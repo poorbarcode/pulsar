@@ -572,6 +572,7 @@ public class ManagedCursorImpl implements ManagedCursor {
         markDeletePosition = position;
         persistentMarkDeletePosition = position;
         inProgressMarkDeletePersistPosition = null;
+        // TODO 如果真正的 mark-delete-ledger 已经删除, 就把 position 后移. 要是 next entry 的消息还没消费怎么办 ?
         readPosition = ledger.getNextValidPosition(position);
         lastMarkDeleteEntry = new MarkDeleteEntry(markDeletePosition, properties, null, null);
         // assign cursor-ledger so, it can be deleted when new ledger will be switched

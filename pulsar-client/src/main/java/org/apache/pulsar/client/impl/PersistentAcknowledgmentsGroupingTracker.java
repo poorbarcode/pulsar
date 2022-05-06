@@ -337,12 +337,16 @@ public class PersistentAcknowledgmentsGroupingTracker implements Acknowledgments
                     return this.currentCumulativeAckFuture;
                 } finally {
                     this.lock.readLock().unlock();
+                    // TODO fyb cumulativeAck 为什么要管 pendingIndividualAck
+                    // afdfe199be73aad7b061e0d5b625787d249f1530 这个版本没有
+                    // 04aa9e8e51869d1621a7e25402a656084eebfc09 这个版本就有咯额
                     if (pendingIndividualBatchIndexAcks.size() >= MAX_ACK_GROUP_SIZE) {
                         flush();
                     }
                 }
             } else {
                 doCumulativeAckAsync(messageId, bitSet);
+                // TODO fyb cumulativeAck 为什么要管 pendingIndividualAck
                 if (pendingIndividualBatchIndexAcks.size() >= MAX_ACK_GROUP_SIZE) {
                     flush();
                 }

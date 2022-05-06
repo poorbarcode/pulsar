@@ -858,7 +858,7 @@ public class PersistentDispatcherMultipleConsumers extends AbstractDispatcherMul
                 delayedDeliveryTracker = Optional
                         .of(topic.getBrokerService().getDelayedDeliveryTrackerFactory().newTracker(this));
             }
-
+            // TODO fyb 是不是可以减小锁的粒度, addMessage 里面用到的数组好像不是线程安全的.
             delayedDeliveryTracker.get().resetTickTime(topic.getDelayedDeliveryTickTimeMillis());
             return delayedDeliveryTracker.get().addMessage(ledgerId, entryId, msgMetadata.getDeliverAtTime());
         }

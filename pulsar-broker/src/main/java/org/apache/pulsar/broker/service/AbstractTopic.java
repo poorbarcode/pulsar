@@ -860,6 +860,9 @@ public abstract class AbstractTopic implements Topic, TopicPolicyListener<TopicP
         }
     }
 
+    /**
+     * TODO fyb 现在 broker 限流有两种策略, 但是现在只实现了一种.
+     */
     protected void enableProducerReadForPublishBufferLimiting() {
         if (producers != null) {
             producers.values().forEach(producer -> {
@@ -1157,12 +1160,14 @@ public abstract class AbstractTopic implements Topic, TopicPolicyListener<TopicP
                     this.topicPublishRateLimiter = new PrecisPublishLimiter(publishRate,
                             () -> this.enableCnxAutoRead(), brokerService.pulsar().getExecutor());
                 } else {
+                    // TODO fyb PublishRateLimiterImpl 根本就不能用于 topic 维度的限流, 因为 tryAcquire() 恒为 false
                     this.topicPublishRateLimiter = new PublishRateLimiterImpl(publishRate);
                 }
             } else {
                 this.topicPublishRateLimiter.update(publishRate);
             }
         } else {
+            // TODO fyb 修改 topic 策略, 为什么要更改 broker 维度的变量: autoReadDisabledRateLimiting
             log.info("Disabling publish throttling for {}", this.topic);
             if (topicPublishRateLimiter != null) {
                 topicPublishRateLimiter.close();

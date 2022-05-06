@@ -428,6 +428,7 @@ public class Producer {
                 final ServerError serverError = getServerError(exception);
 
                 producer.cnx.execute(() -> {
+                    // TODO 要不要针对 send duplicate 异常单独做 errorCode. 客户端能不能做处理这种异常呢 ?
                     if (!(exception instanceof TopicClosedException)) {
                         // For TopicClosed exception there's no need to send explicit error, since the client was
                         // already notified

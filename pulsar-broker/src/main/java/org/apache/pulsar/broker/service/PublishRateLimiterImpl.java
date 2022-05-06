@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.LongAdder;
 import org.apache.pulsar.common.policies.data.Policies;
 import org.apache.pulsar.common.policies.data.PublishRate;
 
+// TODO fyb 现在的实现是定时任务归0刷新计数器, 有没有更高效的方式 ?
 public class PublishRateLimiterImpl implements PublishRateLimiter {
     protected volatile int publishMaxMessageRate = 0;
     protected volatile long publishMaxByteRate = 0;
@@ -104,6 +105,7 @@ public class PublishRateLimiterImpl implements PublishRateLimiter {
         resetPublishCount();
     }
 
+    // TODO 为什么总是返回 false ?
     @Override
     public boolean tryAcquire(int numbers, long bytes) {
         return false;

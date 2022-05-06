@@ -785,6 +785,7 @@ public interface ConsumerBuilder<T> extends Cloneable {
      *              .minNackTimeMs(1000)
      *              .maxNackTimeMs(60 * 1000)
      *              .build()).subscribe();
+     * TODO ExponentialRedeliveryBackoff 这个类已经被删除了?
      * </pre>
      */
     ConsumerBuilder<T> ackTimeoutRedeliveryBackoff(RedeliveryBackoff ackTimeoutRedeliveryBackoff);

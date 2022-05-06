@@ -1187,6 +1187,7 @@ public class SimpleLoadManagerImpl implements LoadManager, Consumer<Notification
                 long oldBundleCount = lastLoadReport.getNumBundles();
                 long newBundleCount = pulsar.getBrokerService().getNumberOfNamespaceBundles();
                 long bundleCountChange = Math.abs(oldBundleCount - newBundleCount);
+                // TODO fyb 这个合并代码出现问题导致原来的特性没了
                 if (newBundleCount != oldBundleCount) {
                     needUpdate = true;
                 }

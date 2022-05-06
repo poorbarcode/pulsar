@@ -906,7 +906,7 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
             callback.openCursorFailed(e, ctx);
             return;
         }
-
+        // TODO fyb 应该用 computeIfAbsent 吧? 但是 uninitializedCursors 是非线程安全的, 要加双检锁?
         if (uninitializedCursors.containsKey(cursorName)) {
             uninitializedCursors.get(cursorName).thenAccept(cursor -> callback.openCursorComplete(cursor, ctx))
                     .exceptionally(ex -> {

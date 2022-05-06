@@ -1443,6 +1443,7 @@ public class ConsumerImpl<T> extends ConsumerBase<T> implements ConnectionHandle
      * @param message
      */
     void notifyPendingReceivedCallback(final Message<T> message, Exception exception) {
+        // TODO fyb 这里会不会有丢消息分风险?
         if (pendingReceives.isEmpty()) {
             return;
         }
@@ -1622,6 +1623,7 @@ public class ConsumerImpl<T> extends ConsumerBase<T> implements ConnectionHandle
         int available = AVAILABLE_PERMITS_UPDATER.addAndGet(this, delta);
         while (available >= getCurrentReceiverQueueSize() / 2 && !paused) {
             if (AVAILABLE_PERMITS_UPDATER.compareAndSet(this, available, 0)) {
+                // TODO fyb send flow 失败, 但是内存里的  available 已经设置为 0, 会不会后面就没消息进来了.
                 sendFlowPermitsToBroker(currentCnx, available);
                 break;
             } else {
@@ -2677,6 +2679,7 @@ public class ConsumerImpl<T> extends ConsumerBase<T> implements ConnectionHandle
         if (ackType == AckType.Cumulative) {
             unAckedMessageTracker.removeMessagesTill(messageId);
         } else {
+            // TODO fyb 这里其实还没有真正 ack, 会不会导致状态不对呀.
             unAckedMessageTracker.remove(messageId);
         }
         return cnx().newAckForReceipt(cmd, requestId);

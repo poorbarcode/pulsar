@@ -1020,6 +1020,7 @@ public class ServerCnx extends PulsarHandler implements TransportCnx {
                         if (!existingConsumerFuture.isDone()) {
                             error = ServerError.ServiceNotReady;
                         } else {
+                            // TODO fyb 代码运行到这里的时候, 或许 existingConsumerFuture 已经执行完并返回正常的连接了
                             error = getErrorCode(existingConsumerFuture);
                             consumers.remove(consumerId, existingConsumerFuture);
                         }
@@ -1487,6 +1488,10 @@ public class ServerCnx extends PulsarHandler implements TransportCnx {
 
         CompletableFuture<Producer> producerFuture = producers.get(send.getProducerId());
 
+        // TODO fyb 这里直接 close connection 有两个风险:
+        // TODO 1. 正在执行注册的 producer 被关闭( 客户端 Bug 可以引起这个问题 )
+        // TODO 2. 已经注册的 Consumer 的连接也被关闭了( 所有 producer close 之后, 可以引起这个问题 )
+        // TODO 原来这样写, 应该主要是为了 client-producer 执行 reConnect 吧
         if (producerFuture == null || !producerFuture.isDone() || producerFuture.isCompletedExceptionally()) {
             log.warn("[{}] Received message, but the producer is not ready : {}. Closing the connection.",
                     remoteAddress, send.getProducerId());
@@ -2671,6 +2676,7 @@ public class ServerCnx extends PulsarHandler implements TransportCnx {
         }
     }
 
+    // TODO fyb metrics 是不是要细分场景( 比如: topic-rate, broker-rate, bytes 等)
     private void recordRateLimitMetrics(ConcurrentLongHashMap<CompletableFuture<Producer>> producers) {
         producers.forEach((key, producerFuture) -> {
             if (producerFuture != null && producerFuture.isDone()) {

@@ -130,6 +130,7 @@ public class ConsumerBuilderImpl<T> implements ConsumerBuilder<T> {
             DeadLetterPolicy deadLetterPolicy = conf.getDeadLetterPolicy();
             if (deadLetterPolicy == null || StringUtils.isBlank(deadLetterPolicy.getRetryLetterTopic())
                     || StringUtils.isBlank(deadLetterPolicy.getDeadLetterTopic())) {
+                // TODO fyb 这里有问题呀, 如果 topic 原来的"重试队列"和"死信队列"不是默认命名的话, 怎么办?
                 CompletableFuture<PartitionedTopicMetadata> retryLetterTopicMetadata =
                         client.getPartitionedTopicMetadata(oldRetryLetterTopic);
                 CompletableFuture<PartitionedTopicMetadata> deadLetterTopicMetadata =

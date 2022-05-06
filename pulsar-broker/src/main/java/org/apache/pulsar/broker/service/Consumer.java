@@ -426,6 +426,7 @@ public class Consumer {
                 }
                 position = PositionImpl.get(msgId.getLedgerId(), msgId.getEntryId(), ackSets);
                 ackedCount = getAckedCountForBatchIndexLevelEnabled(position, batchSize, ackSets);
+                // TODO fyb tx 的 ack 都用 individualAckWithTransaction 这个方法了, 那么下面这块代码是不是没用了.
                 if (isTransactionEnabled()) {
                     //sync the batch position bit set point, in order to delete the position in pending acks
                     if (Subscription.isIndividualAckMode(subType)) {
@@ -449,6 +450,7 @@ public class Consumer {
         subscription.acknowledgeMessage(positionsAcked, AckType.Individual, properties);
         CompletableFuture<Void> completableFuture = new CompletableFuture<>();
         completableFuture.complete(null);
+        // TODO fyb tx 的 ack 都用 individualAckWithTransaction 这个方法了, 那么下面这块代码是不是没用了.
         if (isTransactionEnabled() && Subscription.isIndividualAckMode(subType)) {
             completableFuture.whenComplete((v, e) -> positionsAcked.forEach(position -> {
                 //check if the position can remove from the consumer pending acks.

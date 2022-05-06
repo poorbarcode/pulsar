@@ -349,6 +349,7 @@ public class SystemTopicBasedTopicPoliciesService implements TopicPoliciesServic
                     initPolicesCache(reader, future);
                 });
             } else {
+                // TODO fyb 出了 bug 后, 代码已经运行不到这里了.
                 if (log.isDebugEnabled()) {
                     log.debug("[{}] Reach the end of the system topic.", reader.getSystemTopic().getTopicName());
                 }
