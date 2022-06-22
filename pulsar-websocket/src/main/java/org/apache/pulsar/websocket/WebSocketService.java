@@ -179,6 +179,7 @@ public class WebSocketService implements Closeable {
                 .allowTlsInsecureConnection(config.isTlsAllowInsecureConnection()) //
                 .tlsTrustCertsFilePath(config.getBrokerClientTrustCertsFilePath()) //
                 .ioThreads(config.getWebSocketNumIoThreads()) //
+                .disabledAutoReleaseUselessConnections()
                 .connectionsPerBroker(config.getWebSocketConnectionsPerBroker());
 
         // Apply all arbitrary configuration. This must be called before setting any fields annotated as
