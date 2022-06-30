@@ -1975,7 +1975,7 @@ public class PersistentTopic extends AbstractTopic implements Topic, AddEntryCal
         CompletableFuture<Set<String>> availableBookiesFuture =
                 brokerService.pulsar().getPulsarResources().getBookieResources().listAvailableBookiesAsync();
         futures.add(availableBookiesFuture.handle((strings, throwable) -> null));
-        availableBookiesFuture.whenComplete((bookies, e) -> {
+        CompletableFuture setLedgersFuture = availableBookiesFuture.whenComplete((bookies, e) -> {
             if (e != null) {
                 log.error("[{}] Failed to fetch available bookies.", topic, e);
                 statFuture.completeExceptionally(e);
@@ -2133,7 +2133,7 @@ public class PersistentTopic extends AbstractTopic implements Topic, AddEntryCal
             statFuture.completeExceptionally(e);
             return null;
         });
-        return statFuture;
+        return setLedgersFuture.thenCompose(__ -> statFuture);
     }
 
     public Optional<CompactedTopicContext> getCompactedTopicContext() {

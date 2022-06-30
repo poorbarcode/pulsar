@@ -1161,7 +1161,7 @@ public class AdminApiTest extends MockedPulsarServiceBaseTest {
         assertEquals(partitionTopicInfoResponse, expectedResult);
     }
 
-    @Test
+    @Test(invocationCount = 3)
     public void testGetStats() throws Exception {
         final String topic = "persistent://prop-xyz/ns1/my-topic" + UUID.randomUUID().toString();
         admin.topics().createNonPartitionedTopic(topic);
