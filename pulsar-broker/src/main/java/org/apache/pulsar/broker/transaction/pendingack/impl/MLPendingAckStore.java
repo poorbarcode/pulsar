@@ -435,7 +435,7 @@ public class MLPendingAckStore implements PendingAckStore {
         buffer.resetReaderIndex();
         if (magicNum == BATCHED_ENTRY_DATA_PREFIX_MAGIC_NUMBER){
             // skip version
-            buffer.skipBytes(2);
+            buffer.skipBytes(4);
             BatchedPendingAckMetadataEntry batchedPendingAckMetadataEntry = new BatchedPendingAckMetadataEntry();
             batchedPendingAckMetadataEntry.parseFrom(buffer, buffer.readableBytes());
             return batchedPendingAckMetadataEntry.getPendingAckLogsList();

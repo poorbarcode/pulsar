@@ -35,7 +35,7 @@ import org.testng.annotations.Test;
 public class MLPendingAckStoreBatchLogTest {
 
     @Test
-    public void testReplayAsync() throws Exception{
+    public void testReadingEntriesInReplay() throws Exception{
         // Process Controller
         final AtomicInteger processController = new AtomicInteger();
         // Mock resources.
@@ -141,6 +141,9 @@ public class MLPendingAckStoreBatchLogTest {
         entry4 = iterator.next();
         Assert.assertEquals(entry4.getKey().getEntryId(), 69);
         Assert.assertEquals(entry4.getValue().getEntryId(), 6);
+
+        // cleanup
+        executorService.shutdown();
     }
 
 }

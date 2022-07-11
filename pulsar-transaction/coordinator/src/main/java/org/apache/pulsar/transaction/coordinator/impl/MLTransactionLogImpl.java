@@ -276,9 +276,12 @@ public class MLTransactionLogImpl implements TransactionLog {
     private List<TransactionMetadataEntry> deserializeEntry(Entry entry){
         ByteBuf buffer = entry.getDataBuffer();
         // Check whether it is batched Entry.
-        if (buffer.readShort() == BATCHED_ENTRY_DATA_PREFIX_MAGIC_NUMBER){
+        buffer.markReaderIndex();
+        short magicNum = buffer.readShort();
+        buffer.resetReaderIndex();
+        if (magicNum == BATCHED_ENTRY_DATA_PREFIX_MAGIC_NUMBER){
             // skip version
-            buffer.skipBytes(2);
+            buffer.skipBytes(4);
             BatchedTransactionMetadataEntry batchedLog = new BatchedTransactionMetadataEntry();
             batchedLog.parseFrom(buffer, buffer.readableBytes());
             return batchedLog.getTransactionLogsList();
