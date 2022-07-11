@@ -18,7 +18,9 @@
  */
 package org.apache.pulsar.transaction.coordinator.impl;
 
+import static org.apache.pulsar.transaction.coordinator.impl.TxnLogBufferedWriter.BATCHED_ENTRY_DATA_PREFIX_MAGIC_NUMBER;
 import io.netty.buffer.ByteBuf;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
@@ -37,9 +39,11 @@ import org.apache.pulsar.common.api.proto.CommandSubscribe;
 import org.apache.pulsar.common.naming.NamespaceName;
 import org.apache.pulsar.common.naming.TopicDomain;
 import org.apache.pulsar.common.naming.TopicName;
+import org.apache.pulsar.common.util.collections.BitSetRecyclable;
 import org.apache.pulsar.transaction.coordinator.TransactionCoordinatorID;
 import org.apache.pulsar.transaction.coordinator.TransactionLog;
 import org.apache.pulsar.transaction.coordinator.TransactionLogReplayCallback;
+import org.apache.pulsar.transaction.coordinator.proto.BatchedTransactionMetadataEntry;
 import org.apache.pulsar.transaction.coordinator.proto.TransactionMetadataEntry;
 import org.jctools.queues.MessagePassingQueue;
 import org.jctools.queues.SpscArrayQueue;
@@ -73,6 +77,7 @@ public class MLTransactionLogImpl implements TransactionLog {
         this.tcId = tcID.getId();
         this.managedLedgerFactory = managedLedgerFactory;
         this.managedLedgerConfig = managedLedgerConfig;
+        this.managedLedgerConfig.setDeletionAtBatchIndexLevelEnabled(true);
         this.entryQueue = new SpscArrayQueue<>(2000);
     }
 
@@ -154,7 +159,9 @@ public class MLTransactionLogImpl implements TransactionLog {
         managedLedger.asyncAddEntry(buf, new AsyncCallbacks.AddEntryCallback() {
             @Override
             public void addComplete(Position position, ByteBuf entryData, Object ctx) {
-                buf.release();
+                if (buf != null) {
+                    buf.release();
+                }
                 completableFuture.complete(position);
             }
 
@@ -164,7 +171,9 @@ public class MLTransactionLogImpl implements TransactionLog {
                 if (exception instanceof ManagedLedgerAlreadyClosedException) {
                     managedLedger.readyToCreateNewLedger();
                 }
-                buf.release();
+                if (buf != null) {
+                    buf.release();
+                }
                 completableFuture.completeExceptionally(exception);
             }
         }, null);
@@ -209,15 +218,46 @@ public class MLTransactionLogImpl implements TransactionLog {
         }
 
         public void start() {
-            TransactionMetadataEntry transactionMetadataEntry = new TransactionMetadataEntry();
-
             while (fillEntryQueueCallback.fillQueue() || entryQueue.size() > 0) {
                 Entry entry = entryQueue.poll();
                 if (entry != null) {
                     try {
-                        ByteBuf buffer = entry.getDataBuffer();
-                        transactionMetadataEntry.parseFrom(buffer, buffer.readableBytes());
-                        transactionLogReplayCallback.handleMetadataEntry(entry.getPosition(), transactionMetadataEntry);
+                        List<TransactionMetadataEntry> logs = deserializeEntry(entry);
+                        if (logs.isEmpty()){
+                            continue;
+                        } else if (logs.size() == 1){
+                            TransactionMetadataEntry log = logs.get(0);
+                            transactionLogReplayCallback.handleMetadataEntry(entry.getPosition(), log);
+                        } else {
+                            /**
+                             * 1. Query batch index of current entry from cursor.
+                             * 2. Filter the data which has already ack.
+                             * 3. Build batched position and handle valid data.
+                             */
+                            long[] ackSetAlreadyAck = cursor.getDeletedBatchIndexesAsLongArray(
+                                    PositionImpl.get(entry.getLedgerId(), entry.getEntryId()));
+                            BitSetRecyclable bitSetAlreadyAck = null;
+                            if (ackSetAlreadyAck != null){
+                                bitSetAlreadyAck = BitSetRecyclable.valueOf(ackSetAlreadyAck);
+                            }
+                            int batchSize = logs.size();
+                            for (int batchIndex = 0; batchIndex < batchSize; batchIndex++){
+                                if (bitSetAlreadyAck != null && !bitSetAlreadyAck.get(batchIndex)){
+                                   continue;
+                                }
+                                TransactionMetadataEntry log = logs.get(batchIndex);
+                                BitSetRecyclable bitSetOfCurrentRecord = BitSetRecyclable.create();
+                                bitSetOfCurrentRecord.set(batchIndex);
+                                long[] ackSetOfCurrentRecord = bitSetOfCurrentRecord.toLongArray();
+                                bitSetOfCurrentRecord.recycle();
+                                PositionImpl batchedPosition = PositionImpl.get(entry.getLedgerId(),
+                                        entry.getEntryId(), ackSetOfCurrentRecord);
+                                transactionLogReplayCallback.handleMetadataEntry(batchedPosition, log);
+                            }
+                            if (ackSetAlreadyAck != null){
+                                bitSetAlreadyAck.recycle();
+                            }
+                        }
                     } finally {
                         entry.release();
                     }
@@ -230,6 +270,22 @@ public class MLTransactionLogImpl implements TransactionLog {
                 }
             }
             transactionLogReplayCallback.replayComplete();
+        }
+    }
+
+    private List<TransactionMetadataEntry> deserializeEntry(Entry entry){
+        ByteBuf buffer = entry.getDataBuffer();
+        // Check whether it is batched Entry.
+        if (buffer.readShort() == BATCHED_ENTRY_DATA_PREFIX_MAGIC_NUMBER){
+            // skip version
+            buffer.skipBytes(2);
+            BatchedTransactionMetadataEntry batchedLog = new BatchedTransactionMetadataEntry();
+            batchedLog.parseFrom(buffer, buffer.readableBytes());
+            return batchedLog.getTransactionLogsList();
+        } else {
+            TransactionMetadataEntry log = new TransactionMetadataEntry();
+            log.parseFrom(buffer, buffer.readableBytes());
+            return Collections.singletonList(log);
         }
     }
 

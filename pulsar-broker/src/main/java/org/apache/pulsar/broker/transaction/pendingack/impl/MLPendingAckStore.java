@@ -18,6 +18,7 @@
  */
 package org.apache.pulsar.broker.transaction.pendingack.impl;
 
+import static org.apache.pulsar.transaction.coordinator.impl.TxnLogBufferedWriter.BATCHED_ENTRY_DATA_PREFIX_MAGIC_NUMBER;
 import com.google.common.collect.ComparisonChain;
 import io.netty.buffer.ByteBuf;
 import java.util.ArrayList;
@@ -39,6 +40,7 @@ import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.pulsar.broker.service.BrokerServiceException.PersistenceException;
 import org.apache.pulsar.broker.transaction.pendingack.PendingAckReplyCallBack;
 import org.apache.pulsar.broker.transaction.pendingack.PendingAckStore;
+import org.apache.pulsar.broker.transaction.pendingack.proto.BatchedPendingAckMetadataEntry;
 import org.apache.pulsar.broker.transaction.pendingack.proto.PendingAckMetadata;
 import org.apache.pulsar.broker.transaction.pendingack.proto.PendingAckMetadataEntry;
 import org.apache.pulsar.broker.transaction.pendingack.proto.PendingAckOp;
@@ -48,6 +50,7 @@ import org.apache.pulsar.common.allocator.PulsarByteBufAllocator;
 import org.apache.pulsar.common.api.proto.CommandAck.AckType;
 import org.apache.pulsar.common.naming.SystemTopicNames;
 import org.apache.pulsar.common.naming.TopicName;
+import org.apache.pulsar.common.util.collections.BitSetRecyclable;
 import org.jctools.queues.MessagePassingQueue;
 import org.jctools.queues.SpscArrayQueue;
 import org.slf4j.Logger;
@@ -89,7 +92,7 @@ public class MLPendingAckStore implements PendingAckStore {
      *         If the max position (key) is smaller than the subCursor mark delete position,
      *         the log cursor will mark delete the position before log position (value).
      */
-    private final ConcurrentSkipListMap<PositionImpl, PositionImpl> pendingAckLogIndex;
+    final ConcurrentSkipListMap<PositionImpl, PositionImpl> pendingAckLogIndex;
 
     private final ManagedCursor subManagedCursor;
 
@@ -247,6 +250,41 @@ public class MLPendingAckStore implements PendingAckStore {
         return completableFuture;
     }
 
+    /**
+     * Build the index mapping of Transaction pending ack log (aka t-log) and Topic message log (aka m-log).
+     * When m-log has been ack, t-log which holds m-log is no longer useful, this method builder the mapping of them.
+     *
+     * If a Ledger Entry has many t-log, we only need to care about the record that carries the largest acknowledgement
+     * info. Because all Commit/Abort log after this record describes behavior acknowledgement, if the behavior
+     * acknowledgement has been handle correct, these Commit/Abort log is no longer useful.
+     * @param logPosition The position of batch log Entry.
+     * @param logList Pending ack log records in a batch log Entry.
+     */
+    private void handleMetadataEntry(PositionImpl logPosition, List<PendingAckMetadataEntry> logList) {
+        // Find the record that carries the largest ack info, and call "handleMetadataEntry(position, pendingAckLog)"
+        PendingAckMetadataEntry pendingAckLogHasMaxAckPosition = null;
+        PositionImpl maxAcknowledgementPosition = this.maxAckPosition;
+        for (int i = logList.size() - 1; i >= 0; i--){
+            PendingAckMetadataEntry pendingAckLog = logList.get(i);
+            if (pendingAckLog.getPendingAckOp() == PendingAckOp.ABORT
+                    && pendingAckLog.getPendingAckOp() == PendingAckOp.COMMIT) {
+                continue;
+            }
+            if (pendingAckLog.getPendingAckMetadatasList().isEmpty()){
+                continue;
+            }
+            for (PendingAckMetadata ack : pendingAckLog.getPendingAckMetadatasList()){
+                if (maxAcknowledgementPosition.compareTo(ack.getLedgerId(), ack.getEntryId()) < 0){
+                    maxAcknowledgementPosition = PositionImpl.get(ack.getLedgerId(), ack.getEntryId());
+                    pendingAckLogHasMaxAckPosition = pendingAckLog;
+                }
+            }
+        }
+        if (pendingAckLogHasMaxAckPosition != null) {
+            handleMetadataEntry(logPosition, pendingAckLogHasMaxAckPosition);
+        }
+    }
+
     private void handleMetadataEntry(PositionImpl logPosition, PendingAckMetadataEntry pendingAckMetadataEntry) {
         // store the persistent position in to memory
         // store the max position of this entry retain
@@ -332,14 +370,40 @@ public class MLPendingAckStore implements PendingAckStore {
                 while (lastConfirmedEntry.compareTo(currentLoadPosition) > 0 && fillEntryQueueCallback.fillQueue()) {
                     Entry entry = entryQueue.poll();
                     if (entry != null) {
-                        ByteBuf buffer = entry.getDataBuffer();
                         currentLoadPosition = PositionImpl.get(entry.getLedgerId(), entry.getEntryId());
-                        PendingAckMetadataEntry pendingAckMetadataEntry = new PendingAckMetadataEntry();
-                        pendingAckMetadataEntry.parseFrom(buffer, buffer.readableBytes());
                         currentIndexLag.incrementAndGet();
-                        handleMetadataEntry(new PositionImpl(entry.getLedgerId(), entry.getEntryId()),
-                                pendingAckMetadataEntry);
-                        pendingAckReplyCallBack.handleMetadataEntry(pendingAckMetadataEntry);
+                        List<PendingAckMetadataEntry> logs = deserializeEntry(entry);
+                        if (logs.isEmpty()){
+                            continue;
+                        } else if (logs.size() == 1){
+                            PendingAckMetadataEntry log = logs.get(0);
+                            handleMetadataEntry(new PositionImpl(entry.getLedgerId(), entry.getEntryId()), log);
+                            pendingAckReplyCallBack.handleMetadataEntry(log);
+                        } else {
+                            /**
+                             * 1. Query batch index of current entry from cursor.
+                             * 2. Filter the data which has already ack.
+                             * 3. Build batched position and handle valid data.
+                             */
+                            long[] ackSetAlreadyAck = cursor.getDeletedBatchIndexesAsLongArray(
+                                    PositionImpl.get(entry.getLedgerId(), entry.getEntryId()));
+                            BitSetRecyclable bitSetAlreadyAck = null;
+                            if (ackSetAlreadyAck != null){
+                                bitSetAlreadyAck = BitSetRecyclable.valueOf(ackSetAlreadyAck);
+                            }
+                            int batchSize = logs.size();
+                            for (int batchIndex = 0; batchIndex < batchSize; batchIndex++){
+                                if (bitSetAlreadyAck != null && !bitSetAlreadyAck.get(batchIndex)){
+                                    continue;
+                                }
+                                PendingAckMetadataEntry log = logs.get(batchIndex);
+                                pendingAckReplyCallBack.handleMetadataEntry(log);
+                            }
+                            handleMetadataEntry(new PositionImpl(entry.getLedgerId(), entry.getEntryId()), logs);
+                            if (ackSetAlreadyAck != null){
+                                bitSetAlreadyAck.recycle();
+                            }
+                        }
                         entry.release();
                         clearUselessLogData();
                     } else {
@@ -354,11 +418,31 @@ public class MLPendingAckStore implements PendingAckStore {
                     }
                 }
             } catch (Exception e) {
+                e.printStackTrace();
                 pendingAckReplyCallBack.replayFailed(e);
                 log.error("[{}] Pending ack recover fail!", subManagedCursor.getManagedLedger().getName(), e);
                 return;
             }
             pendingAckReplyCallBack.replayComplete();
+        }
+    }
+
+    private List<PendingAckMetadataEntry> deserializeEntry(Entry entry){
+        ByteBuf buffer = entry.getDataBuffer();
+        // Check whether it is batched Entry.
+        buffer.markReaderIndex();
+        short magicNum = buffer.readShort();
+        buffer.resetReaderIndex();
+        if (magicNum == BATCHED_ENTRY_DATA_PREFIX_MAGIC_NUMBER){
+            // skip version
+            buffer.skipBytes(2);
+            BatchedPendingAckMetadataEntry batchedPendingAckMetadataEntry = new BatchedPendingAckMetadataEntry();
+            batchedPendingAckMetadataEntry.parseFrom(buffer, buffer.readableBytes());
+            return batchedPendingAckMetadataEntry.getPendingAckLogsList();
+        } else {
+            PendingAckMetadataEntry pendingAckMetadataEntry = new PendingAckMetadataEntry();
+            pendingAckMetadataEntry.parseFrom(buffer, buffer.readableBytes());
+            return Collections.singletonList(pendingAckMetadataEntry);
         }
     }
 
