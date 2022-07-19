@@ -130,6 +130,7 @@ import org.apache.pulsar.transaction.coordinator.TransactionTimeoutTracker;
 import org.apache.pulsar.transaction.coordinator.impl.MLTransactionLogImpl;
 import org.apache.pulsar.transaction.coordinator.impl.MLTransactionSequenceIdGenerator;
 import org.apache.pulsar.transaction.coordinator.impl.MLTransactionMetadataStore;
+import org.apache.pulsar.transaction.coordinator.impl.TxnLogBufferedWriterConfig;
 import org.awaitility.Awaitility;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -607,8 +608,12 @@ public class TransactionTest extends TransactionTestBase {
         managedCursors.removeCursor("transaction-buffer-sub");
     }
 
+    // TODO fyb 重点 unit-test.
     @Test
     public void testEndTPRecoveringWhenManagerLedgerDisReadable() throws Exception{
+        TxnLogBufferedWriterConfig bufferedWriterConfig = new TxnLogBufferedWriterConfig();
+        ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
+
         String topic = NAMESPACE1 + "/testEndTPRecoveringWhenManagerLedgerDisReadable";
         admin.topics().createNonPartitionedTopic(topic);
         @Cleanup
@@ -640,7 +645,8 @@ public class TransactionTest extends TransactionTestBase {
 
         TransactionPendingAckStoreProvider pendingAckStoreProvider = mock(TransactionPendingAckStoreProvider.class);
         doReturn(CompletableFuture.completedFuture(
-                new MLPendingAckStore(persistentTopic.getManagedLedger(), managedCursor, null, 500)))
+                new MLPendingAckStore(persistentTopic.getManagedLedger(), managedCursor, null,
+                        500, bufferedWriterConfig, scheduledExecutorService)))
                 .when(pendingAckStoreProvider).newPendingAckStore(any());
         doReturn(CompletableFuture.completedFuture(true)).when(pendingAckStoreProvider).checkInitializedBefore(any());
 
@@ -926,6 +932,7 @@ public class TransactionTest extends TransactionTestBase {
                 pulsarService.getConfiguration().setAllowAutoUpdateSchemaEnabled(true)));
     }
 
+    // TODO fyb 重点 unit-test.
     @Test
     public void testPendingAckMarkDeletePosition() throws Exception {
         getPulsarServiceList().get(0).getConfig().setTransactionPendingAckLogIndexMinLag(1);
