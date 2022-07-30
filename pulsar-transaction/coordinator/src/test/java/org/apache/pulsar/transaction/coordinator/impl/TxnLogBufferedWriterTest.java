@@ -61,6 +61,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 @Slf4j
+@Test(groups = "broker")
 public class TxnLogBufferedWriterTest extends MockedBookKeeperTestCase {
 
     /** Default metrics definitions. **/
