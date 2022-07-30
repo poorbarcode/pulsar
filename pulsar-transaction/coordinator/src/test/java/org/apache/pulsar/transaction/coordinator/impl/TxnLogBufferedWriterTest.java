@@ -112,11 +112,11 @@ public class TxnLogBufferedWriterTest extends MockedBookKeeperTestCase {
                 {512, 1024 * 1024, 1, true, 2000, 2, 4, BookieErrorType.ALWAYS_ERROR, false},
                 {512, 1024 * 1024, 1, false, 2000, 4, 4, BookieErrorType.ALWAYS_ERROR, false},
                 // Bookie sometimes error.
-                {512, 1024 * 1024, 1, true, 2000, 4, 4, BookieErrorType.SOMETIMES_ERROR, false},
-                {512, 1024 * 1024, 1, false, 2000, 4, 4, BookieErrorType.SOMETIMES_ERROR, false},
+                {256, 1024 * 1024, 1, true, 1000, 4, 4, BookieErrorType.SOMETIMES_ERROR, false},
+                {256, 1024 * 1024, 1, false, 1000, 4, 4, BookieErrorType.SOMETIMES_ERROR, false},
                 // TxnLogBufferedWriter sometimes close.
-                {512, 1024 * 1024, 1, true, 2000, 4, 4, BookieErrorType.NO_ERROR, true},
-                {512, 1024 * 1024, 1, false, 2000, 4, 4, BookieErrorType.NO_ERROR, true}
+                {256, 1024 * 1024, 1, true, 1000, 4, 4, BookieErrorType.NO_ERROR, true},
+                {256, 1024 * 1024, 1, false, 1000, 4, 4, BookieErrorType.NO_ERROR, true}
         };
     }
 
