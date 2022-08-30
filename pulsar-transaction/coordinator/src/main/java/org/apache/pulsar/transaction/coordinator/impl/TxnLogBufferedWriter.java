@@ -44,6 +44,14 @@ import org.apache.bookkeeper.mledger.Position;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.pulsar.common.allocator.PulsarByteBufAllocator;
 
+/**
+ * TODO list in this PR:
+ * 1. Constructor without param-metricsStats and null checks for variable-metrics will be removed.
+ * 2. TxnLogBufferedWriterMetricsStats create by The Transaction component Providers.
+ * 3. Instead {@link ManagedLedgerException} to new exception: TxnPersistentException.
+ * 4. Rewrite tests.
+ */
+
 /***
  * See PIP-160: https://github.com/apache/pulsar/issues/15516.
  * Buffer requests and flush to Managed Ledger. Transaction Log Store And Pending Ack Store will no longer write to
