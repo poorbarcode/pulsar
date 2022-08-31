@@ -35,6 +35,8 @@ import static org.testng.Assert.fail;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URI;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
@@ -68,6 +70,7 @@ import org.apache.pulsar.common.naming.NamespaceBundleFactory;
 import org.apache.pulsar.common.naming.NamespaceBundle;
 import org.apache.pulsar.common.naming.NamespaceBundles;
 import org.apache.pulsar.common.naming.NamespaceName;
+import org.apache.pulsar.common.naming.TopicDomain;
 import org.apache.pulsar.common.naming.TopicName;
 import org.apache.pulsar.common.policies.data.BundlesData;
 import org.apache.pulsar.common.policies.data.LocalPolicies;
@@ -89,6 +92,7 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.github.benmanes.caffeine.cache.AsyncLoadingCache;
@@ -777,6 +781,62 @@ public class NamespaceServiceTest extends BrokerTestBase {
         getResult = pulsar.getLocalMetadataStore().get(path).get();
         assertFalse(getResult.isPresent());
 
+    }
+
+    @DataProvider(name = "replicatorTypes")
+    public Object[][] replicatorTypes (){
+        return new Object[][]{
+            {ReplicatorType.NON_REPLICATOR, 1},
+            {ReplicatorType.SELF_REPLICATOR, 1},
+            {ReplicatorType.NON_REPLICATOR, 3},
+            {ReplicatorType.SELF_REPLICATOR, 3}
+        };
+    }
+
+    private enum ReplicatorType {
+        NON_REPLICATOR,
+        SELF_REPLICATOR;
+    }
+
+    @Test(dataProvider = "replicatorTypes")
+    public void testGetListOfNonPersistentTopics(ReplicatorType replicatorType, int partitionCount) throws Exception{
+        String namespaceName = "prop/ns-abc";
+        String nonPersistentTopicName = "non-persistent://" + namespaceName + "/testGetListOfNonPersistentTopics";
+        String subName = "sub-testGetListOfNonPersistentTopics";
+        // set env.
+        if (replicatorType == ReplicatorType.NON_REPLICATOR) {
+            admin.namespaces().removeReplicatorDispatchRateAsync(namespaceName);
+        } else {
+            assertEquals(admin.namespaces().getNamespaceReplicationClusters(namespaceName), Arrays.asList("test"));
+        }
+        // create topic.
+        if (partitionCount == 1) {
+            admin.topics().createNonPartitionedTopic(nonPersistentTopicName);
+        } else {
+            admin.topics().createPartitionedTopic(nonPersistentTopicName, partitionCount);
+        }
+        // make non-persistent topic active.
+        Consumer consumer = pulsarClient.newConsumer().subscriptionName(subName)
+                .topic(nonPersistentTopicName).subscribe();
+        // verify.
+        List<String> topicNames = pulsar.getNamespaceService()
+                .getListOfNonPersistentTopics(NamespaceName.get(namespaceName)).join();
+        int topicCount = 0;
+        for (String tName : topicNames){
+            if (tName.startsWith(nonPersistentTopicName)){
+                topicCount++;
+            }
+        }
+        assertEquals(topicCount, partitionCount);
+
+        pulsar.getPulsarResources().getNamespaceResources().getPartitionedTopicResources().listPartitionedTopicsAsync(NamespaceName.get(namespaceName),
+                TopicDomain.non_persistent).join();
+        // cleanup and reset.
+        consumer.close();
+        admin.topics().delete(nonPersistentTopicName);
+        if (replicatorType == ReplicatorType.NON_REPLICATOR) {
+            admin.namespaces().setNamespaceReplicationClusters(namespaceName, Collections.singleton("test"));
+        }
     }
 
     @SuppressWarnings("unchecked")

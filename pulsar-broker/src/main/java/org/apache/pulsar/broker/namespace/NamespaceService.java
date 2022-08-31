@@ -44,6 +44,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import javax.ws.rs.core.Response;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -61,6 +62,7 @@ import org.apache.pulsar.broker.service.Topic;
 import org.apache.pulsar.broker.service.nonpersistent.NonPersistentTopic;
 import org.apache.pulsar.broker.stats.prometheus.metrics.Summary;
 import org.apache.pulsar.broker.web.PulsarWebResource;
+import org.apache.pulsar.broker.web.RestException;
 import org.apache.pulsar.client.admin.PulsarAdmin;
 import org.apache.pulsar.client.api.ClientBuilder;
 import org.apache.pulsar.client.api.PulsarClient;
@@ -1223,36 +1225,57 @@ public class NamespaceService implements AutoCloseable {
     }
 
     public CompletableFuture<List<String>> getListOfNonPersistentTopics(NamespaceName namespaceName) {
-
-        return PulsarWebResource.checkLocalOrGetPeerReplicationCluster(pulsar, namespaceName)
-                .thenCompose(peerClusterData -> {
-                    // if peer-cluster-data is present it means namespace is owned by that peer-cluster and request
-                    // should redirect to the peer-cluster
-                    if (peerClusterData != null) {
-                        return getNonPersistentTopicsFromPeerCluster(peerClusterData, namespaceName);
-                    } else {
-                        // Non-persistent topics don't have managed ledgers so we have to retrieve them from local
-                        // cache.
-                        List<String> topics = Lists.newArrayList();
-                        synchronized (pulsar.getBrokerService().getMultiLayerTopicMap()) {
-                            if (pulsar.getBrokerService().getMultiLayerTopicMap()
-                                    .containsKey(namespaceName.toString())) {
-                                pulsar.getBrokerService().getMultiLayerTopicMap().get(namespaceName.toString())
-                                        .forEach((__, bundle) -> {
-                                            bundle.forEach((topicName, topic) -> {
-                                                if (topic instanceof NonPersistentTopic
-                                                        && ((NonPersistentTopic) topic).isActive()) {
-                                                    topics.add(topicName);
-                                                }
-                                            });
-                                        });
-                            }
+        CompletableFuture<List<String>> res = new CompletableFuture<>();
+        PulsarWebResource.checkLocalOrGetPeerReplicationCluster(pulsar, namespaceName)
+                .whenComplete((peerClusterData, exception) -> {
+                    if (exception != null){
+                        if (!(exception instanceof RestException)){
+                            res.completeExceptionally(exception.getCause());
+                            return;
                         }
-
-                        topics.sort(null);
-                        return CompletableFuture.completedFuture(topics);
+                        RestException restException = (RestException) exception;
+                        if (restException.getResponse().getStatus()
+                                != Response.Status.PRECONDITION_FAILED.getStatusCode()){
+                            res.completeExceptionally(exception.getCause());
+                            return;
+                        }
+                        res.complete(getNonPersistentTopicsByLocalCache(namespaceName));
+                        return;
                     }
+                    if (peerClusterData == null) {
+                        res.complete(getNonPersistentTopicsByLocalCache(namespaceName));
+                        return;
+                    }
+                    getNonPersistentTopicsFromPeerCluster(peerClusterData, namespaceName).whenComplete((list, e) -> {
+                        if (e != null){
+                            res.completeExceptionally(FutureUtil.unwrapCompletionException(e));
+                        } else {
+                            res.complete(list);
+                        }
+                    });
                 });
+        return res;
+    }
+
+    private List<String> getNonPersistentTopicsByLocalCache(NamespaceName namespaceName){
+        List<String> topics = Lists.newArrayList();
+        synchronized (pulsar.getBrokerService().getMultiLayerTopicMap()) {
+            if (pulsar.getBrokerService().getMultiLayerTopicMap()
+                    .containsKey(namespaceName.toString())) {
+                pulsar.getBrokerService().getMultiLayerTopicMap().get(namespaceName.toString())
+                        .forEach((__, bundle) -> {
+                            bundle.forEach((topicName, topic) -> {
+                                if (topic instanceof NonPersistentTopic
+                                        && ((NonPersistentTopic) topic).isActive()) {
+                                    topics.add(topicName);
+                                }
+                            });
+                        });
+            }
+        }
+
+        topics.sort(null);
+        return topics;
     }
 
     private CompletableFuture<List<String>> getNonPersistentTopicsFromPeerCluster(ClusterDataImpl peerClusterData,
