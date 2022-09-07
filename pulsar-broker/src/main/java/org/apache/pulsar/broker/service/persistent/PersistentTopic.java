@@ -1197,7 +1197,7 @@ public class PersistentTopic extends AbstractTopic implements Topic, AddEntryCal
                                     ledger.asyncDelete(new AsyncCallbacks.DeleteLedgerCallback() {
                                         @Override
                                         public void deleteLedgerComplete(Object ctx) {
-                                            brokerService.removeTopicFromCache(topic);
+                                            brokerService.removeTopicFromCache(topic, PersistentTopic.this);
 
                                             dispatchRateLimiter.ifPresent(DispatchRateLimiter::close);
 
@@ -1308,7 +1308,7 @@ public class PersistentTopic extends AbstractTopic implements Topic, AddEntryCal
                 @Override
                 public void closeComplete(Object ctx) {
                     // Everything is now closed, remove the topic from map
-                    brokerService.removeTopicFromCache(topic)
+                    brokerService.removeTopicFromCache(topic, PersistentTopic.this)
                             .thenRun(() -> {
                                 replicatedSubscriptionsController.ifPresent(ReplicatedSubscriptionsController::close);
 
@@ -1330,7 +1330,7 @@ public class PersistentTopic extends AbstractTopic implements Topic, AddEntryCal
                 @Override
                 public void closeFailed(ManagedLedgerException exception, Object ctx) {
                     log.error("[{}] Failed to close managed ledger, proceeding anyway.", topic, exception);
-                    brokerService.removeTopicFromCache(topic);
+                    brokerService.removeTopicFromCache(topic, PersistentTopic.this);
                     closeFuture.complete(null);
                 }
             }, null);
