@@ -200,7 +200,7 @@ public class PulsarFunctionTlsTest {
         }
     }
 
-    @Test
+    @Test(invocationCount = 100)
     public void testFunctionsCreation() throws Exception {
 
         String jarFilePathUrl = String.format("%s:%s", org.apache.pulsar.common.functions.Utils.FILE,

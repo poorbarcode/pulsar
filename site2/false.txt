@@ -1,0 +1,1318 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[INFO] Running org.apache.pulsar.common.naming.RangeEquallyDivideBundleSplitAlgorithmTest
+  [INFO] Running org.apache.pulsar.common.naming.NamespaceBundleTest
+  [INFO] Running org.apache.pulsar.common.naming.NamespaceBundleSplitAlgorithmTest
+  [INFO] Running org.apache.pulsar.common.naming.NamespaceBundlesTest
+  [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 8.477 s - in org.apache.pulsar.common.naming.NamespaceBundleSplitAlgorithmTest
+  [INFO] Running org.apache.pulsar.common.naming.SpecifiedPositionsBundleSplitAlgorithmTest
+  [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 9.733 s - in org.apache.pulsar.common.naming.RangeEquallyDivideBundleSplitAlgorithmTest
+  [INFO] Running org.apache.pulsar.common.naming.TopicCountEquallyDivideBundleSplitAlgorithmTest
+  [INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.01 s - in org.apache.pulsar.common.naming.SpecifiedPositionsBundleSplitAlgorithmTest
+  [INFO] Running org.apache.pulsar.common.naming.FlowOrQpsEquallyDivideBundleSplitAlgorithmTest
+  [INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.831 s - in org.apache.pulsar.common.naming.TopicCountEquallyDivideBundleSplitAlgorithmTest
+  [INFO] Running org.apache.pulsar.common.naming.ServiceConfigurationTest
+  [INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 11.689 s - in org.apache.pulsar.common.naming.NamespaceBundleTest
+  [INFO] Running org.apache.pulsar.PulsarClusterMetadataSetupTest
+  [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.513 s - in org.apache.pulsar.PulsarClusterMetadataSetupTest
+  [INFO] Running org.apache.pulsar.broker.intercept.BrokerInterceptorUtilsTest
+  [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.716 s - in org.apache.pulsar.common.naming.FlowOrQpsEquallyDivideBundleSplitAlgorithmTest
+  [INFO] Running org.apache.pulsar.broker.intercept.MangedLedgerInterceptorImplTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.279 s - in org.apache.pulsar.broker.intercept.BrokerInterceptorUtilsTest
+  [INFO] Running org.apache.pulsar.broker.intercept.BrokerInterceptorWithClassLoaderTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.287 s - in org.apache.pulsar.broker.intercept.MangedLedgerInterceptorImplTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.248 s - in org.apache.pulsar.broker.intercept.BrokerInterceptorWithClassLoaderTest
+  [INFO] Running org.apache.pulsar.broker.intercept.BrokerInterceptorTest
+  [INFO] Running org.apache.pulsar.broker.intercept.InterceptFilterOutTest
+  [INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 12.856 s - in org.apache.pulsar.common.naming.NamespaceBundlesTest
+  [INFO] Running org.apache.pulsar.broker.TimeAverageBrokerDataTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.184 s - in org.apache.pulsar.broker.intercept.InterceptFilterOutTest
+  [INFO] Running org.apache.pulsar.broker.web.RestExceptionTest
+  [INFO] Tests run: 15, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.447 s - in org.apache.pulsar.common.naming.ServiceConfigurationTest
+  [INFO] Running org.apache.pulsar.broker.web.ProcessHandlerFilterTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.232 s - in org.apache.pulsar.broker.web.RestExceptionTest
+  [INFO] Running org.apache.pulsar.broker.web.plugin.servlet.AdditionalServletWithClassLoaderTest
+  [INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.349 s - in org.apache.pulsar.broker.TimeAverageBrokerDataTest
+  [INFO] Running org.apache.pulsar.broker.web.plugin.servlet.AdditionalServletWithPulsarServiceTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.175 s - in org.apache.pulsar.broker.web.plugin.servlet.AdditionalServletWithClassLoaderTest
+  [INFO] Running org.apache.pulsar.broker.web.WebServiceTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.842 s - in org.apache.pulsar.broker.intercept.BrokerInterceptorTest
+  [INFO] Running org.apache.pulsar.broker.web.ExceptionHandlerTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.269 s - in org.apache.pulsar.broker.web.WebServiceTest
+  [INFO] Running org.apache.pulsar.broker.web.PulsarWebResourceTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.123 s - in org.apache.pulsar.broker.web.ExceptionHandlerTest
+  [INFO] Running org.apache.pulsar.broker.web.MaxRequestSizeFilterTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.268 s - in org.apache.pulsar.broker.web.PulsarWebResourceTest
+  [INFO] Running org.apache.pulsar.broker.BookKeeperClientFactoryImplTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.183 s - in org.apache.pulsar.broker.BookKeeperClientFactoryImplTest
+  [INFO] Running org.apache.pulsar.broker.namespace.NamespaceEphemeralDataTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.129 s - in org.apache.pulsar.broker.namespace.NamespaceEphemeralDataTest
+  [INFO] Running org.apache.pulsar.broker.namespace.OwnerShipCacheForCurrentServerTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.298 s - in org.apache.pulsar.broker.namespace.OwnerShipCacheForCurrentServerTest
+  [INFO] Running org.apache.pulsar.broker.namespace.NamespaceOwnershipListenerTests
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.485 s - in org.apache.pulsar.broker.namespace.NamespaceOwnershipListenerTests
+[INFO] Running org.apache.pulsar.broker.namespace.OwnershipCacheTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.151 s - in org.apache.pulsar.broker.namespace.OwnershipCacheTest
+  [INFO] Running org.apache.pulsar.broker.namespace.NamespaceServiceTest
+  [INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.549 s - in org.apache.pulsar.broker.web.MaxRequestSizeFilterTest
+  [INFO] Running org.apache.pulsar.broker.namespace.NamespaceCreateBundlesTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.187 s - in org.apache.pulsar.broker.namespace.NamespaceCreateBundlesTest
+  [INFO] Running org.apache.pulsar.broker.namespace.NamespaceUnloadingTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.272 s - in org.apache.pulsar.broker.namespace.NamespaceServiceTest
+  [INFO] Running org.apache.pulsar.broker.BrokerAdditionalServletTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.147 s - in org.apache.pulsar.broker.namespace.NamespaceUnloadingTest
+  [INFO] Running org.apache.pulsar.broker.admin.TopicsAuthTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.192 s - in org.apache.pulsar.broker.BrokerAdditionalServletTest
+  [INFO] Running org.apache.pulsar.broker.admin.AdminApiTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.287 s - in org.apache.pulsar.broker.admin.AdminApiTest
+  [INFO] Running org.apache.pulsar.broker.admin.BrokerAdminClientTlsAuthTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.119 s - in org.apache.pulsar.broker.admin.BrokerAdminClientTlsAuthTest
+  [INFO] Running org.apache.pulsar.broker.admin.AdminResourceTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.14 s - in org.apache.pulsar.broker.admin.AdminResourceTest
+  [INFO] Running org.apache.pulsar.broker.admin.AdminTopicApiTest
+  [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.075 s - in org.apache.pulsar.broker.web.plugin.servlet.AdditionalServletWithPulsarServiceTest
+  [INFO] Running org.apache.pulsar.broker.admin.TopicPoliciesTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.127 s - in org.apache.pulsar.broker.admin.AdminTopicApiTest
+  [INFO] Running org.apache.pulsar.broker.admin.AnalyzeBacklogSubscriptionTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.166 s - in org.apache.pulsar.broker.admin.AnalyzeBacklogSubscriptionTest
+  [INFO] Running org.apache.pulsar.broker.admin.NamespacesTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.253 s - in org.apache.pulsar.broker.admin.NamespacesTest
+  [INFO] Running org.apache.pulsar.broker.admin.AdminApiMultiBrokersTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.179 s - in org.apache.pulsar.broker.admin.AdminApiMultiBrokersTest
+  [INFO] Running org.apache.pulsar.broker.admin.AdminApiDynamicConfigurationsTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.144 s - in org.apache.pulsar.broker.admin.AdminApiDynamicConfigurationsTest
+  [INFO] Running org.apache.pulsar.broker.admin.AdminRestTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.912 s - in org.apache.pulsar.broker.admin.TopicPoliciesTest
+  [INFO] Running org.apache.pulsar.broker.admin.AdminApiSchemaAutoUpdateTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.142 s - in org.apache.pulsar.broker.admin.AdminRestTest
+  [INFO] Running org.apache.pulsar.broker.admin.TopicMessageTTLTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.22 s - in org.apache.pulsar.broker.admin.AdminApiSchemaAutoUpdateTest
+  [INFO] Running org.apache.pulsar.broker.admin.ResourceGroupsTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.173 s - in org.apache.pulsar.broker.admin.TopicMessageTTLTest
+  [INFO] Running org.apache.pulsar.broker.admin.AdminApiClusterTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.086 s - in org.apache.pulsar.broker.admin.AdminApiClusterTest
+  [INFO] Running org.apache.pulsar.broker.admin.AdminTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.127 s - in org.apache.pulsar.broker.admin.AdminTest
+  [INFO] Running org.apache.pulsar.broker.admin.AdminApiSchemaWithAuthTest
+  [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 5.108 s - in org.apache.pulsar.broker.web.ProcessHandlerFilterTest
+  [INFO] Running org.apache.pulsar.broker.admin.CreateSubscriptionTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.341 s - in org.apache.pulsar.broker.admin.CreateSubscriptionTest
+  [INFO] Running org.apache.pulsar.broker.admin.AdminApiOffloadTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.14 s - in org.apache.pulsar.broker.admin.AdminApiOffloadTest
+  [INFO] Running org.apache.pulsar.broker.admin.AdminApiGetLastMessageIdTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.129 s - in org.apache.pulsar.broker.admin.AdminApiGetLastMessageIdTest
+  [INFO] Running org.apache.pulsar.broker.admin.TopicsTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.194 s - in org.apache.pulsar.broker.admin.AdminApiSchemaWithAuthTest
+  [INFO] Running org.apache.pulsar.broker.admin.AdminApiHealthCheckTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.095 s - in org.apache.pulsar.broker.admin.AdminApiHealthCheckTest
+  [INFO] Running org.apache.pulsar.broker.admin.AdminApiSubscriptionTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.108 s - in org.apache.pulsar.broker.admin.AdminApiSubscriptionTest
+  [INFO] Running org.apache.pulsar.broker.admin.AdminApiSchemaTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.118 s - in org.apache.pulsar.broker.admin.AdminApiSchemaTest
+  [INFO] Running org.apache.pulsar.broker.admin.MaxUnackedMessagesTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.103 s - in org.apache.pulsar.broker.admin.MaxUnackedMessagesTest
+[INFO] Running org.apache.pulsar.broker.admin.AdminApiTlsAuthTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.104 s - in org.apache.pulsar.broker.admin.AdminApiTlsAuthTest
+  [INFO] Running org.apache.pulsar.broker.admin.TopicPoliciesDisableTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.111 s - in org.apache.pulsar.broker.admin.TopicPoliciesDisableTest
+  [INFO] Running org.apache.pulsar.broker.admin.TopicAutoCreationTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.099 s - in org.apache.pulsar.broker.admin.TopicAutoCreationTest
+  [INFO] Running org.apache.pulsar.broker.admin.PersistentTopicsTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.166 s - in org.apache.pulsar.broker.admin.PersistentTopicsTest
+  [INFO] Running org.apache.pulsar.broker.admin.BookiesApiTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.121 s - in org.apache.pulsar.broker.admin.BookiesApiTest
+  [INFO] Running org.apache.pulsar.broker.admin.IncrementPartitionsTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.117 s - in org.apache.pulsar.broker.admin.IncrementPartitionsTest
+  [INFO] Running org.apache.pulsar.broker.admin.NamespacesV2Test
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.139 s - in org.apache.pulsar.broker.admin.NamespacesV2Test
+  [INFO] Running org.apache.pulsar.broker.admin.AdminApi2Test
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.274 s - in org.apache.pulsar.broker.admin.AdminApi2Test
+  [INFO] Running org.apache.pulsar.broker.admin.v3.AdminApiTransactionTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.199 s - in org.apache.pulsar.broker.admin.v3.AdminApiTransactionTest
+  [INFO] Running org.apache.pulsar.broker.admin.v3.PackagesApiTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.17 s - in org.apache.pulsar.broker.admin.v3.PackagesApiTest
+  [INFO] Running org.apache.pulsar.broker.admin.v3.AsyncResponseTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.093 s - in org.apache.pulsar.broker.admin.v3.AsyncResponseTest
+  [INFO] Running org.apache.pulsar.broker.admin.v3.AdminApiTransactionMultiBrokerTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.155 s - in org.apache.pulsar.broker.admin.v3.AdminApiTransactionMultiBrokerTest
+  [INFO] Running org.apache.pulsar.broker.admin.v3.PackagesApiNotEnabledTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.132 s - in org.apache.pulsar.broker.admin.v3.PackagesApiNotEnabledTest
+  [INFO] Running org.apache.pulsar.broker.admin.v1.V1_AdminApiTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.152 s - in org.apache.pulsar.broker.admin.v1.V1_AdminApiTest
+  [INFO] Running org.apache.pulsar.broker.admin.v1.V1_AdminApi2Test
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.127 s - in org.apache.pulsar.broker.admin.v1.V1_AdminApi2Test
+  [INFO] Running org.apache.pulsar.broker.MultiBrokerBaseTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.113 s - in org.apache.pulsar.broker.MultiBrokerBaseTest
+  [INFO] Running org.apache.pulsar.broker.service.PersistentTopicTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.172 s - in org.apache.pulsar.broker.service.PersistentTopicTest
+  [INFO] Running org.apache.pulsar.broker.service.ServerCnxAuthorizationTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.122 s - in org.apache.pulsar.broker.service.ServerCnxAuthorizationTest
+  [INFO] Running org.apache.pulsar.broker.service.MaxMessageSizeTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.089 s - in org.apache.pulsar.broker.service.MaxMessageSizeTest
+  [INFO] Running org.apache.pulsar.broker.service.ReplicatorGlobalNSTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.112 s - in org.apache.pulsar.broker.service.ReplicatorGlobalNSTest
+  [INFO] Running org.apache.pulsar.broker.service.TransactionMarkerDeleteTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.09 s - in org.apache.pulsar.broker.service.TransactionMarkerDeleteTest
+  [INFO] Running org.apache.pulsar.broker.service.TopicPoliciesServiceDisableTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.097 s - in org.apache.pulsar.broker.service.TopicPoliciesServiceDisableTest
+  [INFO] Running org.apache.pulsar.broker.service.PrecisTopicPublishRateThrottleTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.103 s - in org.apache.pulsar.broker.service.PrecisTopicPublishRateThrottleTest
+  [INFO] Running org.apache.pulsar.broker.service.PersistentFailoverE2ETest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.13 s - in org.apache.pulsar.broker.service.PersistentFailoverE2ETest
+  [INFO] Running org.apache.pulsar.broker.service.AbstractSubscriptionTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.059 s - in org.apache.pulsar.broker.service.AbstractSubscriptionTest
+  [INFO] Running org.apache.pulsar.broker.service.SystemTopicBasedTopicPoliciesServiceTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.1 s - in org.apache.pulsar.broker.service.SystemTopicBasedTopicPoliciesServiceTest
+[INFO] Running org.apache.pulsar.broker.service.plugin.EntryFilterProviderTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.04 s - in org.apache.pulsar.broker.service.plugin.EntryFilterProviderTest
+  [INFO] Running org.apache.pulsar.broker.service.plugin.EntryFilterProducerTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.05 s - in org.apache.pulsar.broker.service.plugin.EntryFilterProducerTest
+  [INFO] Running org.apache.pulsar.broker.service.plugin.FilterEntryTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.087 s - in org.apache.pulsar.broker.service.plugin.FilterEntryTest
+  [INFO] Running org.apache.pulsar.broker.service.plugin.EntryFilter2Test
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.035 s - in org.apache.pulsar.broker.service.plugin.EntryFilter2Test
+  [INFO] Running org.apache.pulsar.broker.service.plugin.EntryFilterTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.056 s - in org.apache.pulsar.broker.service.plugin.EntryFilterTest
+  [INFO] Running org.apache.pulsar.broker.service.BrokerServiceAutoSubscriptionCreationTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.085 s - in org.apache.pulsar.broker.service.BrokerServiceAutoSubscriptionCreationTest
+  [INFO] Running org.apache.pulsar.broker.service.InactiveTopicDeleteTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.1 s - in org.apache.pulsar.broker.service.InactiveTopicDeleteTest
+  [INFO] Running org.apache.pulsar.broker.service.PeerReplicatorTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.051 s - in org.apache.pulsar.broker.service.PeerReplicatorTest
+  [INFO] Running org.apache.pulsar.broker.service.BrokerInternalClientConfigurationOverrideTest
+  [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 27.11 s - in org.apache.pulsar.broker.admin.ResourceGroupsTest
+  [INFO] Running org.apache.pulsar.broker.service.ConsistentHashingStickyKeyConsumerSelectorTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.043 s - in org.apache.pulsar.broker.service.ConsistentHashingStickyKeyConsumerSelectorTest
+  [INFO] Running org.apache.pulsar.broker.service.ExclusiveProducerTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.085 s - in org.apache.pulsar.broker.service.ExclusiveProducerTest
+  [INFO] Running org.apache.pulsar.broker.service.ReplicatorTopicPoliciesTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.094 s - in org.apache.pulsar.broker.service.ReplicatorTopicPoliciesTest
+  [INFO] Running org.apache.pulsar.broker.service.PersistentTopicConcurrentTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.061 s - in org.apache.pulsar.broker.service.PersistentTopicConcurrentTest
+  [INFO] Running org.apache.pulsar.broker.service.EnableProxyProtocolTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.111 s - in org.apache.pulsar.broker.service.EnableProxyProtocolTest
+  [INFO] Running org.apache.pulsar.broker.service.BrokerServiceAutoTopicCreationTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.176 s - in org.apache.pulsar.broker.service.BrokerServiceAutoTopicCreationTest
+  [INFO] Running org.apache.pulsar.broker.service.ReplicatorSubscriptionTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.092 s - in org.apache.pulsar.broker.service.ReplicatorSubscriptionTest
+  [INFO] Running org.apache.pulsar.broker.service.ManagedLedgerCompressionTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.088 s - in org.apache.pulsar.broker.service.ManagedLedgerCompressionTest
+  [INFO] Running org.apache.pulsar.broker.service.TopicTerminationTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.159 s - in org.apache.pulsar.broker.service.TopicTerminationTest
+  [INFO] Running org.apache.pulsar.broker.service.PublishRateLimiterDisableTest
+  [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.11 s - in org.apache.pulsar.broker.service.PublishRateLimiterDisableTest
+  [INFO] Running org.apache.pulsar.broker.service.PublishRateLimiterTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.082 s - in org.apache.pulsar.broker.service.PublishRateLimiterTest
+  [INFO] Running org.apache.pulsar.broker.service.HashRangeExclusiveStickyKeyConsumerSelectorTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.092 s - in org.apache.pulsar.broker.service.HashRangeExclusiveStickyKeyConsumerSelectorTest
+  [INFO] Running org.apache.pulsar.broker.service.BatchMessageTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.14 s - in org.apache.pulsar.broker.service.BatchMessageTest
+  [INFO] Running org.apache.pulsar.broker.service.NullValueTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.122 s - in org.apache.pulsar.broker.service.NullValueTest
+  [INFO] Running org.apache.pulsar.broker.service.StandaloneTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.092 s - in org.apache.pulsar.broker.service.StandaloneTest
+  [INFO] Running org.apache.pulsar.broker.service.BacklogQuotaManagerConfigurationTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.052 s - in org.apache.pulsar.broker.service.BacklogQuotaManagerConfigurationTest
+  [INFO] Running org.apache.pulsar.broker.service.TopicOwnerTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.057 s - in org.apache.pulsar.broker.service.TopicOwnerTest
+  [INFO] Running org.apache.pulsar.broker.service.OpportunisticStripingTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.046 s - in org.apache.pulsar.broker.service.OpportunisticStripingTest
+[INFO] Running org.apache.pulsar.broker.service.schema.PartitionedTopicsSchemaTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.038 s - in org.apache.pulsar.broker.service.schema.PartitionedTopicsSchemaTest
+  [INFO] Running org.apache.pulsar.broker.service.schema.ClientGetSchemaTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.108 s - in org.apache.pulsar.broker.service.schema.ClientGetSchemaTest
+  [INFO] Running org.apache.pulsar.broker.service.schema.validator.SchemaDataValidatorTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.04 s - in org.apache.pulsar.broker.service.schema.validator.SchemaDataValidatorTest
+  [INFO] Running org.apache.pulsar.broker.service.schema.validator.SchemaRegistryServiceWithSchemaDataValidatorTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.062 s - in org.apache.pulsar.broker.service.schema.validator.SchemaRegistryServiceWithSchemaDataValidatorTest
+  [INFO] Running org.apache.pulsar.broker.service.schema.JsonSchemaCompatibilityCheckTest
+  [INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 23.558 s - in org.apache.pulsar.broker.service.BrokerInternalClientConfigurationOverrideTest
+  [INFO] Running org.apache.pulsar.broker.service.schema.KeyValueSchemaCompatibilityCheckTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.13 s - in org.apache.pulsar.broker.service.schema.KeyValueSchemaCompatibilityCheckTest
+  [INFO] Running org.apache.pulsar.broker.service.schema.ProtobufNativeSchemaCompatibilityCheckTest
+  [INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.551 s - in org.apache.pulsar.broker.service.schema.JsonSchemaCompatibilityCheckTest
+  [INFO] Running org.apache.pulsar.broker.service.schema.SchemaServiceTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.128 s - in org.apache.pulsar.broker.service.schema.SchemaServiceTest
+  [INFO] Running org.apache.pulsar.broker.service.schema.BookkeeperSchemaStorageTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.049 s - in org.apache.pulsar.broker.service.schema.BookkeeperSchemaStorageTest
+  [INFO] Running org.apache.pulsar.broker.service.schema.BaseAvroSchemaCompatibilityTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.044 s - in org.apache.pulsar.broker.service.schema.BaseAvroSchemaCompatibilityTest
+  [INFO] Running org.apache.pulsar.broker.service.schema.ProtobufSchemaCompatibilityCheckTest
+  [INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.165 s - in org.apache.pulsar.broker.service.schema.ProtobufSchemaCompatibilityCheckTest
+  [INFO] Running org.apache.pulsar.broker.service.schema.AvroSchemaCompatibilityCheckTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.544 s - in org.apache.pulsar.broker.service.schema.ProtobufNativeSchemaCompatibilityCheckTest
+  [INFO] Running org.apache.pulsar.broker.service.AbstractTopicTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.08 s - in org.apache.pulsar.broker.service.AbstractTopicTest
+  [INFO] Running org.apache.pulsar.broker.service.nonpersistent.NonPersistentStickyKeyDispatcherMultipleConsumersTest
+  [INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.185 s - in org.apache.pulsar.broker.service.schema.AvroSchemaCompatibilityCheckTest
+  [INFO] Running org.apache.pulsar.broker.service.nonpersistent.NonPersistentTopicTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.119 s - in org.apache.pulsar.broker.service.nonpersistent.NonPersistentTopicTest
+  [INFO] Running org.apache.pulsar.broker.service.PersistentTopicE2ETest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.171 s - in org.apache.pulsar.broker.service.PersistentTopicE2ETest
+  [INFO] Running org.apache.pulsar.broker.service.ReplicatorTlsTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.077 s - in org.apache.pulsar.broker.service.ReplicatorTlsTest
+  [INFO] Running org.apache.pulsar.broker.service.ServerCnxTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.179 s - in org.apache.pulsar.broker.service.ServerCnxTest
+  [INFO] Running org.apache.pulsar.broker.service.CurrentLedgerRolloverIfFullTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.146 s - in org.apache.pulsar.broker.service.CurrentLedgerRolloverIfFullTest
+  [INFO] Running org.apache.pulsar.broker.service.PersistentMessageFinderTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.122 s - in org.apache.pulsar.broker.service.PersistentMessageFinderTest
+  [INFO] Running org.apache.pulsar.broker.service.BrokerEntryMetadataE2ETest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.16 s - in org.apache.pulsar.broker.service.BrokerEntryMetadataE2ETest
+  [INFO] Running org.apache.pulsar.broker.service.TopicDispatchRateLimiterTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.172 s - in org.apache.pulsar.broker.service.TopicDispatchRateLimiterTest
+  [INFO] Running org.apache.pulsar.broker.service.ReplicatorTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.158 s - in org.apache.pulsar.broker.service.ReplicatorTest
+  [INFO] Running org.apache.pulsar.broker.service.MessageCumulativeAckTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.087 s - in org.apache.pulsar.broker.service.MessageCumulativeAckTest
+  [INFO] Running org.apache.pulsar.broker.service.ReplicatorRemoveClusterTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.113 s - in org.apache.pulsar.broker.service.ReplicatorRemoveClusterTest
+  [INFO] Running org.apache.pulsar.broker.service.BacklogQuotaManagerTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.103 s - in org.apache.pulsar.broker.service.BacklogQuotaManagerTest
+[INFO] Running org.apache.pulsar.broker.service.BrokerBkEnsemblesTests
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.078 s - in org.apache.pulsar.broker.service.BrokerBkEnsemblesTests
+  [INFO] Running org.apache.pulsar.broker.service.BrokerServiceTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.158 s - in org.apache.pulsar.broker.service.BrokerServiceTest
+  [INFO] Running org.apache.pulsar.broker.service.SubscribeRateTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.175 s - in org.apache.pulsar.broker.service.SubscribeRateTest
+  [INFO] Running org.apache.pulsar.broker.service.MessageIdSerializationTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.086 s - in org.apache.pulsar.broker.service.MessageIdSerializationTest
+  [INFO] Running org.apache.pulsar.broker.service.MessagePublishBufferThrottleTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.176 s - in org.apache.pulsar.broker.service.MessagePublishBufferThrottleTest
+  [INFO] Running org.apache.pulsar.broker.service.BatchMessageWithBatchIndexLevelTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.205 s - in org.apache.pulsar.broker.service.BatchMessageWithBatchIndexLevelTest
+  [INFO] Running org.apache.pulsar.broker.service.ResendRequestTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.152 s - in org.apache.pulsar.broker.service.ResendRequestTest
+  [INFO] Running org.apache.pulsar.broker.service.SubscribeDispatchLimiterTest
+  [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 5.97 s - in org.apache.pulsar.broker.service.nonpersistent.NonPersistentStickyKeyDispatcherMultipleConsumersTest
+  [INFO] Running org.apache.pulsar.broker.service.PrecisPublishLimiterTest
+  [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 15.308 s - in org.apache.pulsar.broker.service.SubscribeDispatchLimiterTest
+  [INFO] Running org.apache.pulsar.broker.service.PartitionKeyTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.038 s - in org.apache.pulsar.broker.service.PartitionKeyTest
+  [INFO] Running org.apache.pulsar.broker.service.BrokerServiceBundlesCacheInvalidationTest
+  [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 7.676 s - in org.apache.pulsar.broker.service.BrokerServiceBundlesCacheInvalidationTest
+  [INFO] Running org.apache.pulsar.broker.service.EntryBatchIndexesAcksTest
+  [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.055 s - in org.apache.pulsar.broker.service.EntryBatchIndexesAcksTest
+  [INFO] Running org.apache.pulsar.broker.service.BrokerBookieIsolationTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.042 s - in org.apache.pulsar.broker.service.BrokerBookieIsolationTest
+  [INFO] Running org.apache.pulsar.broker.service.TopicListWatcherTest
+  [INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.249 s - in org.apache.pulsar.broker.service.TopicListWatcherTest
+  [INFO] Running org.apache.pulsar.broker.service.PersistentQueueE2ETest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.068 s - in org.apache.pulsar.broker.service.PersistentQueueE2ETest
+  [INFO] Running org.apache.pulsar.broker.service.ConsumerTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.056 s - in org.apache.pulsar.broker.service.ConsumerTest
+  [INFO] Running org.apache.pulsar.broker.service.HashRangeAutoSplitStickyKeyConsumerSelectorTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.034 s - in org.apache.pulsar.broker.service.HashRangeAutoSplitStickyKeyConsumerSelectorTest
+  [INFO] Running org.apache.pulsar.broker.service.GracefulExecutorServicesShutdownTest
+  [INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.126 s - in org.apache.pulsar.broker.service.GracefulExecutorServicesShutdownTest
+  [INFO] Running org.apache.pulsar.broker.service.DistributedIdGeneratorTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.032 s - in org.apache.pulsar.broker.service.DistributedIdGeneratorTest
+  [INFO] Running org.apache.pulsar.broker.service.TransactionMetadataStoreServiceTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.088 s - in org.apache.pulsar.broker.service.TransactionMetadataStoreServiceTest
+  [INFO] Running org.apache.pulsar.broker.service.BrokerServiceThrottlingTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.075 s - in org.apache.pulsar.broker.service.BrokerServiceThrottlingTest
+  [INFO] Running org.apache.pulsar.broker.service.SubscriptionSeekTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.05 s - in org.apache.pulsar.broker.service.SubscriptionSeekTest
+  [INFO] Running org.apache.pulsar.broker.service.AbstractBaseDispatcherTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.036 s - in org.apache.pulsar.broker.service.AbstractBaseDispatcherTest
+  [INFO] Running org.apache.pulsar.broker.service.persistent.PersistentTopicTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.076 s - in org.apache.pulsar.broker.service.persistent.PersistentTopicTest
+  [INFO] Running org.apache.pulsar.broker.service.persistent.PersistentTopicStreamingDispatcherE2ETest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.096 s - in org.apache.pulsar.broker.service.persistent.PersistentTopicStreamingDispatcherE2ETest
+  [INFO] Running org.apache.pulsar.broker.service.persistent.PersistentDispatcherFailoverConsumerStreamingDispatcherTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.077 s - in org.apache.pulsar.broker.service.persistent.PersistentDispatcherFailoverConsumerStreamingDispatcherTest
+[INFO] Running org.apache.pulsar.broker.service.persistent.DelayedDeliveryTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.135 s - in org.apache.pulsar.broker.service.persistent.DelayedDeliveryTest
+  [INFO] Running org.apache.pulsar.broker.service.persistent.ReplicatedSubscriptionsSnapshotBuilderTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.045 s - in org.apache.pulsar.broker.service.persistent.ReplicatedSubscriptionsSnapshotBuilderTest
+  [INFO] Running org.apache.pulsar.broker.service.persistent.MessageRedeliveryControllerTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.045 s - in org.apache.pulsar.broker.service.persistent.MessageRedeliveryControllerTest
+  [INFO] Running org.apache.pulsar.broker.service.persistent.ReplicatedSubscriptionSnapshotCacheTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.029 s - in org.apache.pulsar.broker.service.persistent.ReplicatedSubscriptionSnapshotCacheTest
+  [INFO] Running org.apache.pulsar.broker.service.persistent.ChecksumTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.094 s - in org.apache.pulsar.broker.service.persistent.ChecksumTest
+  [INFO] Running org.apache.pulsar.broker.service.persistent.PersistentFailoverStreamingDispatcherE2ETest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.111 s - in org.apache.pulsar.broker.service.persistent.PersistentFailoverStreamingDispatcherE2ETest
+  [INFO] Running org.apache.pulsar.broker.service.persistent.SimpleProducerConsumerTestStreamingDispatcherTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.246 s - in org.apache.pulsar.broker.service.persistent.SimpleProducerConsumerTestStreamingDispatcherTest
+  [INFO] Running org.apache.pulsar.broker.service.persistent.MessageDuplicationTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.03 s - in org.apache.pulsar.broker.service.persistent.MessageDuplicationTest
+  [INFO] Running org.apache.pulsar.broker.service.persistent.PersistentTopicStreamingDispatcherTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.073 s - in org.apache.pulsar.broker.service.persistent.PersistentTopicStreamingDispatcherTest
+  [INFO] Running org.apache.pulsar.broker.service.persistent.PersistentSubscriptionMessageDispatchStreamingDispatcherThrottlingTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.039 s - in org.apache.pulsar.broker.service.persistent.PersistentSubscriptionMessageDispatchStreamingDispatcherThrottlingTest
+  [INFO] Running org.apache.pulsar.broker.service.persistent.PersistentStickyKeyDispatcherMultipleConsumersTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.015 s - in org.apache.pulsar.broker.service.persistent.PersistentStickyKeyDispatcherMultipleConsumersTest
+  [INFO] Running org.apache.pulsar.broker.service.persistent.ReplicatedSubscriptionConfigTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.046 s - in org.apache.pulsar.broker.service.persistent.ReplicatedSubscriptionConfigTest
+  [INFO] Running org.apache.pulsar.broker.service.persistent.PersistentStreamingDispatcherBlockConsumerTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.037 s - in org.apache.pulsar.broker.service.persistent.PersistentStreamingDispatcherBlockConsumerTest
+  [INFO] Running org.apache.pulsar.broker.service.persistent.TopicDuplicationTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.03 s - in org.apache.pulsar.broker.service.persistent.TopicDuplicationTest
+  [INFO] Running org.apache.pulsar.broker.service.persistent.PersistentSubscriptionTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.011 s - in org.apache.pulsar.broker.service.persistent.PersistentSubscriptionTest
+  [INFO] Running org.apache.pulsar.broker.service.ReplicatorRateLimiterTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.029 s - in org.apache.pulsar.broker.service.ReplicatorRateLimiterTest
+  [INFO] Running org.apache.pulsar.broker.service.SharedConsumerAssignorTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.025 s - in org.apache.pulsar.broker.service.SharedConsumerAssignorTest
+  [INFO] Running org.apache.pulsar.broker.service.RackAwareTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.021 s - in org.apache.pulsar.broker.service.RackAwareTest
+  [INFO] Running org.apache.pulsar.broker.service.BrokerDispatchRateLimiterTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.023 s - in org.apache.pulsar.broker.service.BrokerDispatchRateLimiterTest
+  [INFO] Running org.apache.pulsar.broker.service.ConsumedLedgersTrimTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.022 s - in org.apache.pulsar.broker.service.ConsumedLedgersTrimTest
+  [INFO] Running org.apache.pulsar.broker.service.BusyWaitServiceTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.023 s - in org.apache.pulsar.broker.service.BusyWaitServiceTest
+  [INFO] Running org.apache.pulsar.broker.service.KeyValueTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.052 s - in org.apache.pulsar.broker.service.KeyValueTest
+  [INFO] Running org.apache.pulsar.broker.service.NonPersistentTopicE2ETest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.057 s - in org.apache.pulsar.broker.service.NonPersistentTopicE2ETest
+  [INFO] Running org.apache.pulsar.broker.service.MessageTTLTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.069 s - in org.apache.pulsar.broker.service.MessageTTLTest
+  [INFO] Running org.apache.pulsar.broker.service.TopicListServiceTest
+  [INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.675 s - in org.apache.pulsar.broker.service.TopicListServiceTest
+  [INFO] Running org.apache.pulsar.broker.service.AdvertisedAddressTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.017 s - in org.apache.pulsar.broker.service.AdvertisedAddressTest
+  [INFO] Running org.apache.pulsar.broker.service.streamingdispatch.StreamingEntryReaderTests
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.016 s - in org.apache.pulsar.broker.service.streamingdispatch.StreamingEntryReaderTests
+[INFO] Running org.apache.pulsar.broker.service.PersistentDispatcherFailoverConsumerTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.011 s - in org.apache.pulsar.broker.service.PersistentDispatcherFailoverConsumerTest
+  [INFO] Running org.apache.pulsar.broker.EndToEndMetadataTest
+  [INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 71.526 s - in org.apache.pulsar.broker.admin.TopicsAuthTest
+  [INFO] Running org.apache.pulsar.broker.loadbalance.ModularLoadManagerImplTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.072 s - in org.apache.pulsar.broker.loadbalance.ModularLoadManagerImplTest
+  [INFO] Running org.apache.pulsar.broker.loadbalance.LeaderElectionServiceTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.072 s - in org.apache.pulsar.broker.loadbalance.LeaderElectionServiceTest
+  [INFO] Running org.apache.pulsar.broker.loadbalance.SimpleBrokerStartTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.061 s - in org.apache.pulsar.broker.loadbalance.SimpleBrokerStartTest
+  [INFO] Running org.apache.pulsar.broker.loadbalance.LoadReportNetworkLimitTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.09 s - in org.apache.pulsar.broker.loadbalance.LoadReportNetworkLimitTest
+  [INFO] Running org.apache.pulsar.broker.loadbalance.ModularLoadManagerStrategyTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.043 s - in org.apache.pulsar.broker.loadbalance.ModularLoadManagerStrategyTest
+  [INFO] Running org.apache.pulsar.broker.loadbalance.impl.BundleSplitterTaskTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.058 s - in org.apache.pulsar.broker.loadbalance.impl.BundleSplitterTaskTest
+  [INFO] Running org.apache.pulsar.broker.loadbalance.impl.UniformLoadShedderTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.035 s - in org.apache.pulsar.broker.loadbalance.impl.UniformLoadShedderTest
+  [INFO] Running org.apache.pulsar.broker.loadbalance.impl.OverloadShedderTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.065 s - in org.apache.pulsar.broker.loadbalance.impl.OverloadShedderTest
+  [INFO] Running org.apache.pulsar.broker.loadbalance.impl.LoadManagerSharedTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.041 s - in org.apache.pulsar.broker.loadbalance.impl.LoadManagerSharedTest
+  [INFO] Running org.apache.pulsar.broker.loadbalance.impl.ThresholdShedderTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.045 s - in org.apache.pulsar.broker.loadbalance.impl.ThresholdShedderTest
+  [INFO] Running org.apache.pulsar.broker.loadbalance.LoadBalancerTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.036 s - in org.apache.pulsar.broker.loadbalance.LoadBalancerTest
+  [INFO] Running org.apache.pulsar.broker.loadbalance.AntiAffinityNamespaceGroupTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.035 s - in org.apache.pulsar.broker.loadbalance.AntiAffinityNamespaceGroupTest
+  [INFO] Running org.apache.pulsar.broker.loadbalance.SimpleLoadManagerImplTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.033 s - in org.apache.pulsar.broker.loadbalance.SimpleLoadManagerImplTest
+  [INFO] Running org.apache.pulsar.broker.loadbalance.AdvertisedListenersTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.056 s - in org.apache.pulsar.broker.loadbalance.AdvertisedListenersTest
+  [INFO] Running org.apache.pulsar.broker.loadbalance.BrokerVersionFilterTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.018 s - in org.apache.pulsar.broker.loadbalance.BrokerVersionFilterTest
+  [INFO] Running org.apache.pulsar.broker.loadbalance.MultiBrokerLeaderElectionTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.129 s - in org.apache.pulsar.broker.loadbalance.MultiBrokerLeaderElectionTest
+  [INFO] Running org.apache.pulsar.broker.tools.BrokerToolTest
+  [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.225 s - in org.apache.pulsar.broker.tools.BrokerToolTest
+  [INFO] Running org.apache.pulsar.broker.SLAMonitoringTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.06 s - in org.apache.pulsar.broker.SLAMonitoringTest
+  [INFO] Running org.apache.pulsar.broker.protocol.SimpleProtocolHandlerSharedThreadPoolTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.068 s - in org.apache.pulsar.broker.protocol.SimpleProtocolHandlerSharedThreadPoolTest
+  [INFO] Running org.apache.pulsar.broker.protocol.ProtocolHandlerWithClassLoaderTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.079 s - in org.apache.pulsar.broker.protocol.ProtocolHandlerWithClassLoaderTest
+  [INFO] Running org.apache.pulsar.broker.protocol.SimpleProtocolHandlerSeparateThreadPoolTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.068 s - in org.apache.pulsar.broker.protocol.SimpleProtocolHandlerSeparateThreadPoolTest
+  [INFO] Running org.apache.pulsar.broker.protocol.ProtocolHandlerUtilsTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.058 s - in org.apache.pulsar.broker.protocol.ProtocolHandlerUtilsTest
+  [INFO] Running org.apache.pulsar.broker.protocol.ProtocolHandlersTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.087 s - in org.apache.pulsar.broker.protocol.ProtocolHandlersTest
+  [INFO] Running org.apache.pulsar.broker.cache.BundlesQuotasTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.046 s - in org.apache.pulsar.broker.cache.BundlesQuotasTest
+  [INFO] Running org.apache.pulsar.broker.resourcegroup.ResourceGroupRateLimiterTest
+  [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 9.782 s - in org.apache.pulsar.broker.resourcegroup.ResourceGroupRateLimiterTest
+  [INFO] Running org.apache.pulsar.broker.resourcegroup.ResourceQuotaCalculatorImplTest
+  [INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 48.786 s - in org.apache.pulsar.broker.service.PrecisPublishLimiterTest
+  [INFO] Running org.apache.pulsar.broker.resourcegroup.ResourceGroupUsageAggregationTest
+  [INFO] Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 4.3 s - in org.apache.pulsar.broker.resourcegroup.ResourceQuotaCalculatorImplTest
+[INFO] Running org.apache.pulsar.broker.resourcegroup.RGUsageMTAggrWaitForAllMsgsTest
+  [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 9.057 s - in org.apache.pulsar.broker.resourcegroup.ResourceGroupUsageAggregationTest
+  [INFO] Running org.apache.pulsar.broker.resourcegroup.ResourceGroupServiceTest
+  [INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 37.299 s - in org.apache.pulsar.broker.EndToEndMetadataTest
+  [INFO] Running org.apache.pulsar.broker.resourcegroup.ResourceUsageTransportManagerTest
+  [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 8.617 s - in org.apache.pulsar.broker.resourcegroup.ResourceUsageTransportManagerTest
+  [INFO] Running org.apache.pulsar.broker.resourcegroup.ResourceGroupConfigListenerTest
+  [INFO] Tests run: 14, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 110.713 s - in org.apache.pulsar.broker.admin.TopicsTest
+  [INFO] Running org.apache.pulsar.broker.auth.AuthorizationWithAuthDataTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.158 s - in org.apache.pulsar.broker.auth.AuthorizationWithAuthDataTest
+  [INFO] Running org.apache.pulsar.broker.auth.AuthenticationServiceTest
+  [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.064 s - in org.apache.pulsar.broker.auth.AuthenticationServiceTest
+  [INFO] Running org.apache.pulsar.broker.auth.AuthorizationTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.07 s - in org.apache.pulsar.broker.auth.AuthorizationTest
+  [INFO] Running org.apache.pulsar.broker.auth.AuthLogsTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.042 s - in org.apache.pulsar.broker.auth.AuthLogsTest
+  [INFO] Running org.apache.pulsar.broker.auth.MockedPulsarServiceBaseTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.033 s - in org.apache.pulsar.broker.auth.MockedPulsarServiceBaseTest
+  [INFO] Running org.apache.pulsar.broker.auth.InvalidBrokerConfigForAuthorizationTest
+  [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.101 s - in org.apache.pulsar.broker.auth.InvalidBrokerConfigForAuthorizationTest
+  [INFO] Running org.apache.pulsar.broker.PulsarServiceTest
+  [INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 28.011 s - in org.apache.pulsar.broker.resourcegroup.RGUsageMTAggrWaitForAllMsgsTest
+  [INFO] Running org.apache.pulsar.broker.BrokerMessageDeduplicationTest
+  [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.579 s - in org.apache.pulsar.broker.BrokerMessageDeduplicationTest
+  [INFO] Running org.apache.pulsar.broker.lookup.http.HttpTopicLookupv2Test
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.048 s - in org.apache.pulsar.broker.lookup.http.HttpTopicLookupv2Test
+  [INFO] Running org.apache.pulsar.broker.lookup.http.v2.TopicLookupTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.268 s - in org.apache.pulsar.broker.lookup.http.v2.TopicLookupTest
+  [INFO] Running org.apache.pulsar.broker.stats.TimeWindowTest
+  [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.055 s - in org.apache.pulsar.broker.stats.TimeWindowTest
+  [INFO] Running org.apache.pulsar.broker.stats.PrometheusMetricsTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.062 s - in org.apache.pulsar.broker.stats.PrometheusMetricsTest
+  [INFO] Running org.apache.pulsar.broker.stats.ConsumerStatsTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.035 s - in org.apache.pulsar.broker.stats.ConsumerStatsTest
+  [INFO] Running org.apache.pulsar.broker.stats.SubscriptionStatsTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.032 s - in org.apache.pulsar.broker.stats.SubscriptionStatsTest
+  [INFO] Running org.apache.pulsar.broker.stats.LedgerOffloaderMetricsTest
+  [INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 20.815 s - in org.apache.pulsar.broker.resourcegroup.ResourceGroupConfigListenerTest
+  [INFO] Running org.apache.pulsar.broker.stats.ManagedCursorMetricsTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.048 s - in org.apache.pulsar.broker.stats.ManagedCursorMetricsTest
+  [INFO] Running org.apache.pulsar.broker.stats.TransactionMetricsTest
+  [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 9.867 s - in org.apache.pulsar.broker.stats.LedgerOffloaderMetricsTest
+  [INFO] Running org.apache.pulsar.broker.stats.ManagedLedgerMetricsTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.079 s - in org.apache.pulsar.broker.stats.ManagedLedgerMetricsTest
+  [INFO] Running org.apache.pulsar.broker.stats.prometheus.AggregatedNamespaceStatsTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.051 s - in org.apache.pulsar.broker.stats.prometheus.AggregatedNamespaceStatsTest
+  [INFO] Running org.apache.pulsar.broker.stats.prometheus.PrometheusMetricStreamsTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.045 s - in org.apache.pulsar.broker.stats.prometheus.PrometheusMetricStreamsTest
+  [INFO] Running org.apache.pulsar.broker.stats.DimensionStatsTest
+  [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.114 s - in org.apache.pulsar.broker.stats.DimensionStatsTest
+  [INFO] Running org.apache.pulsar.broker.stats.BookieClientsStatsGeneratorTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.062 s - in org.apache.pulsar.broker.stats.BookieClientsStatsGeneratorTest
+  [INFO] Running org.apache.pulsar.broker.stats.MetricsAuthenticationTest
+  [INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 17.585 s - in org.apache.pulsar.broker.PulsarServiceTest
+  [INFO] Running org.apache.pulsar.broker.transaction.coordinator.TransactionCoordinatorConfigTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.117 s - in org.apache.pulsar.broker.transaction.coordinator.TransactionCoordinatorConfigTest
+[INFO] Running org.apache.pulsar.broker.transaction.coordinator.TransactionMetaStoreAssignmentTest
+  [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 10.657 s - in org.apache.pulsar.broker.stats.MetricsAuthenticationTest
+  [INFO] Running org.apache.pulsar.broker.transaction.coordinator.TransactionCoordinatorClientTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.03 s - in org.apache.pulsar.broker.transaction.coordinator.TransactionCoordinatorClientTest
+  [INFO] Running org.apache.pulsar.broker.transaction.buffer.TransactionBufferCloseTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.039 s - in org.apache.pulsar.broker.transaction.buffer.TransactionBufferCloseTest
+  [INFO] Running org.apache.pulsar.broker.transaction.buffer.TopicTransactionBufferTest
+  [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 9.607 s - in org.apache.pulsar.broker.transaction.buffer.TopicTransactionBufferTest
+  [INFO] Running org.apache.pulsar.broker.transaction.buffer.TransactionBufferClientTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.051 s - in org.apache.pulsar.broker.transaction.buffer.TransactionBufferClientTest
+  [INFO] Running org.apache.pulsar.broker.transaction.buffer.InMemTransactionBufferReaderTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.045 s - in org.apache.pulsar.broker.transaction.buffer.InMemTransactionBufferReaderTest
+  [INFO] Running org.apache.pulsar.broker.transaction.buffer.TransactionBufferHandlerImplTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.044 s - in org.apache.pulsar.broker.transaction.buffer.TransactionBufferHandlerImplTest
+  [INFO] Running org.apache.pulsar.broker.transaction.buffer.TransactionEntryImplTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.031 s - in org.apache.pulsar.broker.transaction.buffer.TransactionEntryImplTest
+  [INFO] Running org.apache.pulsar.broker.transaction.buffer.TransactionLowWaterMarkTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.055 s - in org.apache.pulsar.broker.transaction.buffer.TransactionLowWaterMarkTest
+  [INFO] Running org.apache.pulsar.broker.transaction.buffer.TransactionStablePositionTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.051 s - in org.apache.pulsar.broker.transaction.buffer.TransactionStablePositionTest
+  [INFO] Running org.apache.pulsar.broker.transaction.buffer.TransactionBufferTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.074 s - in org.apache.pulsar.broker.transaction.buffer.TransactionBufferTest
+  [INFO] Running org.apache.pulsar.broker.transaction.TransactionProduceTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.052 s - in org.apache.pulsar.broker.transaction.TransactionProduceTest
+  [INFO] Running org.apache.pulsar.broker.transaction.TransactionTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.061 s - in org.apache.pulsar.broker.transaction.TransactionTest
+  [INFO] Running org.apache.pulsar.broker.transaction.pendingack.PendingAckInMemoryDeleteTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.044 s - in org.apache.pulsar.broker.transaction.pendingack.PendingAckInMemoryDeleteTest
+  [INFO] Running org.apache.pulsar.broker.transaction.pendingack.impl.MLPendingAckStoreTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.035 s - in org.apache.pulsar.broker.transaction.pendingack.impl.MLPendingAckStoreTest
+  [INFO] Running org.apache.pulsar.broker.transaction.pendingack.PendingAckMetadataTest
+  [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.165 s - in org.apache.pulsar.broker.transaction.pendingack.PendingAckMetadataTest
+  [INFO] Running org.apache.pulsar.broker.transaction.pendingack.PendingAckPersistentTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.044 s - in org.apache.pulsar.broker.transaction.pendingack.PendingAckPersistentTest
+  [INFO] Running org.apache.pulsar.broker.transaction.recover.TransactionRecoverTrackerTest
+  [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.677 s - in org.apache.pulsar.broker.transaction.recover.TransactionRecoverTrackerTest
+  [INFO] Running org.apache.pulsar.broker.transaction.TransactionConsumeTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.064 s - in org.apache.pulsar.broker.transaction.TransactionConsumeTest
+  [INFO] Running org.apache.pulsar.broker.transaction.TopicTransactionBufferRecoverTest
+  [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 64.02 s - in org.apache.pulsar.broker.resourcegroup.ResourceGroupServiceTest
+  [INFO] Running org.apache.pulsar.broker.systopic.NamespaceEventsSystemTopicServiceTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.067 s - in org.apache.pulsar.broker.systopic.NamespaceEventsSystemTopicServiceTest
+  [INFO] Running org.apache.pulsar.broker.systopic.PartitionedSystemTopicTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.041 s - in org.apache.pulsar.broker.systopic.PartitionedSystemTopicTest
+  [INFO] Running org.apache.pulsar.broker.zookeeper.ClusterMetadataSetupTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.032 s - in org.apache.pulsar.broker.zookeeper.ClusterMetadataSetupTest
+  [INFO] Running org.apache.pulsar.broker.zookeeper.ZooKeeperSessionExpireRecoveryTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.016 s - in org.apache.pulsar.broker.zookeeper.ZooKeeperSessionExpireRecoveryTest
+  [INFO] Running org.apache.pulsar.broker.zookeeper.MultiBrokerMetadataConsistencyTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.045 s - in org.apache.pulsar.broker.zookeeper.MultiBrokerMetadataConsistencyTest
+  [INFO] Running org.apache.pulsar.broker.delayed.InMemoryDeliveryTrackerTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.036 s - in org.apache.pulsar.broker.delayed.InMemoryDeliveryTrackerTest
+  [INFO] Running org.apache.pulsar.schema.PartitionedTopicSchemaTest
+  [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 32.784 s - in org.apache.pulsar.broker.transaction.coordinator.TransactionMetaStoreAssignmentTest
+[INFO] Running org.apache.pulsar.schema.SchemaTest
+  [INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 36.521 s - in org.apache.pulsar.broker.stats.TransactionMetricsTest
+  [INFO] Running org.apache.pulsar.schema.compatibility.SchemaCompatibilityCheckTest
+  [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 9.019 s - in org.apache.pulsar.schema.PartitionedTopicSchemaTest
+  [INFO] Running org.apache.pulsar.schema.compatibility.SchemaTypeCompatibilityCheckOnTopicLevelTest
+  [INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 34.947 s - in org.apache.pulsar.schema.compatibility.SchemaTypeCompatibilityCheckOnTopicLevelTest
+  [INFO] Running org.apache.pulsar.schema.compatibility.SchemaTypeCompatibilityCheckTest
+  [INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 76.535 s - in org.apache.pulsar.broker.transaction.TopicTransactionBufferRecoverTest
+  [INFO] Running org.apache.pulsar.PulsarTransactionCoordinatorMetadataSetupTest
+  [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.048 s - in org.apache.pulsar.PulsarTransactionCoordinatorMetadataSetupTest
+  [INFO] Running org.apache.pulsar.PulsarInitialNamespaceSetupTest
+  [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.054 s - in org.apache.pulsar.PulsarInitialNamespaceSetupTest
+  [INFO] Running org.apache.pulsar.functions.worker.PulsarFunctionPublishTest
+  [INFO] Tests run: 10, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 53.578 s - in org.apache.pulsar.schema.compatibility.SchemaTypeCompatibilityCheckTest
+  [INFO] Running org.apache.pulsar.functions.worker.PulsarFunctionMetadataStoreTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.061 s - in org.apache.pulsar.functions.worker.PulsarFunctionMetadataStoreTest
+  [INFO] Running org.apache.pulsar.functions.worker.PulsarFunctionTlsTest
+  [INFO] Tests run: 21, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 132.439 s - in org.apache.pulsar.schema.SchemaTest
+  [INFO] Running org.apache.pulsar.functions.worker.PulsarWorkerAssignmentTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.028 s - in org.apache.pulsar.functions.worker.PulsarWorkerAssignmentTest
+  [INFO] Running org.apache.pulsar.functions.worker.PulsarFunctionLocalRunTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.091 s - in org.apache.pulsar.functions.worker.PulsarFunctionLocalRunTest
+  [INFO] Running org.apache.pulsar.functions.worker.PulsarFunctionE2ESecurityTest
+  [INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 72.512 s - in org.apache.pulsar.functions.worker.PulsarFunctionPublishTest
+  [INFO] Running org.apache.pulsar.io.SinkForTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.015 s - in org.apache.pulsar.io.SinkForTest
+  [INFO] Running org.apache.pulsar.io.PulsarSourceE2ETest
+  [INFO] Tests run: 30, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 162.322 s - in org.apache.pulsar.schema.compatibility.SchemaCompatibilityCheckTest
+  [INFO] Running org.apache.pulsar.io.PulsarBatchSourceE2ETest
+  [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 33.028 s - in org.apache.pulsar.functions.worker.PulsarFunctionE2ESecurityTest
+  [INFO] Running org.apache.pulsar.io.PulsarFunctionE2ETest
+  [INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 60.781 s - in org.apache.pulsar.io.PulsarSourceE2ETest
+  [INFO] Running org.apache.pulsar.io.PulsarFunctionTlsTest
+  [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 9.289 s - in org.apache.pulsar.io.PulsarFunctionTlsTest
+  [INFO] Running org.apache.pulsar.io.PulsarFunctionAdminTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.012 s - in org.apache.pulsar.io.PulsarFunctionAdminTest
+  [INFO] Running org.apache.pulsar.io.PulsarSinkE2ETest
+  [INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 69.336 s - in org.apache.pulsar.io.PulsarBatchSourceE2ETest
+  [INFO] Running org.apache.pulsar.io.AbstractPulsarE2ETest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.025 s - in org.apache.pulsar.io.AbstractPulsarE2ETest
+  [INFO] Running org.apache.pulsar.PulsarVersionStarterTest
+  [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.117 s - in org.apache.pulsar.PulsarVersionStarterTest
+  [INFO] Running org.apache.pulsar.stats.client.PulsarBrokerStatsClientTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.043 s - in org.apache.pulsar.stats.client.PulsarBrokerStatsClientTest
+  [INFO] Running org.apache.pulsar.PulsarClusterMetadataTeardownTest
+  [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.032 s - in org.apache.pulsar.PulsarClusterMetadataTeardownTest
+  [INFO] Running org.apache.pulsar.utils.CmdTest
+  [INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.096 s - in org.apache.pulsar.utils.CmdTest
+  [INFO] Running org.apache.pulsar.utils.LogIndexLagBackOffTest
+  [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.051 s - in org.apache.pulsar.utils.LogIndexLagBackOffTest
+  [INFO] Running org.apache.pulsar.utils.auth.tokens.TokensCliUtilsTest
+  [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.055 s - in org.apache.pulsar.utils.auth.tokens.TokensCliUtilsTest
+  [INFO] Running org.apache.pulsar.utils.SimpleTextOutputStreamTest
+  [INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.052 s - in org.apache.pulsar.utils.SimpleTextOutputStreamTest
+  [INFO] Running org.apache.pulsar.utils.StatsOutputStreamTest
+  [INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.068 s - in org.apache.pulsar.utils.StatsOutputStreamTest
+[INFO] Running org.apache.pulsar.PulsarBrokerStarterTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.026 s - in org.apache.pulsar.PulsarBrokerStarterTest
+  [INFO] Running org.apache.pulsar.websocket.proxy.ProxyEncryptionPublishConsumeTest
+  [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 7.036 s - in org.apache.pulsar.websocket.proxy.ProxyEncryptionPublishConsumeTest
+  [INFO] Running org.apache.pulsar.websocket.proxy.ProxyAuthorizationTest
+  [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 4.636 s - in org.apache.pulsar.websocket.proxy.ProxyAuthorizationTest
+  [INFO] Running org.apache.pulsar.websocket.proxy.ProxyPublishConsumeTest
+  [INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 95.841 s - in org.apache.pulsar.io.PulsarSinkE2ETest
+  [INFO] Running org.apache.pulsar.websocket.proxy.ProxyPublishConsumeTlsTest
+  [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 8.509 s - in org.apache.pulsar.websocket.proxy.ProxyPublishConsumeTlsTest
+  [INFO] Running org.apache.pulsar.websocket.proxy.ProxyAuthenticationTest
+  [INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 26.733 s - in org.apache.pulsar.websocket.proxy.ProxyAuthenticationTest
+  [INFO] Running org.apache.pulsar.websocket.proxy.ProxyPublishConsumeWithoutZKTest
+  [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 5.446 s - in org.apache.pulsar.websocket.proxy.ProxyPublishConsumeWithoutZKTest
+  [INFO] Running org.apache.pulsar.websocket.proxy.ProxyConfigurationTest
+  [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 10.597 s - in org.apache.pulsar.websocket.proxy.ProxyConfigurationTest
+  [INFO] Running org.apache.pulsar.websocket.proxy.v1.V1_ProxyAuthenticationTest
+  [INFO] Tests run: 15, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 210.317 s - in org.apache.pulsar.io.PulsarFunctionE2ETest
+  [INFO] Running org.apache.pulsar.PulsarStandaloneTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.025 s - in org.apache.pulsar.PulsarStandaloneTest
+  [INFO] Running org.apache.pulsar.zookeeper.ZookeeperServerTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.022 s - in org.apache.pulsar.zookeeper.ZookeeperServerTest
+  [INFO] Running org.apache.pulsar.zookeeper.LocalBookkeeperEnsembleTest
+  [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.435 s - in org.apache.pulsar.zookeeper.LocalBookkeeperEnsembleTest
+  [INFO] Running org.apache.pulsar.client.processor.MessagePayloadProcessorTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.017 s - in org.apache.pulsar.client.processor.MessagePayloadProcessorTest
+  [INFO] Running org.apache.pulsar.client.impl.AutoCloseUselessClientConMultiTopicTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.017 s - in org.apache.pulsar.client.impl.AutoCloseUselessClientConMultiTopicTest
+  [INFO] Running org.apache.pulsar.client.impl.RetryUtilTest
+  [INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 26.34 s - in org.apache.pulsar.websocket.proxy.v1.V1_ProxyAuthenticationTest
+  [INFO] Running org.apache.pulsar.client.impl.ConnectionPoolTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.017 s - in org.apache.pulsar.client.impl.ConnectionPoolTest
+  [INFO] Running org.apache.pulsar.client.impl.PatternTopicsConsumerImplTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.011 s - in org.apache.pulsar.client.impl.PatternTopicsConsumerImplTest
+  [INFO] Running org.apache.pulsar.client.impl.AutoScaledReceiverQueueSizeTest
+  [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 4.762 s - in org.apache.pulsar.client.impl.RetryUtilTest
+  [INFO] Running org.apache.pulsar.client.impl.UnAcknowledgedMessagesTimeoutTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.018 s - in org.apache.pulsar.client.impl.UnAcknowledgedMessagesTimeoutTest
+  [INFO] Running org.apache.pulsar.client.impl.ClientCnxTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.017 s - in org.apache.pulsar.client.impl.ClientCnxTest
+  [INFO] Running org.apache.pulsar.client.impl.ProducerCloseTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.016 s - in org.apache.pulsar.client.impl.ProducerCloseTest
+  [INFO] Running org.apache.pulsar.client.impl.PatternTopicsConsumerImplAuthTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.025 s - in org.apache.pulsar.client.impl.PatternTopicsConsumerImplAuthTest
+  [INFO] Running org.apache.pulsar.client.impl.TransactionEndToEndTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.024 s - in org.apache.pulsar.client.impl.TransactionEndToEndTest
+  [INFO] Running org.apache.pulsar.client.impl.PulsarMultiHostClientTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.026 s - in org.apache.pulsar.client.impl.PulsarMultiHostClientTest
+  [INFO] Running org.apache.pulsar.client.impl.BrokerClientIntegrationTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.036 s - in org.apache.pulsar.client.impl.BrokerClientIntegrationTest
+[INFO] Running org.apache.pulsar.client.impl.AutoCloseUselessClientConTXTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.019 s - in org.apache.pulsar.client.impl.AutoCloseUselessClientConTXTest
+  [INFO] Running org.apache.pulsar.client.impl.ConsumerMemoryLimitTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.022 s - in org.apache.pulsar.client.impl.ConsumerMemoryLimitTest
+  [INFO] Running org.apache.pulsar.client.impl.MultiTopicsReaderTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.026 s - in org.apache.pulsar.client.impl.MultiTopicsReaderTest
+  [INFO] Running org.apache.pulsar.client.impl.RawReaderTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.019 s - in org.apache.pulsar.client.impl.RawReaderTest
+  [INFO] Running org.apache.pulsar.client.impl.TopicsConsumerImplTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.021 s - in org.apache.pulsar.client.impl.TopicsConsumerImplTest
+  [INFO] Running org.apache.pulsar.client.impl.BatchMessageIndexAckTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.018 s - in org.apache.pulsar.client.impl.BatchMessageIndexAckTest
+  [INFO] Running org.apache.pulsar.client.impl.DynamicReceiverQueueSizeTest
+  [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.459 s - in org.apache.pulsar.client.impl.DynamicReceiverQueueSizeTest
+  [INFO] Running org.apache.pulsar.client.impl.TopicFromMessageTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.031 s - in org.apache.pulsar.client.impl.TopicFromMessageTest
+  [INFO] Running org.apache.pulsar.client.impl.NegativeAcksTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.028 s - in org.apache.pulsar.client.impl.NegativeAcksTest
+  [INFO] Running org.apache.pulsar.client.impl.MessageParserTest
+  [INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 5.173 s - in org.apache.pulsar.client.impl.AutoScaledReceiverQueueSizeTest
+  [INFO] Running org.apache.pulsar.client.impl.TableViewTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.028 s - in org.apache.pulsar.client.impl.TableViewTest
+  [INFO] Running org.apache.pulsar.client.impl.ConsumeBaseExceptionTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.034 s - in org.apache.pulsar.client.impl.ConsumeBaseExceptionTest
+  [INFO] Running org.apache.pulsar.client.impl.TransactionClientConnectTest
+  [INFO] Tests run: 10, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 9.569 s - in org.apache.pulsar.client.impl.MessageParserTest
+  [INFO] Running org.apache.pulsar.client.impl.BatchMessageIndexAckDisableTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.018 s - in org.apache.pulsar.client.impl.BatchMessageIndexAckDisableTest
+  [INFO] Running org.apache.pulsar.client.impl.AutoCloseUselessClientConMultiPartTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.015 s - in org.apache.pulsar.client.impl.AutoCloseUselessClientConMultiPartTest
+  [INFO] Running org.apache.pulsar.client.impl.ConsumerUnsubscribeTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.01 s - in org.apache.pulsar.client.impl.ConsumerUnsubscribeTest
+  [INFO] Running org.apache.pulsar.client.impl.ConsumerConfigurationTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.014 s - in org.apache.pulsar.client.impl.ConsumerConfigurationTest
+  [INFO] Running org.apache.pulsar.client.impl.MessagePublishThrottlingTest
+  [INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 54.157 s - in org.apache.pulsar.client.impl.TransactionClientConnectTest
+  [INFO] Running org.apache.pulsar.client.impl.DispatchAccordingPermitsTests
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.019 s - in org.apache.pulsar.client.impl.DispatchAccordingPermitsTests
+  [INFO] Running org.apache.pulsar.client.impl.SequenceIdWithErrorTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.019 s - in org.apache.pulsar.client.impl.SequenceIdWithErrorTest
+  [INFO] Running org.apache.pulsar.client.impl.LookupRetryTest
+  [INFO] Tests run: 17, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 201.351 s - in org.apache.pulsar.websocket.proxy.ProxyPublishConsumeTest
+  [INFO] Running org.apache.pulsar.client.impl.SchemaDeleteTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.017 s - in org.apache.pulsar.client.impl.SchemaDeleteTest
+  [INFO] Running org.apache.pulsar.client.impl.ClientWithSocks5ProxyTest
+  [INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 78.713 s - in org.apache.pulsar.client.impl.MessagePublishThrottlingTest
+  [INFO] Running org.apache.pulsar.client.impl.ConsumerAckResponseTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.04 s - in org.apache.pulsar.client.impl.ConsumerAckResponseTest
+  [INFO] Running org.apache.pulsar.client.impl.PulsarClientConfigurationOverrideTest
+  [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.049 s - in org.apache.pulsar.client.impl.PulsarClientConfigurationOverrideTest
+  [INFO] Running org.apache.pulsar.client.impl.AutoCloseUselessClientConNoPartTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.059 s - in org.apache.pulsar.client.impl.AutoCloseUselessClientConNoPartTest
+  [INFO] Running org.apache.pulsar.client.impl.TopicDoesNotExistsTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.054 s - in org.apache.pulsar.client.impl.TopicDoesNotExistsTest
+  [INFO] Running org.apache.pulsar.client.impl.TransactionEndToEndWithoutBatchIndexAckTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.061 s - in org.apache.pulsar.client.impl.TransactionEndToEndWithoutBatchIndexAckTest
+[INFO] Running org.apache.pulsar.client.impl.KeyStoreTlsProducerConsumerTestWithAuthTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.052 s - in org.apache.pulsar.client.impl.KeyStoreTlsProducerConsumerTestWithAuthTest
+  [INFO] Running org.apache.pulsar.client.impl.ConsumerDedupPermitsUpdateTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.039 s - in org.apache.pulsar.client.impl.ConsumerDedupPermitsUpdateTest
+  [INFO] Running org.apache.pulsar.client.impl.AdminApiKeyStoreTlsAuthTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.045 s - in org.apache.pulsar.client.impl.AdminApiKeyStoreTlsAuthTest
+  [INFO] Running org.apache.pulsar.client.impl.BatchMessageIdImplSerializationTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.026 s - in org.apache.pulsar.client.impl.BatchMessageIdImplSerializationTest
+  [INFO] Running org.apache.pulsar.client.impl.PartialPartitionedProducerTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.027 s - in org.apache.pulsar.client.impl.PartialPartitionedProducerTest
+  [INFO] Running org.apache.pulsar.client.impl.PerMessageUnAcknowledgedRedeliveryTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.062 s - in org.apache.pulsar.client.impl.PerMessageUnAcknowledgedRedeliveryTest
+  [INFO] Running org.apache.pulsar.client.impl.CompactedOutBatchMessageTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.045 s - in org.apache.pulsar.client.impl.CompactedOutBatchMessageTest
+  [INFO] Running org.apache.pulsar.client.impl.ProducerSemaphoreTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.034 s - in org.apache.pulsar.client.impl.ProducerSemaphoreTest
+  [INFO] Running org.apache.pulsar.client.impl.ProducerMemoryLimitTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.043 s - in org.apache.pulsar.client.impl.ProducerMemoryLimitTest
+  [INFO] Running org.apache.pulsar.client.impl.TopicPublishThrottlingInitTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.024 s - in org.apache.pulsar.client.impl.TopicPublishThrottlingInitTest
+  [INFO] Running org.apache.pulsar.client.impl.ZeroQueueSizeTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.038 s - in org.apache.pulsar.client.impl.ZeroQueueSizeTest
+  [INFO] Running org.apache.pulsar.client.impl.MessageRedeliveryTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.047 s - in org.apache.pulsar.client.impl.MessageRedeliveryTest
+  [INFO] Running org.apache.pulsar.client.impl.KeyStoreTlsTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.017 s - in org.apache.pulsar.client.impl.KeyStoreTlsTest
+  [INFO] Running org.apache.pulsar.client.impl.ReaderTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.032 s - in org.apache.pulsar.client.impl.ReaderTest
+  [INFO] Running org.apache.pulsar.client.impl.KeyStoreTlsProducerConsumerTestWithoutAuthTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.028 s - in org.apache.pulsar.client.impl.KeyStoreTlsProducerConsumerTestWithoutAuthTest
+  [INFO] Running org.apache.pulsar.client.impl.MessageChecksumTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.028 s - in org.apache.pulsar.client.impl.MessageChecksumTest
+  [INFO] Running org.apache.pulsar.client.impl.MessageChunkingSharedTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.033 s - in org.apache.pulsar.client.impl.MessageChunkingSharedTest
+  [INFO] Running org.apache.pulsar.client.impl.ProduceWithMessageIdTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.02 s - in org.apache.pulsar.client.impl.ProduceWithMessageIdTest
+  [INFO] Running org.apache.pulsar.client.impl.RawMessageSerDeserTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.026 s - in org.apache.pulsar.client.impl.RawMessageSerDeserTest
+  [INFO] Running org.apache.pulsar.client.impl.MessageIdTest
+  [INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 33.297 s - in org.apache.pulsar.client.impl.ClientWithSocks5ProxyTest
+  [INFO] Running org.apache.pulsar.client.impl.MessageChunkingTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.044 s - in org.apache.pulsar.client.impl.MessageChunkingTest
+  [INFO] Running org.apache.pulsar.client.api.ClientErrorsTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.037 s - in org.apache.pulsar.client.api.ClientErrorsTest
+  [INFO] Running org.apache.pulsar.client.api.MutualAuthenticationTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.026 s - in org.apache.pulsar.client.api.MutualAuthenticationTest
+  [INFO] Running org.apache.pulsar.client.api.MultiTopicsConsumerTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.024 s - in org.apache.pulsar.client.api.MultiTopicsConsumerTest
+  [INFO] Running org.apache.pulsar.client.api.ConsumerRedeliveryTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.034 s - in org.apache.pulsar.client.api.ConsumerRedeliveryTest
+  [INFO] Running org.apache.pulsar.client.api.TokenExpirationProduceConsumerTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.091 s - in org.apache.pulsar.client.api.TokenExpirationProduceConsumerTest
+[INFO] Running org.apache.pulsar.client.api.ProducerQueueSizeTest
+  [INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 13.297 s - in org.apache.pulsar.client.impl.MessageIdTest
+  [INFO] Running org.apache.pulsar.client.api.ProducerCleanupTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.031 s - in org.apache.pulsar.client.api.ProducerCleanupTest
+  [INFO] Running org.apache.pulsar.client.api.SimpleTypedProducerConsumerTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.03 s - in org.apache.pulsar.client.api.SimpleTypedProducerConsumerTest
+  [INFO] Running org.apache.pulsar.client.api.SimpleSchemaTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.06 s - in org.apache.pulsar.client.api.SimpleSchemaTest
+  [INFO] Running org.apache.pulsar.client.api.TlsSniTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.018 s - in org.apache.pulsar.client.api.TlsSniTest
+  [INFO] Running org.apache.pulsar.client.api.InterceptorsTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.036 s - in org.apache.pulsar.client.api.InterceptorsTest
+  [INFO] Running org.apache.pulsar.client.api.AuthenticationTlsHostnameVerificationTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.038 s - in org.apache.pulsar.client.api.AuthenticationTlsHostnameVerificationTest
+  [INFO] Running org.apache.pulsar.client.api.ServiceUrlProviderTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.039 s - in org.apache.pulsar.client.api.ServiceUrlProviderTest
+  [INFO] Running org.apache.pulsar.client.api.PulsarMultiListenersWithInternalListenerNameTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.043 s - in org.apache.pulsar.client.api.PulsarMultiListenersWithInternalListenerNameTest
+  [INFO] Running org.apache.pulsar.client.api.PulsarMultiListenersWithoutInternalListenerNameTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.03 s - in org.apache.pulsar.client.api.PulsarMultiListenersWithoutInternalListenerNameTest
+  [INFO] Running org.apache.pulsar.client.api.schema.proto.Test
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.152 s - in org.apache.pulsar.client.api.schema.proto.Test
+  [INFO] Running org.apache.pulsar.client.api.ConsumerAckListTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.016 s - in org.apache.pulsar.client.api.ConsumerAckListTest
+  [INFO] Running org.apache.pulsar.client.api.RetryTopicTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.028 s - in org.apache.pulsar.client.api.RetryTopicTest
+  [INFO] Running org.apache.pulsar.client.api.ConsumerCleanupTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.016 s - in org.apache.pulsar.client.api.ConsumerCleanupTest
+  [INFO] Running org.apache.pulsar.client.api.TopicReaderTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.031 s - in org.apache.pulsar.client.api.TopicReaderTest
+  [INFO] Running org.apache.pulsar.client.api.TokenOauth2AuthenticatedProducerConsumerTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.049 s - in org.apache.pulsar.client.api.TokenOauth2AuthenticatedProducerConsumerTest
+  [INFO] Running org.apache.pulsar.client.api.DeadLetterTopicTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.034 s - in org.apache.pulsar.client.api.DeadLetterTopicTest
+  [INFO] Running org.apache.pulsar.client.api.NonPersistentTopicTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.017 s - in org.apache.pulsar.client.api.NonPersistentTopicTest
+  [INFO] Running org.apache.pulsar.client.api.SubscriptionMessageDispatchThrottlingTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.019 s - in org.apache.pulsar.client.api.SubscriptionMessageDispatchThrottlingTest
+  [INFO] Running org.apache.pulsar.client.api.BrokerServiceLookupTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.025 s - in org.apache.pulsar.client.api.BrokerServiceLookupTest
+  [INFO] Running org.apache.pulsar.client.api.NonDurableSubscriptionTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.043 s - in org.apache.pulsar.client.api.NonDurableSubscriptionTest
+  [INFO] Running org.apache.pulsar.client.api.MultiRolesTokenAuthorizationProviderTest
+  [INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 5.8 s - in org.apache.pulsar.client.api.MultiRolesTokenAuthorizationProviderTest
+  [INFO] Running org.apache.pulsar.client.api.ClientDeduplicationTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.041 s - in org.apache.pulsar.client.api.ClientDeduplicationTest
+  [INFO] Running org.apache.pulsar.client.api.AuthenticatedProducerConsumerTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.041 s - in org.apache.pulsar.client.api.AuthenticatedProducerConsumerTest
+  [INFO] Running org.apache.pulsar.client.api.ExposeMessageRedeliveryCountTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.019 s - in org.apache.pulsar.client.api.ExposeMessageRedeliveryCountTest
+[INFO] Running org.apache.pulsar.client.api.BytesKeyTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.033 s - in org.apache.pulsar.client.api.BytesKeyTest
+  [INFO] Running org.apache.pulsar.client.api.ClientAuthenticationTlsTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.035 s - in org.apache.pulsar.client.api.ClientAuthenticationTlsTest
+  [INFO] Running org.apache.pulsar.client.api.PartitionCreationTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.02 s - in org.apache.pulsar.client.api.PartitionCreationTest
+  [INFO] Running org.apache.pulsar.client.api.TlsProducerConsumerTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.018 s - in org.apache.pulsar.client.api.TlsProducerConsumerTest
+  [INFO] Running org.apache.pulsar.client.api.ConsumerBatchReceiveTest
+  [INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 22.083 s - in org.apache.pulsar.client.api.ProducerQueueSizeTest
+  [INFO] Running org.apache.pulsar.client.api.KeySharedSubscriptionTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.027 s - in org.apache.pulsar.client.api.KeySharedSubscriptionTest
+  [INFO] Running org.apache.pulsar.client.api.AuthorizationProducerConsumerTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.028 s - in org.apache.pulsar.client.api.AuthorizationProducerConsumerTest
+  [INFO] Running org.apache.pulsar.client.api.SimpleProducerConsumerTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.025 s - in org.apache.pulsar.client.api.SimpleProducerConsumerTest
+  [INFO] Running org.apache.pulsar.client.api.ClientDeduplicationFailureTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.012 s - in org.apache.pulsar.client.api.ClientDeduplicationFailureTest
+  [INFO] Running org.apache.pulsar.client.api.DispatcherBlockConsumerTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.015 s - in org.apache.pulsar.client.api.DispatcherBlockConsumerTest
+  [INFO] Running org.apache.pulsar.client.api.ProducerCreationTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.014 s - in org.apache.pulsar.client.api.ProducerCreationTest
+  [INFO] Running org.apache.pulsar.client.api.TokenAuthenticatedProducerConsumerTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.643 s - in org.apache.pulsar.client.api.TokenAuthenticatedProducerConsumerTest
+  [INFO] Running org.apache.pulsar.client.api.TenantTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.033 s - in org.apache.pulsar.client.api.TenantTest
+  [INFO] Running org.apache.pulsar.client.api.PartitionedProducerConsumerTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.047 s - in org.apache.pulsar.client.api.PartitionedProducerConsumerTest
+  [INFO] Running org.apache.pulsar.client.api.PatternMultiTopicsConsumerTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.034 s - in org.apache.pulsar.client.api.PatternMultiTopicsConsumerTest
+  [INFO] Running org.apache.pulsar.client.api.ProxyProtocolTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.032 s - in org.apache.pulsar.client.api.ProxyProtocolTest
+  [INFO] Running org.apache.pulsar.client.api.MessageDispatchThrottlingTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.03 s - in org.apache.pulsar.client.api.MessageDispatchThrottlingTest
+  [INFO] Running org.apache.pulsar.client.api.SimpleProducerConsumerStatTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.026 s - in org.apache.pulsar.client.api.SimpleProducerConsumerStatTest
+  [INFO] Running org.apache.pulsar.client.api.MemoryLimitTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.027 s - in org.apache.pulsar.client.api.MemoryLimitTest
+  [INFO] Running org.apache.pulsar.client.api.v1.V1_ProducerConsumerTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.031 s - in org.apache.pulsar.client.api.v1.V1_ProducerConsumerTest
+  [INFO] Running org.apache.pulsar.compaction.CompactorMXBeanImplTest
+  [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.015 s - in org.apache.pulsar.compaction.CompactorMXBeanImplTest
+  [INFO] Running org.apache.pulsar.compaction.CompactionRetentionTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.016 s - in org.apache.pulsar.compaction.CompactionRetentionTest
+  [INFO] Running org.apache.pulsar.compaction.CompactorToolTest
+  [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.016 s - in org.apache.pulsar.compaction.CompactorToolTest
+  [INFO] Running org.apache.pulsar.compaction.CompactorTest
+  [INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 18.563 s - in org.apache.pulsar.compaction.CompactorTest
+  [INFO] Running org.apache.pulsar.compaction.CompactedTopicTest
+  [INFO] Tests run: 12, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 95.689 s - in org.apache.pulsar.client.impl.LookupRetryTest
+  [INFO] Running org.apache.pulsar.compaction.CompactionTest
+  [INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.018 s - in org.apache.pulsar.compaction.CompactionTest
+  [INFO] Tests run: 13, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 142.052 s - in org.apache.pulsar.compaction.CompactedTopicTest
+  [INFO] Tests run: 268, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 432.699 s - in org.apache.pulsar.client.api.ConsumerBatchReceiveTest
