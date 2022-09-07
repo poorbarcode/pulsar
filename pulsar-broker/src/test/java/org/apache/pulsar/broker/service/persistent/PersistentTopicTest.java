@@ -35,12 +35,15 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import java.util.stream.Collectors;
 import lombok.Cleanup;
 import org.apache.bookkeeper.client.LedgerHandle;
 import org.apache.bookkeeper.mledger.ManagedLedger;
@@ -286,59 +289,66 @@ public class PersistentTopicTest extends BrokerTestBase {
         };
     }
 
-    @Test
-    public void testConcurrentClose() throws Exception {
+    @DataProvider(name = "closeWithoutWaitingClientDisconnectInFirstBatch")
+    public Object[][] closeWithoutWaitingClientDisconnectInFirstBatch() {
+        return new Object[][]{
+                new Object[] {true},
+                new Object[] {false},
+        };
+    }
+
+    @Test(dataProvider = "closeWithoutWaitingClientDisconnectInFirstBatch")
+    public void testConcurrentClose(boolean closeWithoutWaitingClientDisconnectInFirstBatch) throws Exception {
         final String topicName = "persistent://prop/ns/concurrentClose";
         final String ns = "prop/ns";
         admin.namespaces().createNamespace(ns, 1);
         admin.topics().createNonPartitionedTopic(topicName);
-        // create topic.
         final Topic topic = pulsar.getBrokerService().getTopicIfExists(topicName).get().get();
-        /**
-         * We execute 20 cmd-close at the same time, using 10 of param(true) and 10 of param(true).
-         * expect:
-         *   1. The first one should be successful.
-         *      1-1: If use param(false), the result future means that all close-task finished (aka future_all_task_finish).
-         *      1-2: If use param(true), the result future means that only managed ledger close-task
-         *         finished (aka future_all_only_ml_finish).
-         *   2. Other than the first time： All instructions that use parameter-true,
-         *      return future that only managed ledger close-task finished ( it may be sames as case-1, may be not ).
-         *   3. Other than the first time： All instructions that use parameter-false,
-         *      return future that failed on topic fenced (aka future_fail_by_fenced).
-         *      AQ: Why failed ? I don't know, just keep the same implementation as before.
-         * So after we do it 20 times, we'll get something like this:
-         *   a: 10 >= count of {future_fail_by_fenced} >= 9
-         *   b: 10 >= count of {future_all_task_finish} >= 9
-         *   c: 1 >= count of {future_all_only_ml_finish} >= 0
-         */
+        List<CompletableFuture<Void>> futureList = make2ConcurrentBatchesOfClose(topic, 10, true);
+        Map<Integer, List<CompletableFuture<Void>>> futureMap =
+                futureList.stream().collect(Collectors.groupingBy(Objects::hashCode));
+        assertEquals(futureMap.size(), 3);
+        for (List list : futureMap.values()){
+            if (list.size() == 1){
+                // This is the first thread, used param "true" or not.
+            } else {
+                assertTrue(list.size() >= 9 && list.size() <= 10);
+            }
+        }
+    }
+
+    private List<CompletableFuture<Void>> make2ConcurrentBatchesOfClose(Topic topic, int tryTimes,
+                                                              boolean closeWithoutWaitingClientDisconnectInFirstBatch){
         final List<CompletableFuture<Void>> futureList = new ArrayList<>();
         final List<Thread> taskList = new ArrayList<>();
         CountDownLatch allTaskBeginLatch = new CountDownLatch(1);
-
-        for (int i = 0; i < 10; i++) {
+        // Call a batch of close.
+        for (int i = 0; i < tryTimes; i++) {
             Thread thread = new Thread(() -> {
                 try {
                     allTaskBeginLatch.await(5, TimeUnit.SECONDS);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
-                futureList.add(topic.close(false));
+                futureList.add(topic.close(closeWithoutWaitingClientDisconnectInFirstBatch));
             });
             thread.start();
             taskList.add(thread);
         }
-        for (int i = 0; i < 10; i++) {
+        // Call another batch of close.
+        for (int i = 0; i < tryTimes; i++) {
             Thread thread = new Thread(() -> {
                 try {
                     allTaskBeginLatch.await(5, TimeUnit.SECONDS);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
-                futureList.add(topic.close(true));
+                futureList.add(topic.close(!closeWithoutWaitingClientDisconnectInFirstBatch));
             });
             thread.start();
             taskList.add(thread);
         }
+        // Wait close task executed.
         allTaskBeginLatch.countDown();
         Awaitility.await().atMost(5, TimeUnit.SECONDS).until(()->{
             for (Thread thread : taskList){
@@ -348,34 +358,7 @@ public class PersistentTopicTest extends BrokerTestBase {
             }
             return true;
         });
-        // assert execute only once.
-        final List<CompletableFuture<Void>> future_all_task_finish_and_future_all_only_ml_finish = new ArrayList<>();
-        final List<CompletableFuture<Void>> futureList_fenced = new ArrayList<>();
-        for (CompletableFuture<Void> future : futureList){
-            if (future.isCompletedExceptionally()){
-                futureList_fenced.add(future);
-            } else {
-                future_all_task_finish_and_future_all_only_ml_finish.add(future);
-            }
-        }
-        // Assert that "10>=count of {future_all_task_finish}>=9" and "1>=count of {future_all_only_ml_finish}>=0"
-        assertTrue(future_all_task_finish_and_future_all_only_ml_finish.size() >= 10
-                && future_all_task_finish_and_future_all_only_ml_finish.size() <= 11);
-        // Assert that "10 >= count of {future_fail_by_fenced} >= 9"
-        assertTrue(futureList_fenced.size() >= 9 && futureList_fenced.size() <= 10);
-
-        // Assert that only one cmd-close exactly executed.
-        CompletableFuture<Void> runningTask = future_all_task_finish_and_future_all_only_ml_finish.get(0);
-        int futureCompleteSamesAsFirstOne = 0;
-        int futureCompleteOther = 0;
-        for (CompletableFuture<Void> future : future_all_task_finish_and_future_all_only_ml_finish){
-            if (future == runningTask){
-                futureCompleteSamesAsFirstOne++;
-            } else {
-                futureCompleteOther++;
-            }
-        }
-        assertEquals(1, Math.min(futureCompleteSamesAsFirstOne, futureCompleteOther));
+        return futureList;
     }
 
     @Test(dataProvider = "topicAndMetricsLevel")
