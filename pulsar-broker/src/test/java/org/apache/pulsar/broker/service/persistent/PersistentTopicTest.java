@@ -304,7 +304,8 @@ public class PersistentTopicTest extends BrokerTestBase {
         admin.namespaces().createNamespace(ns, 1);
         admin.topics().createNonPartitionedTopic(topicName);
         final Topic topic = pulsar.getBrokerService().getTopicIfExists(topicName).get().get();
-        List<CompletableFuture<Void>> futureList = make2ConcurrentBatchesOfClose(topic, 10, true);
+        List<CompletableFuture<Void>> futureList =
+                make2ConcurrentBatchesOfClose(topic, 10, closeWithoutWaitingClientDisconnectInFirstBatch);
         Map<Integer, List<CompletableFuture<Void>>> futureMap =
                 futureList.stream().collect(Collectors.groupingBy(Objects::hashCode));
         assertEquals(futureMap.size(), 3);
