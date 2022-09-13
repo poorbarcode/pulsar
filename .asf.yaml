@@ -49,27 +49,7 @@ github:
         # Contexts are the names of checks that must pass.
         # See ./github/workflows/README.md for more documentation on this list.
         contexts:
-          - License check
-          - backwards-compatibility
-          - build
-          - cli
-          - cpp-tests
-          - function-state
-          - messaging
-          - process
-          - pulsar-ci-test (group1)
-          - pulsar-ci-test (group2)
-          - pulsar-ci-test (group3)
-          - pulsar-io
-          - schema
-          - shade-check
-          - sql
-          - standalone
-          - thread
-          - tiered-filesystem
-          - tiered-jcloud
-          - transaction
-          - unit-tests
+           - Pulsar CI checks completed
 
       required_pull_request_reviews:
         dismiss_stale_reviews: false
@@ -101,3 +81,11 @@ github:
     branch-2.8: {}
     branch-2.9: {}
     branch-2.10: {}
+    branch-2.11: {}
+
+notifications:
+  commits:      commits@pulsar.apache.org
+  issues:       commits@pulsar.apache.org
+  pullrequests: commits@pulsar.apache.org
+  discussions:  dev@pulsar.apache.org
+  jira_options: link label

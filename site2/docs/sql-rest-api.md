@@ -1,7 +1,7 @@
 ---
 id: sql-rest-api
 title: Pulsar SQL REST APIs
-sidebar_label: REST APIs
+sidebar_label: "REST APIs"
 ---
 
 This section lists resources that make up the Presto REST API v1. 
@@ -10,7 +10,7 @@ This section lists resources that make up the Presto REST API v1.
 
 All requests for Presto services should use Presto REST API v1 version. 
 
-To request services, use explicit URL `http://presto.service:8081/v1`. You need to update `presto.service:8081` with your real Presto address before sending requests.
+To request services, use the explicit URL `http://presto.service:8081/v1``. You need to update `presto.service:8081` with your real Presto address before sending requests.
 
 `POST` requests require the `X-Presto-User` header. If you use authentication, you must use the same `username` that is specified in the authentication configuration. If you do not use authentication, you can specify anything for `username`.
 
@@ -178,8 +178,10 @@ The following is an example of `show catalogs`. The query continues until the re
 }
 ```
 
-> Note
-> 
-> Since the response data is not in sync with the query state from the perspective of clients, you cannot rely on the response data to determine whether the query completes.
+:::note
+
+Since the response data is not in sync with the query state from the perspective of clients, you cannot rely on the response data to determine whether the query completes.
+
+:::
 
 For more information about Presto REST API, refer to [Presto HTTP Protocol](https://github.com/prestosql/presto/wiki/HTTP-Protocol).

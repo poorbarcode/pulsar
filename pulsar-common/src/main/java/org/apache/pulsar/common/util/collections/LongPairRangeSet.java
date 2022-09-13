@@ -18,7 +18,6 @@
  */
 package org.apache.pulsar.common.util.collections;
 
-import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Range;
 import com.google.common.collect.RangeSet;
@@ -127,6 +126,11 @@ public interface LongPairRangeSet<T extends Comparable<T>> {
     Range<T> lastRange();
 
     /**
+     * Return the number bit sets to true from lower (inclusive) to upper (inclusive).
+     */
+    int cardinality(long lowerKey, long lowerValue, long upperKey, long upperValue);
+
+    /**
      * Represents a function that accepts two long arguments and produces a result.
      *
      * @param <T> the type of the result.
@@ -176,13 +180,21 @@ public interface LongPairRangeSet<T extends Comparable<T>> {
         }
 
         @Override
-        public int compareTo(LongPair o) {
-            return ComparisonChain.start().compare(key, o.getKey()).compare(value, o.getValue()).result();
+        public int compareTo(LongPair that) {
+            if (this.key != that.key) {
+                return this.key < that.key ? -1 : 1;
+            }
+
+            if (this.value != that.value) {
+                return this.value < that.value ? -1 : 1;
+            }
+
+            return 0;
         }
 
         @Override
         public String toString() {
-            return String.format("%d:%d", key, value);
+            return key + ":" + value;
         }
     }
 
@@ -287,6 +299,11 @@ public interface LongPairRangeSet<T extends Comparable<T>> {
             }
             List<Range<T>> list = Lists.newArrayList(set.asRanges().iterator());
             return list.get(list.size() - 1);
+        }
+
+        @Override
+        public int cardinality(long lowerKey, long lowerValue, long upperKey, long upperValue) {
+            throw new UnsupportedOperationException();
         }
 
         @Override

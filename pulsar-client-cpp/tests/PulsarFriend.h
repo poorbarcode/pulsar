@@ -23,8 +23,8 @@
 #include "lib/ProducerImpl.h"
 #include "lib/PartitionedProducerImpl.h"
 #include "lib/ConsumerImpl.h"
-#include "lib/PartitionedConsumerImpl.h"
 #include "lib/MultiTopicsConsumerImpl.h"
+#include "lib/ReaderImpl.h"
 
 using std::string;
 
@@ -79,14 +79,16 @@ class PulsarFriend {
         return std::static_pointer_cast<ConsumerImpl>(consumer.impl_);
     }
 
-    static decltype(ConsumerImpl::chunkedMessageCache_) & getChunkedMessageCache(Consumer consumer) {
+    static ConsumerImplPtr getConsumer(Reader reader) {
+        return std::static_pointer_cast<ConsumerImpl>(reader.impl_->getConsumer().lock());
+    }
+
+    static ReaderImplWeakPtr getReaderImplWeakPtr(Reader reader) { return reader.impl_; }
+
+    static decltype(ConsumerImpl::chunkedMessageCache_)& getChunkedMessageCache(Consumer consumer) {
         auto consumerImpl = getConsumerImplPtr(consumer);
         ConsumerImpl::Lock lock(consumerImpl->chunkProcessMutex_);
         return consumerImpl->chunkedMessageCache_;
-    }
-
-    static std::shared_ptr<PartitionedConsumerImpl> getPartitionedConsumerImplPtr(Consumer consumer) {
-        return std::static_pointer_cast<PartitionedConsumerImpl>(consumer.impl_);
     }
 
     static std::shared_ptr<MultiTopicsConsumerImpl> getMultiTopicsConsumerImplPtr(Consumer consumer) {
@@ -95,11 +97,23 @@ class PulsarFriend {
 
     static std::shared_ptr<ClientImpl> getClientImplPtr(Client client) { return client.impl_; }
 
+    static ClientImpl::ProducersList& getProducers(const Client& client) {
+        return getClientImplPtr(client)->producers_;
+    }
+
+    static ClientImpl::ConsumersList& getConsumers(const Client& client) {
+        return getClientImplPtr(client)->consumers_;
+    }
+
     static void setNegativeAckEnabled(Consumer consumer, bool enabled) {
         consumer.impl_->setNegativeAcknowledgeEnabledForTesting(enabled);
     }
 
     static ClientConnectionWeakPtr getClientConnection(HandlerBase& handler) { return handler.connection_; }
+
+    static void setClientConnection(HandlerBase& handler, ClientConnectionWeakPtr conn) {
+        handler.connection_ = conn;
+    }
 
     static boost::posix_time::ptime& getFirstBackoffTime(Backoff& backoff) {
         return backoff.firstBackoffTime_;

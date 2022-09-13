@@ -1,14 +1,20 @@
 ---
 id: client-libraries-python
 title: Pulsar Python client
-sidebar_label: Python
+sidebar_label: "Python"
 ---
+
+````mdx-code-block
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+````
+
 
 Pulsar Python client library is a wrapper over the existing [C++ client library](client-libraries-cpp.md) and exposes all of the [same features](/api/cpp). You can find the code in the [Python directory](https://github.com/apache/pulsar/tree/master/pulsar-client-cpp/python) of the C++ client code.
 
 All the methods in producer, consumer, and reader of a Python client are thread-safe.
 
-[pdoc](https://github.com/BurntSushi/pdoc)-generated API docs for the Python client are available [here](/api/python).
+pdoc-generated API docs for the Python client are available [here](/api/python).
 
 ## Install
 
@@ -19,29 +25,30 @@ You can install the [`pulsar-client`](https://pypi.python.org/pypi/pulsar-client
 To install the `pulsar-client` library as a pre-built package using the [pip](https://pip.pypa.io/en/stable/) package manager:
 
 ```shell
-$ pip install pulsar-client=={{pulsar:version_number}}
+pip install pulsar-client==@pulsar:version_number@
 ```
 
 ### Optional dependencies
-If you install the client libraries on Linux to support services like Pulsar functions or Avro serialization, you can install optional components alongside the  `pulsar-client` library.
+If you install the client libraries on Linux to support services like Pulsar functions or Avro serialization, you can install optional components alongside the `pulsar-client` library.
 
 ```shell
 # avro serialization
-$ pip install pulsar-client[avro]=='{{pulsar:version_number}}'
+pip install 'pulsar-client[avro]==@pulsar:version_number@'
 
 # functions runtime
-$ pip install pulsar-client[functions]=='{{pulsar:version_number}}'
+pip install 'pulsar-client[functions]==@pulsar:version_number@'
 
 # all optional components
-$ pip install pulsar-client[all]=='{{pulsar:version_number}}'
+pip install 'pulsar-client[all]==@pulsar:version_number@'
 ```
 
 Installation via PyPi is available for the following Python versions:
 
 Platform | Supported Python versions
 :--------|:-------------------------
-MacOS <br />  10.13 (High Sierra), 10.14 (Mojave) <br /> | 2.7, 3.7, 3.8, 3.9
-Linux | 2.7, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9
+MacOS >= 11.0 | 3.7, 3.8, 3.9 and 3.10
+Linux (including Alpine Linux) | 3.7, 3.8, 3.9 and 3.10
+
 
 ### Install from source
 
@@ -50,9 +57,31 @@ To install the `pulsar-client` library by building from source, follow [instruct
 To install the built Python bindings:
 
 ```shell
-$ git clone https://github.com/apache/pulsar
-$ cd pulsar/pulsar-client-cpp/python
-$ sudo python setup.py install
+git clone https://github.com/apache/pulsar
+cd pulsar/pulsar-client-cpp/python
+sudo python setup.py install
+```
+
+## Connection URLs
+
+To connect to Pulsar using client libraries, you need to specify a [Pulsar protocol](developing-binary-protocol.md) URL.
+
+You can assign Pulsar protocol URLs to specific clusters and use the `pulsar` scheme. The following is an example of `localhost` with the default port `6650`:
+
+```http
+pulsar://localhost:6650
+```
+
+If you have multiple brokers, separate `IP:port` by commas:
+
+```http
+pulsar://localhost:6550,localhost:6651,localhost:6652
+```
+
+If you use [TLS](security-tls-authentication.md) authentication, add `+ssl` in the scheme:
+
+```http
+pulsar+ssl://pulsar.us-west.example.com:6651
 ```
 
 ## API Reference
@@ -61,7 +90,7 @@ The complete Python API reference is available at [api/python](/api/python).
 
 ## Examples
 
-You can find a variety of Python code examples for the [pulsar-client](/pulsar-client-cpp/python) library.
+You can find a variety of Python code examples for the `pulsar-client` library.
 
 ### Producer example
 
@@ -104,7 +133,7 @@ while True:
 client.close()
 ```
 
-This example shows how to configure negative acknowledgement.
+This example shows how to configure negative acknowledgment.
 
 ```python
 from pulsar import Client, schema
@@ -146,11 +175,12 @@ while True:
     print("Received message '{}' id='{}'".format(msg.data(), msg.message_id()))
     # No acknowledgment
 ```
+
 ### Multi-topic subscriptions
 
 In addition to subscribing a consumer to a single Pulsar topic, you can also subscribe to multiple topics simultaneously. To use multi-topic subscriptions, you can supply a regular expression (regex) or a `List` of topics. If you select topics via regex, all topics must be within the same Pulsar namespace.
 
-The following is an example: 
+The following is an example:
 
 ```python
 import re
@@ -167,11 +197,22 @@ while True:
 client.close()
 ```
 
+### Create a Python client with multiple advertised listeners
+To ensure clients in both internal and external networks can connect to a Pulsar cluster, Pulsar introduces [advertisedListeners](concepts-multiple-advertised-listeners.md).
+
+The following example creates a Python client using multiple advertised listeners:
+
+```python
+import pulsar
+
+client = pulsar.Client('pulsar://localhost:6650', listener_name='external')
+```
+
 ## Schema
 
 ### Supported schema types
 
-You can use different builtin schema types in Pulsar. All the definitions are in the `pulsar.schema` package.
+You can use different built-in schema types in Pulsar. All the definitions are in the `pulsar.schema` package.
 
 | Schema | Notes |
 | ------ | ----- |
@@ -184,10 +225,7 @@ You can use different builtin schema types in Pulsar. All the definitions are in
 
 The schema definition is done through a class that inherits from `pulsar.schema.Record`.
 
-This class has a number of fields which can be of either
-`pulsar.schema.Field` type or another nested `Record`. All the
-fields are specified in the `pulsar.schema` package. The fields
-are matching the AVRO fields types.
+This class has a number of fields that can be of either `pulsar.schema.Field` type or another nested `Record`. All the fields are specified in the `pulsar.schema` package. The fields are matching the AVRO field types.
 
 | Field Type | Python Type | Notes |
 | ---------- | ----------- | ----- |
@@ -209,7 +247,7 @@ When adding a field, you can use these parameters in the constructor.
 
 | Argument   | Default | Notes |
 | ---------- | --------| ----- |
-| `default`  | `None`  | Set a default value for the field. Eg: `a = Integer(default=5)` |
+| `default`  | `None`  | Set a default value for the field, such as `a = Integer(default=5)`. |
 | `required` | `False` | Mark the field as "required". It is set in the schema accordingly. |
 
 #### Schema definition examples
@@ -254,7 +292,8 @@ class Example(Record):
 
 ##### Set namespace for Avro schema
 
-Set the namespace for Avro Record schema using the special field `_avro_namespace`.
+Set the namespace for the Avro Record schema using the special field `_avro_namespace`.
+
 ```python
 class NamespaceDemo(Record):
    _avro_namespace = 'xxx.xxx.xxx'
@@ -263,11 +302,12 @@ class NamespaceDemo(Record):
 ```
 
 The schema definition is like this.
-```
+
+```json
 {
-  'name': 'NamespaceDemo', 'namespace': 'xxx.xxx.xxx', 'type': 'record', 'fields': [
-    {'name': 'x', 'type': ['null', 'string']}, 
-    {'name': 'y', 'type': ['null', 'int']}
+  "name": "NamespaceDemo", "namespace": "xxx.xxx.xxx", "type": "record", "fields": [
+    {"name": "x", "type": ["null", "string"]},
+    {"name": "y", "type": ["null", "int"]}
   ]
 }
 ```
@@ -302,9 +342,12 @@ while True:
         consumer.negative_acknowledge(msg)
 ```
 
-<!--DOCUSAURUS_CODE_TABS-->
+````mdx-code-block
+<Tabs
+  defaultValue="BytesSchema"
+  values={[{"label":"BytesSchema","value":"BytesSchema"},{"label":"StringSchema","value":"StringSchema"},{"label":"AvroSchema","value":"AvroSchema"},{"label":"JsonSchema","value":"JsonSchema"}]}>
 
-<!--BytesSchema-->
+<TabItem value="BytesSchema">
 
 You can send byte data using a `BytesSchema`.
 
@@ -324,7 +367,8 @@ msg = consumer.receive()
 data = msg.value()
 ```
 
-<!--StringSchema-->
+</TabItem>
+<TabItem value="StringSchema">
 
 You can send string data using a `StringSchema`.
 
@@ -344,7 +388,8 @@ msg = consumer.receive()
 str = msg.value()
 ```
 
-<!--AvroSchema-->
+</TabItem>
+<TabItem value="AvroSchema">
 
 You can declare an `AvroSchema` using one of the following methods.
 
@@ -352,7 +397,7 @@ You can declare an `AvroSchema` using one of the following methods.
 
 You can declare an `AvroSchema` by passing a class that inherits
 from `pulsar.schema.Record` and defines the fields as
-class variables. 
+class variables.
 
 **Example**
 
@@ -381,7 +426,7 @@ You can declare an `AvroSchema` using JSON. In this case, Avro schemas are defin
 
 **Example**
 
-Below is an `AvroSchema` defined using a JSON file (_company.avsc_). 
+Below is an `AvroSchema` defined using a JSON file (_company.avsc_).
 
 ```json
 {
@@ -415,7 +460,7 @@ If you use the "JSON definition" method to declare an `AvroSchema`, pay attentio
 
 **Example**
 
-```
+```python
 from fastavro.schema import load_schema
 from pulsar.schema import *
 schema_definition = load_schema("examples/company.avsc")
@@ -444,14 +489,15 @@ msg = consumer.receive()
 msg.value()
 ```
 
-<!--JsonSchema-->
+</TabItem>
+<TabItem value="JsonSchema">
 
 #### Record
 
 You can declare a `JsonSchema` by passing a class that inherits
-from `pulsar.schema.Record` and defines the fields as class variables. This is similar to using `AvroSchema`. The only difference is to use  `JsonSchema` instead of `AvroSchema` when defining schema type as shown below. For how to use `AvroSchema` via record, see [here](client-libraries-python.md#method-1-record).
+from `pulsar.schema.Record` and defines the fields as class variables. This is similar to using `AvroSchema`. The only difference is to use  `JsonSchema` instead of `AvroSchema` when defining schema type as shown below. For how to use `AvroSchema` via record, see [heres-python.md#method-1-record).
 
-```
+```python
 producer = client.create_producer(
                 'avro-schema-topic',
                 schema=JsonSchema(Example))
@@ -462,15 +508,18 @@ consumer = client.subscribe(
 				schema=JsonSchema(Example))
 ```
 
-<!--END_DOCUSAURUS_CODE_TABS-->
+</TabItem>
+
+</Tabs>
+````
 
 ## End-to-end encryption
 
-[End-to-end encryption](https://pulsar.apache.org/docs/en/next/cookbooks-encryption/#docsNav) allows applications to encrypt messages at producers and decrypt messages at consumers.
+[End-to-end encryption](/cookbooks-encryption.md#docsNav) allows applications to encrypt messages at producers and decrypt messages at consumers.
 
 ### Configuration
 
-To use the end-to-end encryption feature in the Python client, you need to configure `publicKeyPath` and `privateKeyPath` for both producer and consumer.
+To use the end-to-end encryption feature in the Python client, you need to configure `publicKeyPath` for producers and `privateKeyPath` for consumers.
 
 ```
 publicKeyPath: "./public.pem"
@@ -483,83 +532,83 @@ This section provides step-by-step instructions on how to use the end-to-end enc
 
 **Prerequisite**
 
-- Pulsar Python client 2.7.1 or later 
+- Pulsar Python client 2.7.1 or later
 
 **Step**
 
 1. Create both public and private key pairs.
 
-    **Input**
+   **Input**
 
-    ```shell
-    openssl genrsa -out private.pem 2048
-    openssl rsa -in private.pem -pubout -out public.pem
-    ```
+   ```shell
+   openssl genrsa -out private.pem 2048
+   openssl rsa -in private.pem -pubout -out public.pem
+   ```
 
 2. Create a producer to send encrypted messages.
 
-    **Input**
+   **Input**
 
-    ```python
-    import pulsar
+   ```python
+   import pulsar
 
-    publicKeyPath = "./public.pem"
-    privateKeyPath = "./private.pem"
-    crypto_key_reader = pulsar.CryptoKeyReader(publicKeyPath, privateKeyPath)
-    client = pulsar.Client('pulsar://localhost:6650')
-    producer = client.create_producer(topic='encryption', encryption_key='encryption', crypto_key_reader=crypto_key_reader)
-    producer.send('encryption message'.encode('utf8'))
-    print('sent message')
-    producer.close()
-    client.close()
-    ```
+   publicKeyPath = "./public.pem"
+   privateKeyPath = ""
+   crypto_key_reader = pulsar.CryptoKeyReader(publicKeyPath, privateKeyPath)
+   client = pulsar.Client('pulsar://localhost:6650')
+   producer = client.create_producer(topic='encryption', encryption_key='encryption', crypto_key_reader=crypto_key_reader)
+   producer.send('encryption message'.encode('utf8'))
+   print('sent message')
+   producer.close()
+   client.close()
+   ```
 
 3. Create a consumer to receive encrypted messages.
 
-    **Input**
+   **Input**
 
-    ```python
-    import pulsar
+   ```python
+   import pulsar
 
-    publicKeyPath = "./public.pem"
-    privateKeyPath = "./private.pem"
-    crypto_key_reader = pulsar.CryptoKeyReader(publicKeyPath, privateKeyPath)
-    client = pulsar.Client('pulsar://localhost:6650')
-    consumer = client.subscribe(topic='encryption', subscription_name='encryption-sub', crypto_key_reader=crypto_key_reader)
-    msg = consumer.receive()
-    print("Received msg '{}' id = '{}'".format(msg.data(), msg.message_id()))
-    consumer.close()
-    client.close()
-    ```
+   publicKeyPath = ""
+   privateKeyPath = "./private.pem"
+   crypto_key_reader = pulsar.CryptoKeyReader(publicKeyPath, privateKeyPath)
+   client = pulsar.Client('pulsar://localhost:6650')
+   consumer = client.subscribe(topic='encryption', subscription_name='encryption-sub', crypto_key_reader=crypto_key_reader)
+   msg = consumer.receive()
+   print("Received msg '{}' id = '{}'".format(msg.data(), msg.message_id()))
+   consumer.close()
+   client.close()
+   ```
 
 4. Run the consumer to receive encrypted messages.
 
-    **Input**
+   **Input**
 
-    ```shell
-    python consumer.py
-    ```
+   ```shell
+   python consumer.py
+   ```
 
 5. In a new terminal tab, run the producer to produce encrypted messages.
 
-    **Input**
+   **Input**
 
-    ```shell
-    python producer.py
-    ```
+   ```shell
+   python producer.py
+   ```
 
-    Now you can see the producer sends messages and the consumer receives messages successfully.
+   Now you can see the producer sends messages and the consumer receives messages successfully.
 
-    **Output**
+   **Output**
 
-    This is from the producer side.
+   This is from the producer side.
 
-    ```
-    sent message
-    ```
+   ```
+   sent message
+   ```
 
-    This is from the consumer side.
+   This is from the consumer side.
 
-    ```
-    Received msg 'encryption message' id = '(0,0,-1,-1)'
-    ```
+   ```
+   Received msg 'encryption message' id = '(0,0,-1,-1)'
+   ```

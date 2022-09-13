@@ -451,6 +451,16 @@ public class ConcurrentLongHashMap<V> {
                             if (nextValueInArray == EmptyValue) {
                                 values[bucket] = (V) EmptyValue;
                                 --usedBuckets;
+
+                                // Cleanup all the buckets that were in `DeletedValue` state,
+                                // so that we can reduce unnecessary expansions
+                                int lastBucket = signSafeMod(bucket - 1, capacity);
+                                while (values[lastBucket] == DeletedValue) {
+                                    values[lastBucket] = (V) EmptyValue;
+                                    --usedBuckets;
+
+                                    lastBucket = signSafeMod(lastBucket - 1, capacity);
+                                }
                             } else {
                                 values[bucket] = (V) DeletedValue;
                             }
@@ -470,7 +480,11 @@ public class ConcurrentLongHashMap<V> {
             } finally {
                 if (autoShrink && size < resizeThresholdBelow) {
                     try {
-                        int newCapacity = alignToPowerOfTwo((int) (capacity / shrinkFactor));
+                        // Shrinking must at least ensure initCapacity,
+                        // so as to avoid frequent shrinking and expansion near initCapacity,
+                        // frequent shrinking and expansion,
+                        // additionally opened arrays will consume more memory and affect GC
+                        int newCapacity = Math.max(alignToPowerOfTwo((int) (capacity / shrinkFactor)), initCapacity);
                         int newResizeThresholdUp = (int) (newCapacity * mapFillFactor);
                         if (newCapacity < capacity && newResizeThresholdUp > size) {
                             // shrink the hashmap
@@ -489,12 +503,13 @@ public class ConcurrentLongHashMap<V> {
             long stamp = writeLock();
 
             try {
-                Arrays.fill(keys, 0);
-                Arrays.fill(values, EmptyValue);
-                this.size = 0;
-                this.usedBuckets = 0;
-                if (autoShrink) {
-                    rehash(initCapacity);
+                if (autoShrink && capacity > initCapacity) {
+                    shrinkToInitCapacity();
+                } else {
+                    Arrays.fill(keys, 0);
+                    Arrays.fill(values, EmptyValue);
+                    this.size = 0;
+                    this.usedBuckets = 0;
                 }
             } finally {
                 unlockWrite(stamp);
@@ -568,6 +583,21 @@ public class ConcurrentLongHashMap<V> {
             values = newValues;
             capacity = newCapacity;
             usedBuckets = size;
+            resizeThresholdUp = (int) (capacity * mapFillFactor);
+            resizeThresholdBelow = (int) (capacity * mapIdleFactor);
+        }
+
+        private void shrinkToInitCapacity() {
+            long[] newKeys = new long[initCapacity];
+            V[] newValues = (V[]) new Object[initCapacity];
+
+            keys = newKeys;
+            values = newValues;
+            size = 0;
+            usedBuckets = 0;
+            // Capacity needs to be updated after the values, so that we won't see
+            // a capacity value bigger than the actual array size
+            capacity = initCapacity;
             resizeThresholdUp = (int) (capacity * mapFillFactor);
             resizeThresholdBelow = (int) (capacity * mapIdleFactor);
         }

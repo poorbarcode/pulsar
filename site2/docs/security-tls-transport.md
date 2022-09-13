@@ -1,7 +1,7 @@
 ---
 id: security-tls-transport
 title: Transport Encryption using TLS
-sidebar_label: Transport Encryption using TLS
+sidebar_label: "Transport Encryption using TLS"
 ---
 
 ## TLS overview
@@ -14,21 +14,23 @@ You can also configure TLS for both encryption and authentication. Use this guid
 
 ## TLS concepts
 
-TLS is a form of [public key cryptography](https://en.wikipedia.org/wiki/Public-key_cryptography). Using key pairs consisting of a public key and a private key can perform the encryption. The public key encrpyts the messages and the private key decrypts the messages.
+TLS is a form of [public key cryptography](https://en.wikipedia.org/wiki/Public-key_cryptography). Using key pairs consisting of a public key and a private key can perform the encryption. The public key encrypts the messages and the private key decrypts the messages.
 
 To use TLS transport encryption, you need two kinds of key pairs, **server key pairs** and a **certificate authority**.
 
 You can use a third kind of key pair, **client key pairs**, for [client authentication](security-tls-authentication.md).
 
-You should store the **certificate authority** private key in a very secure location (a fully encrypted, disconnected, air gapped computer). As for the certificate authority public key, the **trust cert**, you can freely shared it.
+You should store the **certificate authority** private key in a very secure location (a fully encrypted, disconnected, air gapped computer). As for the certificate authority public key, the **trust cert**, you can freely share it.
 
-For both client and server key pairs, the administrator first generates a private key and a certificate request, then uses the certificate authority private key to sign the certificate request, finally generates a certificate. This certificate is the public key for the server/client key pair.
+For both client and server key pairs, the administrator first generates a private key and a certificate request, then uses the certificate authority private key to sign the certificate request, and finally generates a certificate. This certificate is the public key for the server/client key pair.
 
-For TLS transport encryption, the clients can use the **trust cert** to verify that the server has a key pair that the certificate authority signed when the clients are talking to the server. A man-in-the-middle attacker does not have access to the certificate authority, so they couldn't create a server with such a key pair.
+For TLS transport encryption, the clients can use the **trust cert** to verify that the server has a key pair that the certificate authority signs when the clients are talking to the server. A man-in-the-middle attacker does not have access to the certificate authority, so they couldn't create a server with such a key pair.
 
 For TLS authentication, the server uses the **trust cert** to verify that the client has a key pair that the certificate authority signed. The common name of the **client cert** is then used as the client's role token (see [Overview](security-overview.md)).
 
-`Bouncy Castle Provider` provides cipher suites and algorithms in Pulsar. If you need [FIPS](https://www.bouncycastle.org/fips_faq.html) version of `Bouncy Castle Provider`, please reference [Bouncy Castle page](security-bouncy-castle.md).
+Pulsar uses [netty-tcnative](https://github.com/netty/netty-tcnative) and [Conscrypt](https://github.com/google/conscrypt) as security providers. There are two certificate formats:
+* Java KeyStore(JKS): Pulsar uses Conscrypt by default for both broker service and Web service.
+* CAcerts: Pulsar uses netty-tcnative by default, which includes two implementations, OpenSSL (default) and JDK. When OpenSSL is unavailable, JDK is used.
 
 ## Create TLS certificates
 
@@ -45,7 +47,7 @@ Follow the guide below to set up a certificate authority. You can also refer to 
 ```bash
 mkdir my-ca
 cd my-ca
-wget https://raw.githubusercontent.com/apache/pulsar/master/site2/website/static/examples/openssl.cnf
+wget https://raw.githubusercontent.com/apache/pulsar-site/main/site2/website/static/examples/openssl.cnf
 export CA_HOME=$(pwd)
 ```
 
@@ -57,16 +59,31 @@ chmod 700 private/
 touch index.txt
 echo 1000 > serial
 openssl genrsa -aes256 -out private/ca.key.pem 4096
+# You need enter a password in the command above
 chmod 400 private/ca.key.pem
 openssl req -config openssl.cnf -key private/ca.key.pem \
     -new -x509 -days 7300 -sha256 -extensions v3_ca \
     -out certs/ca.cert.pem
+# You must enter the same password in the previous openssl command
 chmod 444 certs/ca.cert.pem
 ```
 
+:::tip
+
+The default `openssl` on macOS doesn't work for the commands above. You must upgrade the `openssl` via Homebrew:
+
+```bash
+brew install openssl
+export PATH="/usr/local/Cellar/openssl@3/3.0.1/bin:$PATH"
+```
+
+The version `3.0.1` might change in the future. Use the actual path from the output of `brew install` command.
+
+:::
+
 4. After you answer the question prompts, CA-related files are stored in the `./my-ca` directory. Within that directory:
 
-* `certs/ca.cert.pem` is the public certificate. This public certificates is meant to be distributed to all parties involved.
+* `certs/ca.cert.pem` is the public certificate. This public certificate is meant to be distributed to all parties involved.
 * `private/ca.key.pem` is the private key. You only need it when you are signing a new certificate for either broker or clients and you must safely guard this private key.
 
 ### Server certificate
@@ -75,13 +92,15 @@ Once you have created a CA certificate, you can create certificate requests and 
 
 The following commands ask you a few questions and then create the certificates. When you are asked for the common name, you should match the hostname of the broker. You can also use a wildcard to match a group of broker hostnames, for example, `*.broker.usw.example.com`. This ensures that multiple machines can reuse the same certificate.
 
-> #### Tips
-> 
-> Sometimes matching the hostname is not possible or makes no sense,
-> such as when you create the brokers with random hostnames, or you
-> plan to connect to the hosts via their IP. In these cases, you 
-> should configure the client to disable TLS hostname verification. For more
-> details, you can see [the host verification section in client configuration](#hostname-verification).
+:::tip
+
+Sometimes matching the hostname is not possible or makes no sense,
+such as when you create the brokers with random hostnames, or you
+plan to connect to the hosts via their IP. In these cases, you
+should configure the client to disable TLS hostname verification. For more
+details, you can see [the host verification section in client configuration](#hostname-verification).
+
+:::
 
 1. Enter the command below to generate the key.
 
@@ -113,6 +132,38 @@ openssl ca -config openssl.cnf -extensions server_cert \
 
 At this point, you have a cert, `broker.cert.pem`, and a key, `broker.key-pk8.pem`, which you can use along with `ca.cert.pem` to configure TLS transport encryption for your broker and proxy nodes.
 
+### Client certificate
+
+1. Enter the command below to generate the key.
+
+```bash
+openssl genrsa -out client.key.pem 2048
+```
+
+The client expects the key to be in [PKCS 8](https://en.wikipedia.org/wiki/PKCS_8) format, so enter the following command to convert it.
+
+```bash
+openssl pkcs8 -topk8 -inform PEM -outform PEM \
+      -in client.key.pem -out client.key-pk8.pem -nocrypt
+```
+
+2. Enter the following command to generate the certificate request.
+
+```bash
+openssl req -config openssl.cnf \
+    -key client.key.pem -new -sha256 -out client.csr.pem
+```
+
+3. Sign it with the certificate authority by entering the command below.
+
+```bash
+openssl ca -config openssl.cnf -extensions client_cert \
+    -days 1000 -notext -md sha256 \
+    -in client.csr.pem -out client.cert.pem
+```
+
+At this point, you have a cert `client.cert.pem` and a key `client.key-pk8.pem`, which you can use along with `ca.cert.pem` to configure TLS encryption for your client.
+
 ## Configure broker
 
 To configure a Pulsar [broker](reference-terminology.md#broker) to use TLS transport encryption, you need to make some changes to `broker.conf`, which locates in the `conf` directory of your [Pulsar installation](getting-started-standalone.md).
@@ -126,11 +177,16 @@ tlsRequireTrustedClientCertOnConnect=true
 tlsCertificateFilePath=/path/to/broker.cert.pem
 tlsKeyFilePath=/path/to/broker.key-pk8.pem
 tlsTrustCertsFilePath=/path/to/ca.cert.pem
+
+brokerClientTlsEnabled=true
+brokerClientTrustCertsFilePath=/path/to/ca.cert.pem
+brokerClientCertificateFilePath=/path/to/client.cert.pem
+brokerClientKeyFilePath=/path/to/client.key-pk8.pem
 ```
 
 > You can find a full list of parameters available in the `conf/broker.conf` file,
-> as well as the default values for those parameters, in [Broker Configuration](reference-configuration.md#broker) 
-> 
+> as well as the default values for those parameters, in [Broker Configuration](reference-configuration.md#broker)
+>
 ### TLS Protocol Version and Cipher
 
 You can configure the broker (and proxy) to require specific TLS protocol versions and ciphers for TLS negiotation. You can use the TLS protocol versions and ciphers to stop clients from requesting downgraded TLS protocol versions or ciphers that may have weaknesses.
@@ -142,7 +198,7 @@ tlsProtocols=TLSv1.3,TLSv1.2
 tlsCiphers=TLS_DH_RSA_WITH_AES_256_GCM_SHA384,TLS_DH_RSA_WITH_AES_256_CBC_SHA
 ```
 
-OpenSSL currently supports ```TLSv1.1```, ```TLSv1.2``` and ```TLSv1.3``` for the protocol version. You can acquire a list of supported cipher from the openssl ciphers command, i.e. ```openssl ciphers -tls1_3```.
+OpenSSL currently supports `TLSv1.1`, `TLSv1.2` and `TLSv1.3` for the protocol version. You can acquire a list of supported cipher from the openssl ciphers command, i.e. `openssl ciphers -tls1_3`.
 
 For JDK 11, you can obtain a list of supported values from the documentation:
 - [TLS protocol](https://docs.oracle.com/en/java/javase/11/security/oracle-providers.html#GUID-7093246A-31A3-4304-AC5F-5FB6400405E2__SUNJSSEPROVIDERPROTOCOLPARAMETERS-BBF75009)
@@ -153,8 +209,11 @@ For JDK 11, you can obtain a list of supported values from the documentation:
 Proxies need to configure TLS in two directions, for clients connecting to the proxy, and for the proxy connecting to brokers.
 
 ```properties
+servicePortTls=6651
+webServicePortTls=8081
+
 # For clients connecting to the proxy
-tlsEnabledInProxy=true
+tlsRequireTrustedClientCertOnConnect=true
 tlsCertificateFilePath=/path/to/broker.cert.pem
 tlsKeyFilePath=/path/to/broker.key-pk8.pem
 tlsTrustCertsFilePath=/path/to/ca.cert.pem
@@ -162,13 +221,15 @@ tlsTrustCertsFilePath=/path/to/ca.cert.pem
 # For the proxy to connect to brokers
 tlsEnabledWithBroker=true
 brokerClientTrustCertsFilePath=/path/to/ca.cert.pem
+brokerClientCertificateFilePath=/path/to/client.cert.pem
+brokerClientKeyFilePath=/path/to/client.key-pk8.pem
 ```
 
 ## Client configuration
 
-When you enable the TLS transport encryption, you need to configure the client to use ```https://``` and port 8443 for the web service URL, and ```pulsar+ssl://``` and port 6651 for the broker service URL.
+When you enable the TLS transport encryption, you need to configure the client to use `https://` and port 8443 for the web service URL, and `pulsar+ssl://` and port 6651 for the broker service URL.
 
-As the server certificate that you generated above does not belong to any of the default trust chains, you also need to either specify the path the **trust cert** (recommended), or tell the client to allow untrusted server certs.
+As the server certificate that you generated above does not belong to any of the default trust chains, you also need to either specify the path of the **trust cert** (recommended), or tell the client to allow untrusted server certs.
 
 ### Hostname verification
 
@@ -178,7 +239,7 @@ Moreover, as the administrator has full control of the certificate authority, a 
 
 One scenario where you may want to enable hostname verification is where you have multiple proxy nodes behind a VIP, and the VIP has a DNS record, for example, pulsar.mycompany.com. In this case, you can generate a TLS cert with pulsar.mycompany.com as the "CommonName," and then enable hostname verification on the client.
 
-The examples below show that hostname verification is disabled for the CLI tools/Java/Python/C++/Node.js/C# clients by default. 
+The examples below show that hostname verification is disabled for the CLI tools/Java/Python/C++/Node.js/C# clients by default.
 
 ### CLI tools
 
@@ -189,9 +250,10 @@ You need to add the following parameters to that file to use TLS transport with 
 ```properties
 webServiceUrl=https://broker.example.com:8443/
 brokerServiceUrl=pulsar+ssl://broker.example.com:6651/
-useTls=true
 tlsAllowInsecureConnection=false
 tlsTrustCertsFilePath=/path/to/ca.cert.pem
+tlsKeyFilePath=/path/to/client.key-pk8.pem
+tlsCertFile=/path/to/client-cert.pem
 tlsEnableHostnameVerification=false
 ```
 
@@ -202,7 +264,8 @@ import org.apache.pulsar.client.api.PulsarClient;
 
 PulsarClient client = PulsarClient.builder()
     .serviceUrl("pulsar+ssl://broker.example.com:6651/")
-    .enableTls(true)
+    .tlsKeyFilePath("/path/to/client.key-pk8.pem")
+    .tlsCertificateFilePath("/path/to/client.cert.pem")
     .tlsTrustCertsFilePath("/path/to/ca.cert.pem")
     .enableTlsHostnameVerification(false) // false by default, in any case
     .allowTlsInsecureConnection(false) // false by default, in any case
@@ -222,7 +285,7 @@ client = Client("pulsar+ssl://broker.example.com:6651/",
 
 #### C++ client
 
-```c++
+```cpp
 #include <pulsar/Client.h>
 
 ClientConfiguration config = ClientConfiguration();
@@ -235,7 +298,7 @@ config.setValidateHostName(false);
 
 #### Node.js client
 
-```JavaScript
+```javascript
 const Pulsar = require('pulsar-client');
 
 (async () => {
@@ -251,7 +314,7 @@ const Pulsar = require('pulsar-client');
 
 #### C# client
 
-```c#
+```csharp
 var certificate = new X509Certificate2("ca.cert.pem");
 var client = PulsarClient.Builder()
                          .TrustedCertificateAuthority(certificate) //If the CA is not trusted on the host, you can add it explicitly.
@@ -259,4 +322,5 @@ var client = PulsarClient.Builder()
                          .VerifyCertificateName(false)     //Default is 'false'
                          .Build();
 ```
+
 > Note that `VerifyCertificateName` refers to the configuration of hostname verification in the C# client.

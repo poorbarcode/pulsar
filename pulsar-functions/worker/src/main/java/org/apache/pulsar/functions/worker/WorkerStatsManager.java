@@ -29,6 +29,7 @@ import java.io.StringWriter;
 import java.util.List;
 import java.util.function.Supplier;
 import lombok.Setter;
+import org.apache.pulsar.common.util.DirectMemoryUtils;
 import org.apache.pulsar.functions.instance.stats.PrometheusTextFormat;
 import org.apache.pulsar.functions.proto.Function;
 
@@ -190,7 +191,7 @@ public class WorkerStatsManager {
       Gauge.build("jvm_memory_direct_bytes_max", "-").create().setChild(new Gauge.Child() {
         @Override
         public double get() {
-          return io.netty.util.internal.PlatformDependent.maxDirectMemory();
+          return DirectMemoryUtils.jvmMaxDirectMemory();
         }
       }).register(CollectorRegistry.defaultRegistry);
     }
@@ -325,6 +326,11 @@ public class WorkerStatsManager {
   }
 
   private void writeMetric(String metricName, long value, StringWriter stream) {
+    stream.write("# TYPE ");
+    stream.write(PULSAR_FUNCTION_WORKER_METRICS_PREFIX);
+    stream.write(metricName);
+    stream.write(" gauge \n");
+
     stream.write(PULSAR_FUNCTION_WORKER_METRICS_PREFIX);
     stream.write(metricName);
     stream.write("{");

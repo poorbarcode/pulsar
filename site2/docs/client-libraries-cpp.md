@@ -1,7 +1,7 @@
 ---
 id: client-libraries-cpp
 title: Pulsar C++ client
-sidebar_label: C++
+sidebar_label: "C++"
 ---
 
 You can use Pulsar C++ client to create Pulsar producers and consumers in C++.
@@ -10,17 +10,19 @@ All the methods in producer, consumer, and reader of a C++ client are thread-saf
 
 ## Supported platforms
 
-Pulsar C++ client is supported on **Linux** ,**MacOS** and **Windows** platforms.
+Pulsar C++ client is supported on **Linux**, **macOS** and **Windows** platforms.
 
-[Doxygen](http://www.doxygen.nl/)-generated API docs for the C++ client are available [here](/api/cpp).
-
+Doxygen-generated API docs for the C++ client are available [here](/api/cpp).
 
 ## Linux
 
-> **Note**   
-> You can choose one of the following installation methods based on your needs: Compilation, Install RPM or Install Debian.
+:::note
 
-### Compilation 
+You can choose one of the following installation methods based on your needs: Compilation, Install RPM or Install Debian.
+
+:::
+
+### Compilation
 
 #### System requirements
 
@@ -35,43 +37,43 @@ You need to install the following components before using the C++ client:
 1. Clone the Pulsar repository.
 
 ```shell
-$ git clone https://github.com/apache/pulsar
+git clone https://github.com/apache/pulsar
 ```
 
 2. Install all necessary dependencies.
 
 ```shell
-$ apt-get install cmake libssl-dev libcurl4-openssl-dev liblog4cxx-dev \
-  libprotobuf-dev protobuf-compiler libboost-all-dev google-mock libgtest-dev libjsoncpp-dev
+apt-get install cmake libssl-dev libcurl4-openssl-dev liblog4cxx-dev \
+libprotobuf-dev protobuf-compiler libboost-all-dev google-mock libgtest-dev libjsoncpp-dev
 ```
 
 3. Compile and install [Google Test](https://github.com/google/googletest).
 
 ```shell
 # libgtest-dev version is 1.18.0 or above
-$ cd /usr/src/googletest
-$ sudo cmake .
-$ sudo make
-$ sudo cp ./googlemock/libgmock.a ./googlemock/gtest/libgtest.a /usr/lib/
+cd /usr/src/googletest
+sudo cmake .
+sudo make
+sudo cp ./googlemock/libgmock.a ./googlemock/gtest/libgtest.a /usr/lib/
 
 # less than 1.18.0
-$ cd /usr/src/gtest
-$ sudo cmake .
-$ sudo make
-$ sudo cp libgtest.a /usr/lib
+cd /usr/src/gtest
+sudo cmake .
+sudo make
+sudo cp libgtest.a /usr/lib
 
-$ cd /usr/src/gmock
-$ sudo cmake .
-$ sudo make
-$ sudo cp libgmock.a /usr/lib
+cd /usr/src/gmock
+sudo cmake .
+sudo make
+sudo cp libgmock.a /usr/lib
 ```
 
 4. Compile the Pulsar client library for C++ inside the Pulsar repository.
 
 ```shell
-$ cd pulsar-client-cpp
-$ cmake .
-$ make
+cd pulsar-client-cpp
+cmake .
+make
 ```
 
 After you install the components successfully, the files `libpulsar.so` and `libpulsar.a` are in the `lib` folder of the repository. The tools `perfProducer` and `perfConsumer` are in the `perf` directory.
@@ -82,11 +84,13 @@ After you install the components successfully, the files `libpulsar.so` and `lib
 
 After you download and install RPM or DEB, the `libpulsar.so`, `libpulsarnossl.so`, `libpulsar.a`, and `libpulsarwithdeps.a` libraries are in your `/usr/lib` directory.
 
-By default, they are built in code path `${PULSAR_HOME}/pulsar-client-cpp`. You can build with the command below.
+By default, they are built-in code path `${PULSAR_HOME}/pulsar-client-cpp`. You can build with the command below.
 
- `cmake . -DBUILD_TESTS=OFF -DLINK_STATIC=ON && make pulsarShared pulsarSharedNossl pulsarStatic pulsarStaticWithDeps -j 3`.
+ ```bash
+ cmake . -DBUILD_TESTS=OFF -DLINK_STATIC=ON && make pulsarShared pulsarSharedNossl pulsarStatic pulsarStaticWithDeps -j 3
+ ```
 
-These libraries rely on some other libraries. If you want to get detailed version of dependencies, see [RPM](https://github.com/apache/pulsar/blob/master/pulsar-client-cpp/pkg/rpm/Dockerfile) or [DEB](https://github.com/apache/pulsar/blob/master/pulsar-client-cpp/pkg/deb/Dockerfile) files.
+These libraries rely on some other libraries. If you want to get a detailed version of dependencies, see [RPM](https://github.com/apache/pulsar/blob/master/pulsar-client-cpp/pkg/rpm/Dockerfile) or [DEB](https://github.com/apache/pulsar/blob/master/pulsar-client-cpp/pkg/deb/Dockerfile) files.
 
 1. `libpulsar.so` is a shared library, containing statically linked `boost` and `openssl`. It also dynamically links all other necessary libraries. You can use this Pulsar library with the command below.
 
@@ -111,60 +115,65 @@ These libraries rely on some other libraries. If you want to get detailed versio
 ```bash
  g++ --std=c++11  PulsarTest.cpp -o test /usr/lib/libpulsarwithdeps.a -lssl -lcrypto -ldl -lpthread  -I/usr/local/ssl/include -L/usr/local/ssl/lib
 ```
+
 The `libpulsarwithdeps.a` does not include library openssl related libraries `libssl` and `libcrypto`, because these two libraries are related to security. It is more reasonable and easier to use the versions provided by the local system to handle security issues and upgrade libraries.
 
 ### Install RPM
 
-1. Download a RPM package from the links in the table. 
+1. Download an RPM package from the links in the table. 
 
 | Link | Crypto files |
 |------|--------------|
-| [client]({{pulsar:dist_rpm:client}}) | [asc]({{pulsar:dist_rpm:client}}.asc), [sha512]({{pulsar:dist_rpm:client}}.sha512) |
-| [client-debuginfo]({{pulsar:dist_rpm:client-debuginfo}}) | [asc]({{pulsar:dist_rpm:client-debuginfo}}.asc),  [sha512]({{pulsar:dist_rpm:client-debuginfo}}.sha512) |
-| [client-devel]({{pulsar:dist_rpm:client-devel}}) | [asc]({{pulsar:dist_rpm:client-devel}}.asc),  [sha512]({{pulsar:dist_rpm:client-devel}}.sha512) |
+| [client](@pulsar:dist_rpm:client@) | [asc](@pulsar:dist_rpm:client@.asc), [sha512](@pulsar:dist_rpm:client@.sha512) |
+| [client-debuginfo](@pulsar:dist_rpm:client-debuginfo@) | [asc](@pulsar:dist_rpm:client-debuginfo@.asc),  [sha512](@pulsar:dist_rpm:client-debuginfo@.sha512) |
+| [client-devel](@pulsar:dist_rpm:client-devel@) | [asc](@pulsar:dist_rpm:client-devel@.asc),  [sha512](@pulsar:dist_rpm:client-devel@.sha512) |
 
 2. Install the package using the following command.
 
 ```bash
-$ rpm -ivh apache-pulsar-client*.rpm
+rpm -ivh apache-pulsar-client*.rpm
 ```
 
-After you install RPM successfully, Pulsar libraries are in the `/usr/lib` directory，for example：
+After you install RPM successfully, Pulsar libraries are in the `/usr/lib` directory, for example：
+
 ```bash
 lrwxrwxrwx 1 root root 18 Dec 30 22:21 libpulsar.so -> libpulsar.so.2.9.1
 lrwxrwxrwx 1 root root 23 Dec 30 22:21 libpulsarnossl.so -> libpulsarnossl.so.2.9.1
 ```
 
-> **Note**  
-> If you get the error that `libpulsar.so: cannot open shared object file: No such file or directory` when starting Pulsar client, you may need to run `ldconfig` first.
+:::note
+
+If you get the error that `libpulsar.so: cannot open shared object file: No such file or directory` when starting Pulsar client, you may need to run `ldconfig` first.
+
+:::
 
 2. Install the GCC and g++ using the following command, otherwise errors would occur in installing Node.js.
 
 ```bash
-$ sudo yum -y install gcc automake autoconf libtool make
-$ sudo yum -y install gcc-c++
+sudo yum -y install gcc automake autoconf libtool make
+sudo yum -y install gcc-c++
 ```
 
 ### Install Debian
 
-1. Download a Debian package from the links in the table. 
+1. Download a Debian package from the links in the table.
 
 | Link | Crypto files |
 |------|--------------|
-| [client]({{pulsar:deb:client}}) | [asc]({{pulsar:dist_deb:client}}.asc), [sha512]({{pulsar:dist_deb:client}}.sha512) |
-| [client-devel]({{pulsar:deb:client-devel}}) | [asc]({{pulsar:dist_deb:client-devel}}.asc),  [sha512]({{pulsar:dist_deb:client-devel}}.sha512) |
+| [client](@pulsar:deb:client@) | [asc](@pulsar:dist_deb:client@.asc), [sha512](@pulsar:dist_deb:client@.sha512) |
+| [client-devel](@pulsar:deb:client-devel@) | [asc](@pulsar:dist_deb:client-devel@.asc),  [sha512](@pulsar:dist_deb:client-devel@.sha512) |
 
 2. Install the package using the following command.
 
 ```bash
-$ apt install ./apache-pulsar-client*.deb
+apt install ./apache-pulsar-client*.deb
 ```
 
 After you install DEB successfully, Pulsar libraries are in the `/usr/lib` directory.
 
 ### Build
 
-> If you want to build RPM and Debian packages from the latest master, follow the instructions below. You should run all the instructions at the root directory of your cloned Pulsar repository.
+If you want to build RPM and Debian packages from the latest master, follow the instructions below. You must run all the instructions at the root directory of your cloned Pulsar repository.
 
 There are recipes that build RPM and Debian packages containing a
 statically linked `libpulsar.so` / `libpulsarnossl.so` / `libpulsar.a` / `libpulsarwithdeps.a` with all required dependencies.
@@ -211,34 +220,35 @@ Debian packages are created in the `pulsar-client-cpp/pkg/deb/BUILD/DEB/` path.
 1. Clone the Pulsar repository.
 
 ```shell
-$ git clone https://github.com/apache/pulsar
+git clone https://github.com/apache/pulsar
 ```
 
 2. Install all necessary dependencies.
 
 ```shell
 # OpenSSL installation
-$ brew install openssl
-$ export OPENSSL_INCLUDE_DIR=/usr/local/opt/openssl/include/
-$ export OPENSSL_ROOT_DIR=/usr/local/opt/openssl/
+brew install openssl
+export OPENSSL_INCLUDE_DIR=/usr/local/opt/openssl/include/
+export OPENSSL_ROOT_DIR=/usr/local/opt/openssl/
 
 # Protocol Buffers installation
-$ brew install protobuf boost boost-python log4cxx
+brew install protobuf boost boost-python log4cxx
 # If you are using python3, you need to install boost-python3 
 
 # Google Test installation
-$ git clone https://github.com/google/googletest.git
-$ cd googletest
-$ cmake .
-$ make install
+git clone https://github.com/google/googletest.git
+cd googletest
+git checkout release-1.12.1
+cmake .
+make install
 ```
 
 3. Compile the Pulsar client library in the repository that you cloned.
 
 ```shell
-$ cd pulsar-client-cpp
-$ cmake .
-$ make
+cd pulsar-client-cpp
+cmake .
+make
 ```
 
 ### Install `libpulsar`
@@ -256,7 +266,7 @@ brew install libpulsar
 1. Clone the Pulsar repository.
 
 ```shell
-$ git clone https://github.com/apache/pulsar
+git clone https://github.com/apache/pulsar
 ```
 
 2. Install all necessary dependencies.
@@ -273,10 +283,12 @@ cmake -B ./build -A x64 -DBUILD_PYTHON_WRAPPER=OFF -DBUILD_TESTS=OFF -DVCPKG_TRI
 cmake --build ./build --config Release
 ```
 
-> **NOTE**
->
-> 1. For Windows 32-bit, you need to use `-A Win32` and `-DVCPKG_TRIPLET=x86-windows`.
-> 2. For MSVC Debug mode, you need to replace `Release` with `Debug` for both `CMAKE_BUILD_TYPE` variable and `--config` option.
+:::note
+
+* For Windows 32-bit, you need to use `-A Win32` and `-DVCPKG_TRIPLET=x86-windows`.
+* For MSVC Debug mode, you need to replace `Release` with `Debug` for both `CMAKE_BUILD_TYPE` variable and `--config` option.
+
+:::
 
 4. Client libraries are available in the following places.
 
@@ -287,20 +299,22 @@ ${PULSAR_HOME}/pulsar-client-cpp/build/lib/Release/pulsar.dll
 
 ## Connection URLs
 
-To connect Pulsar using client libraries, you need to specify a Pulsar protocol URL.
+To connect to Pulsar using client libraries, you need to specify a [Pulsar protocol](developing-binary-protocol.md) URL.
 
-Pulsar protocol URLs are assigned to specific clusters, you can use the Pulsar URI scheme. The default port is `6650`. The following is an example for localhost.
+You can assign Pulsar protocol URLs to specific clusters and use the `pulsar` scheme. The following is an example of `localhost` with the default port `6650`:
 
 ```http
 pulsar://localhost:6650
 ```
 
-In a Pulsar cluster in production, the URL looks as follows. 
+If you have multiple brokers, separate `IP:port` by commas:
+
 ```http
-pulsar://pulsar.us-west.example.com:6650
+pulsar://localhost:6550,localhost:6651,localhost:6652
 ```
 
-If you use TLS authentication, you need to add `ssl`, and the default port is `6651`. The following is an example.
+If you use [TLS](security-tls-authentication.md) authentication, add `+ssl` in the scheme:
+
 ```http
 pulsar+ssl://pulsar.us-west.example.com:6651
 ```
@@ -315,7 +329,7 @@ To use Pulsar as a producer, you need to create a producer on the C++ client. Th
 
 This example sends 100 messages using the blocking style. While simple, it does not produce high throughput as it waits for each ack to come back before sending the next message.
 
-```c++
+```cpp
 #include <pulsar/Client.h>
 #include <thread>
 
@@ -323,6 +337,8 @@ using namespace pulsar;
 
 int main() {
     Client client("pulsar://localhost:6650");
+
+    Producer producer;
 
     Result result = client.createProducer("persistent://public/default/my-topic", producer);
     if (result != ResultOk) {
@@ -355,15 +371,16 @@ int main() {
 
 ### Non-blocking example
 
-This example sends 100 messages using the non-blocking style calling `sendAsync` instead of `send`. This allows the producer to have multiple messages inflight at a time which increases throughput.
+This example sends 100 messages using the non-blocking style calling `sendAsync` instead of `send`. This allows the producer to have multiple messages in-flight at a time which increases throughput.
 
 The producer configuration `blockIfQueueFull` is useful here to avoid `ResultProducerQueueIsFull` errors when the internal queue for outgoing send requests becomes full. Once the internal queue is full, `sendAsync` becomes blocking which can make your code simpler.
 
 Without this configuration, the result code `ResultProducerQueueIsFull` is passed to the callback. You must decide how to deal with that (retry, discard etc).
 
-```c++
+```cpp
 #include <pulsar/Client.h>
 #include <thread>
+#include <atomic>
 
 using namespace pulsar;
 
@@ -426,7 +443,7 @@ With our example above, that reduces the number of internal producers spread out
 
 Note that there can be extra latency for the first message sent. If you set a low send timeout, this timeout could be reached if the initial connection handshake is slow to complete.
 
-```c++
+```cpp
 ProducerConfiguration producerConf;
 producerConf.setPartitionsRoutingMode(ProducerConfiguration::UseSinglePartition);
 producerConf.setLazyStartPartitionedProducers(true);
@@ -434,24 +451,29 @@ producerConf.setLazyStartPartitionedProducers(true);
 
 ### Enable chunking
 
-Message [chunking](concepts-messaging.md#chunking) enables Pulsar to process large payload messages by splitting the message into chunks at the producer side and aggregating chunked messages at the consumer side. 
+Message [chunking](concepts-messaging.md#chunking) enables Pulsar to process large payload messages by splitting the message into chunks at the producer side and aggregating chunked messages at the consumer side.
 
 The message chunking feature is OFF by default. The following is an example about how to enable message chunking when creating a producer.
 
-```c++
+```cpp
 ProducerConfiguration conf;
 conf.setBatchingEnabled(false);
 conf.setChunkingEnabled(true);
 Producer producer;
 client.createProducer("my-topic", conf, producer);
 ```
-> **Note:** To enable chunking, you need to disable batching (`setBatchingEnabled`=`false`) concurrently.
+
+:::note
+
+To enable chunking, you need to disable batching (`setBatchingEnabled`=`false`) concurrently.
+
+:::
 
 ## Create a consumer
 
 To use Pulsar as a consumer, you need to create a consumer on the C++ client. There are two main ways of using the consumer:
 - [Blocking style](#blocking-example): synchronously calling `receive(msg)`.
-- [Non-blocking](#consumer-with-a-message-listener) (event based) style: using a message listener.
+- [Non-blocking](#consumer-with-a-message-listener) (event-based) style: using a message listener.
 
 ### Blocking example
 
@@ -459,7 +481,7 @@ The benefit of this approach is that it is the simplest code. Simply keeps calli
 
 This example starts a subscription at the earliest offset and consumes 100 messages.
 
-```c++
+```cpp
 #include <pulsar/Client.h>
 
 using namespace pulsar;
@@ -497,11 +519,11 @@ int main() {
 
 ### Consumer with a message listener
 
-You can avoid running a loop with blocking calls with an event based style by using a message listener which is invoked for each message that is received.
+You can avoid running a loop by blocking calls with an event-based style by using a message listener which is invoked for each message that is received.
 
 This example starts a subscription at the earliest offset and consumes 100 messages.
 
-```c++
+```cpp
 #include <pulsar/Client.h>
 #include <atomic>
 #include <thread>
@@ -547,11 +569,11 @@ int main() {
 
 ### Configure chunking
 
-You can limit the maximum number of chunked messages a consumer maintains concurrently by configuring the `setMaxPendingChunkedMessage` and `setAutoAckOldestChunkedMessageOnQueueFull` parameters. When the threshold is reached, the consumer drops pending messages by silently acknowledging them or asking the broker to redeliver them later. 
+You can limit the maximum number of chunked messages a consumer maintains concurrently by configuring the `setMaxPendingChunkedMessage` and `setAutoAckOldestChunkedMessageOnQueueFull` parameters. When the threshold is reached, the consumer drops pending messages by silently acknowledging them or asking the broker to redeliver them later.
 
 The following is an example of how to configure message chunking.
 
-```c++
+```cpp
 ConsumerConfiguration conf;
 conf.setAutoAckOldestChunkedMessageOnQueueFull(true);
 conf.setMaxPendingChunkedMessage(100);
@@ -584,55 +606,52 @@ schema, see [Pulsar schema](schema-get-started.md).
 
 - The following example shows how to create a producer with an Avro schema.
 
-    ```cpp
-    static const std::string exampleSchema =
-        "{\"type\":\"record\",\"name\":\"Example\",\"namespace\":\"test\","
-        "\"fields\":[{\"name\":\"a\",\"type\":\"int\"},{\"name\":\"b\",\"type\":\"int\"}]}";
-    Producer producer;
-    ProducerConfiguration producerConf;
-    producerConf.setSchema(SchemaInfo(AVRO, "Avro", exampleSchema));
-    client.createProducer("topic-avro", producerConf, producer);
-    ```
+  ```cpp
+  static const std::string exampleSchema =
+      "{\"type\":\"record\",\"name\":\"Example\",\"namespace\":\"test\","
+      "\"fields\":[{\"name\":\"a\",\"type\":\"int\"},{\"name\":\"b\",\"type\":\"int\"}]}";
+  Producer producer;
+  ProducerConfiguration producerConf;
+  producerConf.setSchema(SchemaInfo(AVRO, "Avro", exampleSchema));
+  client.createProducer("topic-avro", producerConf, producer);
+  ```
 
 - The following example shows how to create a consumer with an Avro schema.
 
-    ```cpp
-    static const std::string exampleSchema =
-        "{\"type\":\"record\",\"name\":\"Example\",\"namespace\":\"test\","
-        "\"fields\":[{\"name\":\"a\",\"type\":\"int\"},{\"name\":\"b\",\"type\":\"int\"}]}";
-    ConsumerConfiguration consumerConf;
-    Consumer consumer;
-    consumerConf.setSchema(SchemaInfo(AVRO, "Avro", exampleSchema));
-    client.subscribe("topic-avro", "sub-2", consumerConf, consumer)
-    ```
+  ```cpp
+  static const std::string exampleSchema =
+      "{\"type\":\"record\",\"name\":\"Example\",\"namespace\":\"test\","
+      "\"fields\":[{\"name\":\"a\",\"type\":\"int\"},{\"name\":\"b\",\"type\":\"int\"}]}";
+  ConsumerConfiguration consumerConf;
+  Consumer consumer;
+  consumerConf.setSchema(SchemaInfo(AVRO, "Avro", exampleSchema));
+  client.subscribe("topic-avro", "sub-2", consumerConf, consumer)
+  ```
 
 ### ProtobufNative schema
 
 The following example shows how to create a producer and a consumer with a ProtobufNative schema.
-​
-1. Generate the `User` class using Protobuf3. 
 
-    > **Note**  
-    > You need to use Protobuf3 or later versions.
-​
+1. Generate the `User` class using Protobuf3 or later versions.
+
    ```protobuf
    syntax = "proto3";
-   
+
    message User {
        string name = 1;
        int32 age = 2;
    }
    ```
-​
+
 2. Include the `ProtobufNativeSchema.h` in your source code. Ensure the Protobuf dependency has been added to your project.
-​
-   ```c++
+
+   ```cpp
    #include <pulsar/ProtobufNativeSchema.h>
    ```
-​
+
 3. Create a producer to send a `User` instance.
-​
-   ```c++
+
+   ```cpp
    ProducerConfiguration producerConf;
    producerConf.setSchema(createProtobufNativeSchema(User::GetDescriptor()));
    Producer producer;
@@ -644,10 +663,10 @@ The following example shows how to create a producer and a consumer with a Proto
    user.SerializeToString(&content);
    producer.send(MessageBuilder().setContent(content).build());
    ```
-​
+
 4. Create a consumer to receive a `User` instance.
-​
-   ```c++
+
+   ```cpp
    ConsumerConfiguration consumerConf;
    consumerConf.setSchema(createProtobufNativeSchema(User::GetDescriptor()));
    consumerConf.setSubscriptionInitialPosition(InitialPositionEarliest);
@@ -658,3 +677,4 @@ The following example shows how to create a producer and a consumer with a Proto
    User user2;
    user2.ParseFromArray(msg.getData(), msg.getLength());
    ```
+

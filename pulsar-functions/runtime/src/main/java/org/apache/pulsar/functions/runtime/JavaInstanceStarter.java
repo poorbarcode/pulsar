@@ -61,6 +61,12 @@ public class JavaInstanceStarter implements AutoCloseable {
             listConverter = StringConverter.class)
     public String jarFile;
 
+    @Parameter(
+            names = "--transform_function_jar",
+            description = "Path to Transform Function Jar\n",
+            listConverter = StringConverter.class)
+    public String transformFunctionJarFile;
+
     @Parameter(names = "--instance_id", description = "Instance Id\n", required = true)
     public int instanceId;
 
@@ -72,6 +78,9 @@ public class JavaInstanceStarter implements AutoCloseable {
 
     @Parameter(names = "--pulsar_serviceurl", description = "Pulsar Service Url\n", required = true)
     public String pulsarServiceUrl;
+
+    @Parameter(names = "--transform_function_id", description = "Transform Function Id\n")
+    public String transformFunctionId;
 
     @Parameter(names = "--client_auth_plugin", description = "Client auth plugin name\n")
     public String clientAuthenticationPlugin;
@@ -157,6 +166,7 @@ public class JavaInstanceStarter implements AutoCloseable {
 
         InstanceConfig instanceConfig = new InstanceConfig();
         instanceConfig.setFunctionId(functionId);
+        instanceConfig.setTransformFunctionId(transformFunctionId);
         instanceConfig.setFunctionVersion(functionVersion);
         instanceConfig.setInstanceId(instanceId);
         instanceConfig.setMaxBufferedTuples(maxBufferedTuples);
@@ -220,6 +230,8 @@ public class JavaInstanceStarter implements AutoCloseable {
                 instanceConfig,
                 jarFile,
                 null, // we really dont use this in thread container
+                transformFunctionJarFile,
+                null, // we really dont use this in thread container
                 containerFactory,
                 expectedHealthCheckInterval * 1000);
 
@@ -228,17 +240,14 @@ public class JavaInstanceStarter implements AutoCloseable {
                 .build()
                 .start();
         log.info("JavaInstance Server started, listening on " + port);
-        java.lang.Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                // Use stderr here since the logger may have been reset by its JVM shutdown hook.
-                try {
-                    close();
-                } catch (Exception ex) {
-                    System.err.println(ex);
-                }
+        java.lang.Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            // Use stderr here since the logger may have been reset by its JVM shutdown hook.
+            try {
+                close();
+            } catch (Exception ex) {
+                System.err.println(ex);
             }
-        });
+        }));
 
         log.info("Starting runtimeSpawner");
         runtimeSpawner.start();

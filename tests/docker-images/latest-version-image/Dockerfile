@@ -27,7 +27,7 @@ USER root
 RUN rm -rf /var/lib/apt/lists/* && apt-get update
 RUN apt-get install -y procps curl git build-essential
 
-ENV GOLANG_VERSION 1.13.3
+ENV GOLANG_VERSION 1.15.8
 
 RUN curl -sSL https://golang.org/dl/go$GOLANG_VERSION.linux-amd64.tar.gz \
 		| tar -C /usr/local -xz
@@ -42,6 +42,7 @@ RUN mkdir -p /go/src /go/bin && chmod -R 777 /go
 ENV GOROOT /usr/local/go
 ENV GOPATH /go
 ENV PATH /go/bin:$PATH
+ENV GO111MODULE=on
 
 COPY target/pulsar-function-go/ /go/src/github.com/apache/pulsar/pulsar-function-go
 RUN cd /go/src/github.com/apache/pulsar/pulsar-function-go && go install ./...
@@ -88,7 +89,7 @@ COPY scripts/init-cluster.sh scripts/run-global-zk.sh scripts/run-local-zk.sh \
      scripts/run-standalone.sh \
      /pulsar/bin/
 
-COPY conf/presto/jvm.config /pulsar/conf/presto/
+COPY conf/presto/jvm.config /pulsar/trino/conf
 
 # copy python test examples
 RUN mkdir -p /pulsar/instances/deps
@@ -105,6 +106,9 @@ COPY target/java-test-functions.jar /pulsar/examples/
 # copy go test examples
 COPY --from=pulsar-function-go /go/bin /pulsar/examples/go-examples
 
+# copy broker plugins
+COPY target/plugins/ /pulsar/examples/
+
 # Include all offloaders
 COPY --from=pulsar-all /pulsar/offloaders /pulsar/offloaders
 
@@ -117,6 +121,7 @@ COPY --from=pulsar-all /pulsar/connectors/pulsar-io-jdbc-postgres-*.nar /pulsar/
 COPY --from=pulsar-all /pulsar/connectors/pulsar-io-kafka-*.nar /pulsar/connectors/
 COPY --from=pulsar-all /pulsar/connectors/pulsar-io-rabbitmq-*.nar /pulsar/connectors/
 COPY --from=pulsar-all /pulsar/connectors/pulsar-io-batch-data-generator-*.nar /pulsar/connectors/
+COPY --from=pulsar-all /pulsar/connectors/pulsar-io-kinesis-*.nar /pulsar/connectors/
 
 # download Oracle JDBC driver for Oracle Debezium Connector tests
 RUN mkdir -p META-INF/bundled-dependencies

@@ -82,7 +82,7 @@ public interface BrokerInterceptor extends AutoCloseable {
      *
      * @param cnx client Connection
      * @param consumer Consumer object
-     * @param metadata A map of metdata
+     * @param metadata A map of metadata
      */
     default void consumerCreated(ServerCnx cnx,
                                  Consumer consumer,
@@ -123,6 +123,23 @@ public interface BrokerInterceptor extends AutoCloseable {
                               CommandAck ackCmd) {
     }
 
+    /**
+     * Intercept when a transaction begins.
+     *
+     * @param tcId Transaction Coordinator Id
+     * @param txnID Transaction ID
+     */
+    default void txnOpened(long tcId, String txnID) {
+    }
+
+    /**
+     * Intercept when a transaction ends.
+     *
+     * @param txnID Transaction ID
+     * @param txnAction Transaction Action
+     */
+    default void txnEnded(String txnID, long txnAction) {
+    }
     /**
      * Called by the broker while new command incoming.
      */

@@ -36,8 +36,8 @@ import org.apache.pulsar.common.policies.data.TransactionInBufferStats;
  *
  * <p>When committing transaction starts, the broker will append a `COMMITTED`
  * marker to the data partition first to mark the transaction is committed.
- * The broker knows the data ledger of the commit marker and calls {@link #commitTxn(TxnID, long, long)}
- * to commit and seal the buffer.
+ * The broker knows the data ledger of the commit marker and calls
+ * {@link TransactionBuffer#commitTxn(TxnID, long)} to commit and seal the buffer.
  *
  * <p>When the marker is appended to the data partition, all the entries are visible
  * to the consumers. So a transaction reader {@link TransactionBufferReader} will be
@@ -167,7 +167,7 @@ public interface TransactionBuffer {
      * Get transaction stats in buffer.
      * @return the transaction stats in buffer.
      */
-    TransactionBufferStats getStats();
+    TransactionBufferStats getStats(boolean lowWaterMarks);
 
     /**
      * Wait TransactionBuffer Recovers completely.
@@ -176,4 +176,12 @@ public interface TransactionBuffer {
      * @return a future which has completely if isTxn = false. Or a future return by takeSnapshot.
      */
     CompletableFuture<Void> checkIfTBRecoverCompletely(boolean isTxn);
+
+
+
+    long getOngoingTxnCount();
+
+    long getAbortedTxnCount();
+
+    long getCommittedTxnCount();
 }

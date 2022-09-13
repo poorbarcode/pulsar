@@ -75,7 +75,7 @@ public class ManagedLedgerErrorsTest extends MockedBookKeeperTestCase {
         ledger.deleteCursor("c1");
 
         assertFalse(metadataStore.exists("/managed-ledgers/my_test_ledger/c1").join());
-        assertEquals(bkc.getLedgers().size(), 2);
+        assertEquals(bkc.getLedgers().size(), 1);
     }
 
     @Test
@@ -434,7 +434,7 @@ public class ManagedLedgerErrorsTest extends MockedBookKeeperTestCase {
         assertEquals(entries.size(), 2);
         assertEquals(new String(entries.get(0).getData()), "entry-1");
         assertEquals(new String(entries.get(1).getData()), "entry-4");
-        entries.forEach(e -> e.release());
+        entries.forEach(Entry::release);
     }
 
     @Test
@@ -483,7 +483,7 @@ public class ManagedLedgerErrorsTest extends MockedBookKeeperTestCase {
         assertEquals(new String(entries.get(0).getData()), "entry-1");
         assertEquals(new String(entries.get(1).getData()), "entry-2");
         assertEquals(new String(entries.get(2).getData()), "entry-3");
-        entries.forEach(e -> e.release());
+        entries.forEach(Entry::release);
     }
 
     @Test
@@ -491,7 +491,8 @@ public class ManagedLedgerErrorsTest extends MockedBookKeeperTestCase {
         ManagedLedger ledger = factory.open("my_test_ledger");
         ManagedCursor cursor = ledger.openCursor("my-cursor");
         Position position = ledger.addEntry("entry".getBytes());
-
+        Position position1 = ledger.addEntry("entry".getBytes());
+        cursor.markDelete(position);
         bkc.failNow(BKException.Code.BookieHandleNotAvailableException);
         metadataStore.failConditional(new MetadataStoreException("error"), (op, path) ->
                 path.equals("/managed-ledgers/my_test_ledger/my-cursor")
@@ -499,7 +500,7 @@ public class ManagedLedgerErrorsTest extends MockedBookKeeperTestCase {
         );
 
         try {
-            cursor.markDelete(position);
+            cursor.markDelete(position1);
             fail("should fail");
         } catch (ManagedLedgerException e) {
             // ok
@@ -509,7 +510,7 @@ public class ManagedLedgerErrorsTest extends MockedBookKeeperTestCase {
         Thread.sleep(100);
 
         // Next markDelete should succeed
-        cursor.markDelete(position);
+        cursor.markDelete(position1);
     }
 
     @Test

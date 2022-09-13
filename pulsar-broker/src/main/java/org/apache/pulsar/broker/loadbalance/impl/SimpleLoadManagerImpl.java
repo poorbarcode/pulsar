@@ -202,7 +202,10 @@ public class SimpleLoadManagerImpl implements LoadManager, Consumer<Notification
         bundleLossesCache = new HashSet<>();
         brokerCandidateCache = new HashSet<>();
         availableBrokersCache = new HashSet<>();
-        brokerToNamespaceToBundleRange = new ConcurrentOpenHashMap<>();
+        brokerToNamespaceToBundleRange =
+                ConcurrentOpenHashMap.<String,
+                        ConcurrentOpenHashMap<String, ConcurrentOpenHashSet<String>>>newBuilder()
+                        .build();
         this.brokerTopicLoadingPredicate = new BrokerTopicLoadingPredicate() {
             @Override
             public boolean isEnablePersistentTopics(String brokerUrl) {
@@ -259,7 +262,7 @@ public class SimpleLoadManagerImpl implements LoadManager, Consumer<Notification
     @Override
     public void start() throws PulsarServerException {
         // Register the brokers in metadata store
-        String lookupServiceAddress = getBrokerAddress();
+        String lookupServiceAddress = pulsar.getLookupServiceAddress();
         String brokerLockPath = LOADBALANCE_BROKERS_ROOT + "/" + lookupServiceAddress;
 
         try {
@@ -851,8 +854,12 @@ public class SimpleLoadManagerImpl implements LoadManager, Consumer<Notification
                 // same broker.
                 brokerToNamespaceToBundleRange
                         .computeIfAbsent(selectedRU.getResourceId().replace("http://", ""),
-                                k -> new ConcurrentOpenHashMap<>())
-                        .computeIfAbsent(namespaceName, k -> new ConcurrentOpenHashSet<>()).add(bundleRange);
+                                k -> ConcurrentOpenHashMap.<String,
+                                        ConcurrentOpenHashSet<String>>newBuilder()
+                                        .build())
+                        .computeIfAbsent(namespaceName, k ->
+                                ConcurrentOpenHashSet.<String>newBuilder().build())
+                        .add(bundleRange);
                 ranking.addPreAllocatedServiceUnit(serviceUnitId, quota);
                 resourceUnitRankings.put(selectedRU, ranking);
             }
@@ -1069,7 +1076,7 @@ public class SimpleLoadManagerImpl implements LoadManager, Consumer<Notification
                 loadReport.setProtocols(pulsar.getProtocolDataToAdvertise());
                 loadReport.setNonPersistentTopicsEnabled(pulsar.getConfiguration().isEnableNonPersistentTopics());
                 loadReport.setPersistentTopicsEnabled(pulsar.getConfiguration().isEnablePersistentTopics());
-                loadReport.setName(getBrokerAddress());
+                loadReport.setName(pulsar.getLookupServiceAddress());
                 loadReport.setBrokerVersionString(pulsar.getBrokerVersion());
 
                 SystemResourceUsage systemResourceUsage = this.getSystemResourceUsage();
@@ -1135,13 +1142,6 @@ public class SimpleLoadManagerImpl implements LoadManager, Consumer<Notification
                 throw e;
             }
         }
-    }
-
-    private String getBrokerAddress() {
-        return String.format("%s:%s", pulsar.getAdvertisedAddress(),
-                pulsar.getConfiguration().getWebServicePort().isPresent()
-                        ? pulsar.getConfiguration().getWebServicePort().get()
-                        : pulsar.getConfiguration().getWebServicePortTls().get());
     }
 
     @Override
@@ -1271,7 +1271,10 @@ public class SimpleLoadManagerImpl implements LoadManager, Consumer<Notification
             final Set<String> preallocatedBundles = resourceUnitRankings.get(resourceUnit).getPreAllocatedBundles();
             final ConcurrentOpenHashMap<String, ConcurrentOpenHashSet<String>> namespaceToBundleRange =
                     brokerToNamespaceToBundleRange
-                            .computeIfAbsent(broker.replace("http://", ""), k -> new ConcurrentOpenHashMap<>());
+                            .computeIfAbsent(broker.replace("http://", ""),
+                                    k -> ConcurrentOpenHashMap.<String,
+                                            ConcurrentOpenHashSet<String>>newBuilder()
+                                            .build());
             namespaceToBundleRange.clear();
             LoadManagerShared.fillNamespaceToBundlesMap(loadedBundles, namespaceToBundleRange);
             LoadManagerShared.fillNamespaceToBundlesMap(preallocatedBundles, namespaceToBundleRange);

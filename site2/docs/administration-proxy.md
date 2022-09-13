@@ -1,14 +1,14 @@
 ---
 id: administration-proxy
 title: Pulsar proxy
-sidebar_label: Pulsar proxy
+sidebar_label: "Pulsar proxy"
 ---
 
 Pulsar proxy is an optional gateway. Pulsar proxy is used when direct connections between clients and Pulsar brokers are either infeasible or undesirable. For example, when you run Pulsar in a cloud environment or on [Kubernetes](https://kubernetes.io) or an analogous platform, you can run Pulsar proxy.
 
 ## Configure the proxy
 
-Before using the proxy, you need to configure it with the brokers addresses in the cluster. You can configure the broker URL in the proxy configuration, or the proxy to connect directly using service discovery.
+Before using a proxy, you need to configure it with a broker's address in the cluster. You can configure the broker URL in the proxy configuration, or the proxy to connect directly using service discovery.
 
 > In a production environment service discovery is not recommended.
 
@@ -27,13 +27,14 @@ functionWorkerWebServiceURL=http://function-workers.example.com:8080
 ```
 
 If you use TLS, configure the broker URLs in the following way:
+
 ```properties
 brokerServiceURLTLS=pulsar+ssl://brokers.example.com:6651
 brokerWebServiceURLTLS=https://brokers.example.com:8443
 functionWorkerWebServiceURL=https://function-workers.example.com:8443
 ```
 
-The hostname in the URLs provided should be a DNS entry which points to multiple brokers or a virtual IP address, which is backed by multiple broker IP addresses, so that the proxy does not lose connectivity to Pulsar cluster if a single broker becomes unavailable.
+The hostname in the URLs provided should be a DNS entry that points to multiple brokers or a virtual IP address, which is backed by multiple broker IP addresses, so that the proxy does not lose connectivity to Pulsar cluster if a single broker becomes unavailable.
 
 The ports to connect to the brokers (6650 and 8080, or in the case of TLS, 6651 and 8443) should be open in the network ACLs.
 
@@ -42,6 +43,7 @@ Note that if you do not use functions, you do not need to configure `functionWor
 ### Use service discovery
 
 Pulsar uses [ZooKeeper](https://zookeeper.apache.org) for service discovery. To connect the proxy to ZooKeeper, specify the following in `conf/proxy.conf`.
+
 ```properties
 metadataStoreUrl=my-zk-0:2181,my-zk-1:2181,my-zk-2:2181
 configurationMetadataStoreUrl=my-zk-0:2184,my-zk-remote:2184
@@ -56,10 +58,10 @@ configurationMetadataStoreUrl=my-zk-0:2184,my-zk-remote:2184
 To start the proxy:
 
 ```bash
-$ cd /path/to/pulsar/directory
-$ bin/pulsar proxy \
-  --metadata-store zk:my-zk-1:2181,my-zk-2:2181,my-zk-3:2181 \
-  --configuration-metadata-store zk:my-zk-1:2181,my-zk-2:2181,my-zk-3:2181
+cd /path/to/pulsar/directory
+bin/pulsar proxy \
+--metadata-store zk:my-zk-1:2181,my-zk-2:2181,my-zk-3:2181 \
+--configuration-metadata-store zk:my-zk-1:2181,my-zk-2:2181,my-zk-3:2181
 ```
 
 > You can run multiple instances of the Pulsar proxy in a cluster.

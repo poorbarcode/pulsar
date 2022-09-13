@@ -76,7 +76,7 @@ public class StreamingEntryReader implements AsyncCallbacks.ReadEntryCallback, W
     /**
      * Read entries in streaming way, that said instead of reading with micro batch and send entries to consumer after
      * all entries in the batch are read from ledger, this method will fire numEntriesToRead requests to managedLedger
-     * and send entry to consumer whenever it is read && all entries before it have been sent to consumer.
+     * and send entry to consumer whenever it is read and all entries before it have been sent to consumer.
      * @param numEntriesToRead number of entry to read from ledger.
      * @param maxReadSizeByte maximum byte will be read from ledger.
      * @param ctx Context send along with read request.
@@ -197,7 +197,8 @@ public class StreamingEntryReader implements AsyncCallbacks.ReadEntryCallback, W
         PositionImpl readPosition = pendingReadEntryRequest.position;
         pendingReadEntryRequest.retry++;
         long waitTimeMillis = readFailureBackoff.next();
-        if (exception.getCause() instanceof TransactionBufferException.TransactionNotSealedException) {
+        if (exception.getCause() instanceof TransactionBufferException.TransactionNotSealedException
+                || exception.getCause() instanceof ManagedLedgerException.OffloadReadHandleClosedException) {
             waitTimeMillis = 1;
             if (log.isDebugEnabled()) {
                 log.debug("[{}] Error reading transaction entries : {}, - Retrying to read in {} seconds",
