@@ -23,12 +23,16 @@ import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import lombok.Cleanup;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.bookkeeper.mledger.impl.ManagedCursorImpl;
 import org.apache.pulsar.broker.BrokerTestUtil;
+import org.apache.pulsar.broker.service.persistent.PersistentDispatcherSingleActiveConsumer;
+import org.apache.pulsar.broker.service.persistent.PersistentSubscription;
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.MessageId;
@@ -369,18 +373,17 @@ public class NegativeAcksTest extends ProducerConsumerBase {
     public void testFailoverConsumerBatchCumulateAck() throws Exception {
         final String topic = BrokerTestUtil.newUniqueName("my-topic");
         admin.topics().createPartitionedTopic(topic, 2);
+        String subName = "sub";
 
-        @Cleanup
         Consumer<Integer> consumer = pulsarClient.newConsumer(Schema.INT32)
                 .topic(topic)
-                .subscriptionName("sub")
+                .subscriptionName(subName)
                 .subscriptionType(SubscriptionType.Failover)
                 .enableBatchIndexAcknowledgment(true)
                 .acknowledgmentGroupTime(100, TimeUnit.MILLISECONDS)
                 .receiverQueueSize(10)
                 .subscribe();
 
-        @Cleanup
         Producer<Integer> producer = pulsarClient.newProducer(Schema.INT32)
                 .topic(topic)
                 .batchingMaxMessages(10)
@@ -425,6 +428,11 @@ public class NegativeAcksTest extends ProducerConsumerBase {
         consumerLatch.await();
         Thread.sleep(500);
         count = 0;
+
+        String tpName1 = "persistent://public/default/" + topic + "-partition-0";
+        String tpName2 = "persistent://public/default/" + topic + "-partition-0";
+        ensureHasBacklog(consumer, subName, tpName1, tpName2);
+
         while(true) {
             Message<Integer> msg = consumer.receive(5, TimeUnit.SECONDS);
             if (msg == null) {
@@ -438,5 +446,32 @@ public class NegativeAcksTest extends ProducerConsumerBase {
         }
         Assert.assertEquals(count, 9);
         Assert.assertEquals(0, datas.size());
+
+        consumer.close();
+        producer.close();
+        admin.topics().deletePartitionedTopic(topic, false);
+    }
+
+    private void ensureHasBacklog(Consumer consumer, String subName, String...topicNames) throws Exception {
+        int hasBacklog = 0;
+        for (String topicName : topicNames){
+            PersistentSubscription subscription = (PersistentSubscription) pulsar.getBrokerService().getTopics()
+                    .get(topicName).get().get().getSubscription(subName);
+            PersistentDispatcherSingleActiveConsumer dispatcher =
+                    (PersistentDispatcherSingleActiveConsumer) subscription.getDispatcher();
+            ManagedCursorImpl cursor = (ManagedCursorImpl) subscription.getCursor();
+            hasBacklog += cursor.hasMoreEntries() ? 1 : 0;
+        }
+        if (consumer instanceof ConsumerImpl consumerImpl){
+            hasBacklog += consumerImpl.incomingMessages.size();
+        } else if (consumer instanceof MultiTopicsConsumerImpl multiTopicsConsumer){
+            List<ConsumerImpl> consumers = multiTopicsConsumer.getConsumers();
+            for (ConsumerImpl consumerImpl : consumers){
+                hasBacklog += consumerImpl.incomingMessages.size();
+            }
+            hasBacklog += multiTopicsConsumer.incomingMessages.size();
+        }
+        Assert.assertTrue(hasBacklog > 0, "ensure has backlog");
+        // TODO await and loop send flow, ensure message not lost.
     }
 }
