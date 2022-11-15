@@ -1578,6 +1578,10 @@ public class ConsumerImpl<T> extends ConsumerBase<T> implements ConnectionHandle
                     skippedMessages++;
                     continue;
                 }
+                if (acknowledgmentsGroupingTracker.isDuplicate(message.getMessageId())) {
+                    skippedMessages++;
+                    continue;
+                }
                 executeNotifyCallback(message);
             }
             if (ackBitSet != null) {
