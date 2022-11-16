@@ -25,6 +25,7 @@ import static org.testng.Assert.assertTrue;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import lombok.Cleanup;
@@ -402,7 +403,7 @@ public class NegativeAcksTest extends ProducerConsumerBase {
             count++;
         }
         producerLatch.await();
-        CountDownLatch consumerLatch = new CountDownLatch(1);
+        final CompletableFuture completableFuture = new CompletableFuture();
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -421,17 +422,21 @@ public class NegativeAcksTest extends ProducerConsumerBase {
                             }
                         })
                         .whenComplete((r, e) -> {
-                            consumerLatch.countDown();
+                            if (e != null){
+                                completableFuture.completeExceptionally(e);
+                            } else {
+                                completableFuture.complete(null);
+                            }
                         });
             }
         }).start();
-        consumerLatch.await();
+        completableFuture.get();
         Thread.sleep(500);
         count = 0;
 
-        String tpName1 = "persistent://public/default/" + topic + "-partition-0";
-        String tpName2 = "persistent://public/default/" + topic + "-partition-0";
-        ensureHasBacklog(consumer, subName, tpName1, tpName2);
+//        String tpName1 = "persistent://public/default/" + topic + "-partition-0";
+//        String tpName2 = "persistent://public/default/" + topic + "-partition-0";
+//        ensureHasBacklog(consumer, subName, tpName1, tpName2);
 
         while(true) {
             Message<Integer> msg = consumer.receive(5, TimeUnit.SECONDS);
