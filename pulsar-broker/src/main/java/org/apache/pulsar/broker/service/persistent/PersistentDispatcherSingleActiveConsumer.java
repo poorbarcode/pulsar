@@ -269,8 +269,9 @@ public class PersistentDispatcherSingleActiveConsumer extends AbstractDispatcher
 
     @Override
     public void redeliverUnacknowledgedMessages(Consumer consumer, long consumerEpoch) {
-        internalRedeliverUnacknowledgedMessages(consumer, consumerEpoch);
-
+        topic.getBrokerService().getTopicOrderedExecutor().executeOrdered(topicName, SafeRun.safeRun(() -> {
+            internalRedeliverUnacknowledgedMessages(consumer, consumerEpoch);
+        }));
     }
 
     private synchronized void internalRedeliverUnacknowledgedMessages(Consumer consumer, long consumerEpoch) {
@@ -300,9 +301,7 @@ public class PersistentDispatcherSingleActiveConsumer extends AbstractDispatcher
         if (log.isDebugEnabled()) {
             log.debug("[{}-{}] Cursor rewinded, redelivering unacknowledged messages. ", name, consumer);
         }
-        topic.getBrokerService().getTopicOrderedExecutor().executeOrdered(topicName, SafeRun.safeRun(() -> {
-            readMoreEntries(consumer);
-        }));
+        readMoreEntries(consumer);
     }
 
     @Override
