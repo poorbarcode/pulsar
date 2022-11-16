@@ -33,7 +33,7 @@ import org.apache.pulsar.common.util.keystoretls.KeyStoreSSLContext;
 import org.apache.pulsar.common.util.keystoretls.SSLContextValidatorEngine;
 import org.testng.annotations.Test;
 
-@Test(groups = "broker-impl")
+@Test(groups = "broker-impl2")
 public class KeyStoreTlsTest {
 
     @Test(timeOut = 300000)

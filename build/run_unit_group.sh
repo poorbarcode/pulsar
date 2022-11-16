@@ -62,19 +62,19 @@ alias echo='{ [[ $- =~ .*x.* ]] && trace_enabled=1 || trace_enabled=0; set +x; }
 
 # Test Groups  -- start --
 function test_group_broker_group_1() {
-  mvn_test -pl pulsar-broker -Dgroups='broker' -DtestReuseFork=true -DskipAfterFailureCount=1
+  mvn_test -pl pulsar-broker -Dgroups='broker-impl' -DtestReuseFork=true -DskipAfterFailureCount=1
 }
 
 function test_group_broker_group_2() {
-  mvn_test -pl pulsar-broker -Dgroups='schema,utils,functions-worker,broker-io,broker-discovery,broker-compaction,broker-naming,websocket,other'
+  mvn_test -pl pulsar-broker -Dgroups='broker-impl'
 }
 
 function test_group_broker_group_3() {
-  mvn_test -pl pulsar-broker -Dgroups='broker-admin'
+  mvn_test -pl pulsar-broker -Dgroups='broker-impl'
 }
 
 function test_group_broker_client_api() {
-  mvn_test -pl pulsar-broker -Dgroups='broker-api'
+  mvn_test -pl pulsar-broker -Dgroups='broker-impl'
 }
 
 function test_group_broker_client_impl() {

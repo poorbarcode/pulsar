@@ -42,7 +42,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-@Test(groups = "broker-impl")
+@Test(groups = "broker-impl2")
 public class BatchMessageIndexAckDisableTest extends ProducerConsumerBase {
 
     @BeforeMethod

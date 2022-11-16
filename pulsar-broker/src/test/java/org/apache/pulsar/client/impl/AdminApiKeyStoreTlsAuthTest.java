@@ -63,7 +63,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 @Slf4j
-@Test(groups = "broker-impl")
+@Test(groups = "broker-impl2")
 public class AdminApiKeyStoreTlsAuthTest extends ProducerConsumerBase {
     private final String clusterName = "test";
     Set<String> tlsProtocols = Sets.newConcurrentHashSet();

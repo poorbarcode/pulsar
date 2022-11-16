@@ -56,7 +56,7 @@ import org.testng.annotations.Test;
  * Unit test for {@link org.apache.pulsar.client.impl.TableViewImpl}.
  */
 @Slf4j
-@Test(groups = "broker-impl")
+@Test(groups = "broker-impl2")
 public class TableViewTest extends MockedPulsarServiceBaseTest {
 
     @BeforeClass

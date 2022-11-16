@@ -59,7 +59,7 @@ import javax.crypto.SecretKey;
 
 // TLS authentication and authorization based on KeyStore type config.
 @Slf4j
-@Test(groups = "broker-impl")
+@Test(groups = "broker-impl2")
 public class KeyStoreTlsProducerConsumerTestWithAuthTest extends ProducerConsumerBase {
     private final SecretKey SECRET_KEY = AuthTokenUtils.createSecretKey(SignatureAlgorithm.HS256);
     private final String CLIENTUSER_TOKEN = AuthTokenUtils.createToken(SECRET_KEY, "clientuser", Optional.empty());

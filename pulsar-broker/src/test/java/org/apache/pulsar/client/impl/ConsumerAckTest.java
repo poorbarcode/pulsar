@@ -57,7 +57,7 @@ import org.testng.annotations.Test;
 import org.testng.collections.Sets;
 
 @Slf4j
-@Test(groups = "broker-impl")
+@Test(groups = "broker-impl2")
 public class ConsumerAckTest extends ProducerConsumerBase {
 
     private TransactionImpl transaction;

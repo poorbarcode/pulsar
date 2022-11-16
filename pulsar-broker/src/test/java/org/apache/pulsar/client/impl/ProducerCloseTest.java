@@ -41,7 +41,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-@Test(groups = "broker-impl")
+@Test(groups = "broker-impl2")
 public class ProducerCloseTest extends ProducerConsumerBase {
 
     @Override

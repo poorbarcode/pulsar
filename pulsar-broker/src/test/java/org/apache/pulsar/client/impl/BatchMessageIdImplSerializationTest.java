@@ -24,7 +24,7 @@ import java.io.IOException;
 
 import org.testng.annotations.Test;
 
-@Test(groups = "broker-impl")
+@Test(groups = "broker-impl2")
 public class BatchMessageIdImplSerializationTest {
 
     @Test

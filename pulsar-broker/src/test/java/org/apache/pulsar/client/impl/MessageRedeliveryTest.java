@@ -53,7 +53,7 @@ import org.testng.annotations.Test;
 import com.google.common.collect.Sets;
 import io.netty.util.concurrent.DefaultThreadFactory;
 
-@Test(groups = "broker-impl")
+@Test(groups = "broker-impl2")
 public class MessageRedeliveryTest extends ProducerConsumerBase {
     private static final Logger log = LoggerFactory.getLogger(MessageRedeliveryTest.class);
 

@@ -31,7 +31,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-@Test(groups = "broker-impl")
+@Test(groups = "broker-impl2")
 public class AutoCloseUselessClientConNoPartTest extends AutoCloseUselessClientConSupports {
 
     private static String topicName = UUID.randomUUID().toString().replaceAll("-","");

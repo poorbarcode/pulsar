@@ -37,7 +37,7 @@ import org.awaitility.Awaitility;
 import org.mockito.Mockito;
 import org.testng.annotations.Test;
 
-@Test(groups = "broker-impl")
+@Test(groups = "broker-impl2")
 @Slf4j
 public class AutoClusterFailoverTest {
     @Test

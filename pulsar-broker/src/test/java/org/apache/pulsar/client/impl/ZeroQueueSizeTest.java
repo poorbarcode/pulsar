@@ -51,7 +51,7 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-@Test(groups = "broker-impl")
+@Test(groups = "broker-impl2")
 public class ZeroQueueSizeTest extends BrokerTestBase {
     private static final Logger log = LoggerFactory.getLogger(ZeroQueueSizeTest.class);
     private final int totalMessages = 10;

@@ -46,7 +46,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
-@Test(groups = "broker-impl")
+@Test(groups = "broker-impl2")
 public class ProducerSemaphoreTest extends ProducerConsumerBase {
 
     @Override

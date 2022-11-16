@@ -49,7 +49,7 @@ import org.testng.annotations.Test;
 
 // TLS test without authentication and authorization based on KeyStore type config.
 @Slf4j
-@Test(groups = "broker-impl")
+@Test(groups = "broker-impl2")
 public class KeyStoreTlsProducerConsumerTestWithoutAuthTest extends ProducerConsumerBase {
     private final String clusterName = "use";
     Set<String> tlsProtocols = Sets.newConcurrentHashSet();

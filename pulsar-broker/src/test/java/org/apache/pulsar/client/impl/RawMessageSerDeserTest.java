@@ -29,7 +29,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import lombok.Cleanup;
 
-@Test(groups = "broker-impl")
+@Test(groups = "broker-impl2")
 public class RawMessageSerDeserTest {
     static final Logger log = LoggerFactory.getLogger(RawMessageSerDeserTest.class);
 

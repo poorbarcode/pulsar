@@ -43,7 +43,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 @Slf4j
-@Test(groups = "broker-impl")
+@Test(groups = "broker-impl2")
 public class AutoCloseUselessClientConTXTest extends AutoCloseUselessClientConSupports {
 
     private static final String topicName = UUID.randomUUID().toString().replaceAll("-","");

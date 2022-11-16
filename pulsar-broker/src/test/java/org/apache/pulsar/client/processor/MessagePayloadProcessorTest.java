@@ -49,7 +49,7 @@ import org.testng.annotations.Test;
  * Test for {@link MessagePayloadProcessor}.
  */
 @Slf4j
-@Test(groups = "broker-impl")
+@Test(groups = "broker-impl2")
 public class MessagePayloadProcessorTest extends ProducerConsumerBase {
 
     @BeforeClass

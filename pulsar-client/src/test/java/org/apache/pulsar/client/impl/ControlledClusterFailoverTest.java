@@ -32,7 +32,7 @@ import org.testng.annotations.Test;
 
 import static org.mockito.Mockito.mock;
 
-@Test(groups = "broker-impl")
+@Test(groups = "broker-impl2")
 public class ControlledClusterFailoverTest {
     @Test
     public void testBuildControlledClusterFailoverInstance() throws IOException {

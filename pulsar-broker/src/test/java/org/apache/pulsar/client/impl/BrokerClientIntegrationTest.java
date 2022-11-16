@@ -112,7 +112,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-@Test(groups = "broker-impl")
+@Test(groups = "broker-impl2")
 public class BrokerClientIntegrationTest extends ProducerConsumerBase {
     private static final Logger log = LoggerFactory.getLogger(BrokerClientIntegrationTest.class);
 

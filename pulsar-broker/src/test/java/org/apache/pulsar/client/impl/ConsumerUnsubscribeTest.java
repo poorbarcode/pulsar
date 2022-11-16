@@ -28,7 +28,7 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-@Test(groups = "broker-impl")
+@Test(groups = "broker-impl2")
 public class ConsumerUnsubscribeTest {
 
     MockBrokerService mockBrokerService;

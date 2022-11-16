@@ -51,7 +51,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doReturn;
 
 @Slf4j
-@Test(groups = "broker-impl")
+@Test(groups = "broker-impl2")
 public class BatchMessageIndexAckTest extends ProducerConsumerBase {
 
     @BeforeMethod

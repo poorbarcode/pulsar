@@ -77,7 +77,7 @@ import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
-@Test(groups = "broker-impl")
+@Test(groups = "broker-impl2")
 public class TopicsConsumerImplTest extends ProducerConsumerBase {
     private static final long testTimeout = 90000; // 1.5 min
     private static final Logger log = LoggerFactory.getLogger(TopicsConsumerImplTest.class);

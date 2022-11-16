@@ -38,7 +38,7 @@ import org.testng.annotations.Test;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
-@Test(groups = "broker-impl")
+@Test(groups = "broker-impl2")
 public class ProducerMemoryLimitTest extends ProducerConsumerBase {
 
     @Override

@@ -35,7 +35,7 @@ import org.testng.annotations.Test;
 
 import java.util.concurrent.TimeUnit;
 
-@Test(groups = "broker-impl")
+@Test(groups = "broker-impl2")
 public class DispatchAccordingPermitsTests extends ProducerConsumerBase {
 
     @Override
