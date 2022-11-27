@@ -71,7 +71,7 @@ public class ManagedCursorTest2 extends MockedBookKeeperTestCase {
         return cursorFuture;
     }
 
-    @Test(timeOut = 300 * 1000)
+    @Test(invocationCount = 10)
     public void testConcurrentTrimLedgerAndOpenNewCursor2() throws Exception {
         String managedLedgerName = "lg_" + UUID.randomUUID().toString().replaceAll("-","");
         String cursorName1 = "cs_01";
@@ -102,8 +102,6 @@ public class ManagedCursorTest2 extends MockedBookKeeperTestCase {
         ManagedLedgerImpl.lock.set(0);
 
         ledger.maybeUpdateCursorBeforeTrimmingConsumedLedger();
-        ManagedCursorContainer managedCursorsContainer = (ManagedCursorContainer) ledger.getCursors();
-
         CompletableFuture trimLedgerFuture = new CompletableFuture();
         CompletableFuture<ManagedCursorImpl> cursorFuture = new CompletableFuture();
         new Thread(() -> {
