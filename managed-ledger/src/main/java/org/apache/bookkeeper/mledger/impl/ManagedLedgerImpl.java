@@ -139,6 +139,27 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
+
+    public static final AtomicInteger lock = new AtomicInteger();
+
+    public static boolean waitForValue(int expectValue, int toValue){
+
+        while (true){
+            if (lock.compareAndSet(expectValue, toValue)){
+                return true;
+            }
+            if (lock.get() >= toValue){
+                return false;
+            }
+            System.out.println("===> " + Thread.currentThread().getName() + ", wait for " + expectValue + " --> " + toValue + ", current:" + lock.get());
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
     private static final long MegaByte = 1024 * 1024;
 
     protected static final int AsyncOperationTimeoutSeconds = 30;
@@ -920,11 +941,12 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
             @Override
             public void operationComplete() {
                 log.info("[{}] Opened new cursor: {}", name, cursor);
+                ManagedLedgerImpl.waitForValue(0, 1);
+                ManagedLedgerImpl.waitForValue(3, 4);
                 cursor.setActive();
-                // Update the ack position (ignoring entries that were written while the cursor was being created)
                 cursor.initializeCursorPosition(initialPosition == InitialPosition.Latest ? getLastPositionAndCounter()
                         : getFirstPositionAndCounter());
-
+                ManagedLedgerImpl.waitForValue(5, 6);
                 synchronized (ManagedLedgerImpl.this) {
                     cursors.add(cursor);
                     uninitializedCursors.remove(cursorName).complete(cursor);
@@ -2369,6 +2391,7 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
                 && config.getLedgerOffloader() != NullLedgerOffloader.INSTANCE
                 ? config.getLedgerOffloader().getOffloadPolicies()
                 : null);
+        ManagedLedgerImpl.waitForValue(1, 2);
         synchronized (this) {
             if (log.isDebugEnabled()) {
                 log.debug("[{}] Start TrimConsumedLedgers. ledgers={} totalSize={}", name, ledgers.keySet(),
@@ -2460,7 +2483,14 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
                     }
                 }
             }
-
+            if (!ledgersToDelete.isEmpty()){
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            ManagedLedgerImpl.waitForValue(2, 3);
             for (LedgerInfo ls : ledgers.values()) {
                 if (isOffloadedNeedsDelete(ls.getOffloadContext(), optionalOffloadPolicies)
                         && !ledgersToDelete.contains(ls)) {
@@ -2469,6 +2499,7 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
                     offloadedLedgersToDelete.add(ls);
                 }
             }
+            ManagedLedgerImpl.waitForValue(4, 5);
 
             if (ledgersToDelete.isEmpty() && offloadedLedgersToDelete.isEmpty()) {
                 trimmerMutex.unlock();
