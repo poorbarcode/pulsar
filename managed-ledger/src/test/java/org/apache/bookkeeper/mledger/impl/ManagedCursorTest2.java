@@ -18,7 +18,6 @@
  */
 package org.apache.bookkeeper.mledger.impl;
 
-import com.google.common.base.Charsets;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,6 +25,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.bookkeeper.mledger.AsyncCallbacks;
 import org.apache.bookkeeper.mledger.ManagedCursor;
 import org.apache.bookkeeper.mledger.ManagedLedger;
@@ -34,10 +34,10 @@ import org.apache.bookkeeper.mledger.ManagedLedgerException;
 import org.apache.bookkeeper.mledger.Position;
 import org.apache.bookkeeper.test.MockedBookKeeperTestCase;
 import org.apache.pulsar.common.api.proto.CommandSubscribe;
-import org.awaitility.Awaitility;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+@Slf4j
 public class ManagedCursorTest2 extends MockedBookKeeperTestCase {
 
     private Position[][] makeManyLedgers(ManagedLedger ledger, int ledgerCount, int maxEntriesPerLedger)
@@ -71,14 +71,14 @@ public class ManagedCursorTest2 extends MockedBookKeeperTestCase {
         return cursorFuture;
     }
 
-    @Test(invocationCount = 10)
+    @Test
     public void testConcurrentTrimLedgerAndOpenNewCursor2() throws Exception {
-        String managedLedgerName = "lg_" + UUID.randomUUID().toString().replaceAll("-","");
+        String managedLedgerName = "lg_" + UUID.randomUUID().toString().replaceAll("-","_");
         String cursorName1 = "cs_01";
         String cursorName2 = "cs_02";
         int maxEntriesPerLedger = 5;
         int ledgerCount = 5;
-        ManagedLedgerImpl.lock.set(100);
+        ManagedLedgerImpl.LOCK.set(100);
 
         ManagedLedgerConfig config = new ManagedLedgerConfig();
         config.setThrottleMarkDelete(1);
@@ -89,7 +89,6 @@ public class ManagedCursorTest2 extends MockedBookKeeperTestCase {
         ManagedCursorImpl cursor1 = (ManagedCursorImpl) ledger.openCursor(cursorName1);
 
         Position[][] allPos = makeManyLedgers(ledger, ledgerCount, maxEntriesPerLedger);
-        Position expectLastTrimLedger = allPos[3][0];
         List<Position> deletePositions = new ArrayList<>();
         deletePositions.addAll(Arrays.asList(allPos[0]));
         deletePositions.addAll(Arrays.asList(allPos[1]));
@@ -99,7 +98,7 @@ public class ManagedCursorTest2 extends MockedBookKeeperTestCase {
 
         Thread.sleep(5 * 1000);
 
-        ManagedLedgerImpl.lock.set(0);
+        ManagedLedgerImpl.LOCK.set(0);
 
         ledger.maybeUpdateCursorBeforeTrimmingConsumedLedger();
         CompletableFuture trimLedgerFuture = new CompletableFuture();
