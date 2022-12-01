@@ -1691,6 +1691,11 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
     // Private helpers
 
     synchronized void ledgerClosed(final LedgerHandle lh) {
+        try {
+            Thread.sleep(1 * 200);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         final State state = STATE_UPDATER.get(this);
         LedgerHandle currentLedger = this.currentLedger;
         if (currentLedger == lh && (state == State.ClosingLedger || state == State.LedgerOpened)) {
@@ -1715,6 +1720,7 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
             ledgers.put(lh.getId(), info);
         } else {
             // The last ledger was empty, so we can discard it
+            printStackTrace(lh);
             ledgers.remove(lh.getId());
             mbean.startDataLedgerDeleteOp();
             bookKeeper.asyncDeleteLedger(lh.getId(), (rc, ctx) -> {
@@ -1730,6 +1736,14 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
         if (!pendingAddEntries.isEmpty()) {
             // Need to create a new ledger to write pending entries
             createLedgerAfterClosed();
+        }
+    }
+
+    private void printStackTrace(LedgerHandle lh){
+        try {
+            System.out.println(0 / 0);
+        } catch (Exception ex){
+            log.error("remove ledger {}, lastConfirmed {}, lh: {}", lh.getId(), lh.getLastAddConfirmed(), lh, ex);
         }
     }
 

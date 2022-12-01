@@ -23,6 +23,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.util.Recycler;
 import io.netty.util.Recycler.Handle;
 import io.netty.util.ReferenceCountUtil;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
@@ -170,8 +171,8 @@ public class OpAddEntry extends SafeRunnable implements AddCallback, CloseCallba
     @Override
     public void addComplete(int rc, final LedgerHandle lh, long entryId, Object ctx) {
         if (!STATE_UPDATER.compareAndSet(OpAddEntry.this, State.INITIATED, State.COMPLETED)) {
-            log.warn("[{}] The add op is terminal legacy callback for entry {}-{} adding.", ml.getName(), lh.getId(),
-                    entryId);
+            log.warn("[{}] The add op is terminal legacy callback for entry {}-{} adding. lh.lastConfirmed {}, lh: {}",
+                    ml.getName(), lh.getId(), entryId, lh.getLastAddConfirmed(), lh);
             OpAddEntry.this.recycle();
             return;
         }
@@ -191,9 +192,17 @@ public class OpAddEntry extends SafeRunnable implements AddCallback, CloseCallba
         }
 
         this.entryId = entryId;
-        if (log.isDebugEnabled()) {
-            log.debug("[{}] [{}] write-complete: ledger-id={} entry-id={} size={} rc={}", this, ml.getName(),
+        if (log.isInfoEnabled()) {
+            log.info("[{}] [{}] write-complete: ledger-id={} entry-id={} size={} rc={}", this, ml.getName(),
                     lh == null ? -1 : lh.getId(), entryId, dataLength, rc);
+        }
+
+        Random random = new Random();
+        int i = random.nextInt(3);
+        if (i == 1){
+            long ledgerId = ledger != null ? ledger.getId() : ((PositionImpl)ctx).getLedgerId();
+            log.info("===> error-pos {}:{}", ledgerId, entryId);
+            rc = BKException.Code.WriteException;
         }
 
         if (rc != BKException.Code.OK) {
