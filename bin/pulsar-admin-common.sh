@@ -18,7 +18,8 @@
 # under the License.
 #
 
-DEFAULT_CLIENT_CONF=$PULSAR_HOME/conf/client.conf
+# DEFAULT_CLIENT_CONF=$PULSAR_HOME/conf/client.conf
+DEFAULT_CLIENT_CONF=/Users/fengyubiao/.sncloud/client.conf
 DEFAULT_LOG_CONF=$PULSAR_HOME/conf/log4j2.yaml
 
 if [ -f "$PULSAR_HOME/conf/pulsar_tools_env.sh" ]
