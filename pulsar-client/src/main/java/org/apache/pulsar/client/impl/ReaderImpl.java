@@ -50,7 +50,7 @@ public class ReaderImpl<T> implements Reader<T> {
             .timeout(0, TimeUnit.MILLISECONDS)
             .maxNumMessages(1)
             .build();
-    private final ConsumerImpl<T> consumer;
+    public final ConsumerImpl<T> consumer;
 
     public ReaderImpl(PulsarClientImpl client, ReaderConfigurationData<T> readerConfiguration,
                       ExecutorProvider executorProvider, CompletableFuture<Consumer<T>> consumerFuture,

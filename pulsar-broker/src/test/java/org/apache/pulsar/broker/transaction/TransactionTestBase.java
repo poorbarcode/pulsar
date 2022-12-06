@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import lombok.Getter;
 import lombok.Setter;
@@ -158,6 +159,10 @@ public abstract class TransactionTestBase extends TestRetrySupport {
     }
 
     protected void startBroker() throws Exception {
+        startBroker(null);
+    }
+
+    protected void startBroker(Consumer<ServiceConfiguration> confInitializer) throws Exception {
         for (int i = 0; i < brokerCount; i++) {
             conf.setClusterName(CLUSTER_NAME);
             conf.setAdvertisedAddress("localhost");
@@ -180,6 +185,21 @@ public abstract class TransactionTestBase extends TestRetrySupport {
             conf.setBrokerDeduplicationEnabled(true);
             conf.setTransactionBufferSnapshotMaxTransactionCount(2);
             conf.setTransactionBufferSnapshotMinTimeInMillis(2000);
+            final int txCountPerSnapshot = 3;
+
+            // Disabled the task that takes snapshot.
+            conf.setTransactionBufferSnapshotMinTimeInMillis(Integer.MAX_VALUE);
+            conf.setTransactionBufferSnapshotMaxTransactionCount(txCountPerSnapshot);
+            // Disabled the task that trims ledger.
+            conf.setRetentionCheckIntervalInSeconds(Integer.MAX_VALUE);
+            // Disabled compaction.
+            conf.setBrokerServiceCompactionMonitorIntervalInSeconds(Integer.MAX_VALUE);
+//            conf.setDispatcherMaxReadBatchSize(1);
+            conf.setManagedLedgerMaxEntriesPerLedger(5);
+
+            if (confInitializer != null){
+                confInitializer.accept(conf);
+            }
             serviceConfigurationList.add(conf);
 
             PulsarService pulsar = spyWithClassAndConstructorArgs(PulsarService.class, conf);

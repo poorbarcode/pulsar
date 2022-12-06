@@ -28,11 +28,14 @@ import org.apache.bookkeeper.mledger.impl.PositionImpl;
 import org.apache.commons.collections4.map.LinkedMap;
 import org.apache.pulsar.broker.service.persistent.PersistentTopic;
 import org.apache.pulsar.broker.systopic.SystemTopicClient;
+import org.apache.pulsar.broker.systopic.TransactionBufferSnapshotBaseSystemTopicClient;
 import org.apache.pulsar.broker.transaction.buffer.AbortedTxnProcessor;
 import org.apache.pulsar.broker.transaction.buffer.metadata.AbortTxnMetadata;
 import org.apache.pulsar.broker.transaction.buffer.metadata.TransactionBufferSnapshot;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.transaction.TxnID;
+import org.apache.pulsar.client.impl.MessageIdImpl;
+import org.apache.pulsar.client.impl.ReaderImpl;
 import org.apache.pulsar.common.naming.TopicName;
 import org.apache.pulsar.common.util.FutureUtil;
 
@@ -78,6 +81,12 @@ public class SingleSnapshotAbortedTxnProcessorImpl implements AbortedTxnProcesso
         return aborts.containsKey(txnID);
     }
 
+    private int checkIncomingQueueEmpty(SystemTopicClient.Reader reader){
+        TransactionBufferSnapshotBaseSystemTopicClient.TransactionBufferSnapshotReader reader1 =
+                (TransactionBufferSnapshotBaseSystemTopicClient.TransactionBufferSnapshotReader) reader;
+        ReaderImpl reader2 = (ReaderImpl) reader1.reader;
+        return reader2.consumer.incomingMessages.size();
+    }
 
     @Override
     public CompletableFuture<PositionImpl> recoverFromSnapshot() {
@@ -88,6 +97,17 @@ public class SingleSnapshotAbortedTxnProcessorImpl implements AbortedTxnProcesso
                     try {
                         while (reader.hasMoreEvents()) {
                             Message<TransactionBufferSnapshot> message = reader.readNext();
+                            if (message != null){
+                                MessageIdImpl msgMessageId = (MessageIdImpl) message.getMessageId();
+                                log.info("===> recover {}:{}", msgMessageId.getLedgerId(),
+                                        msgMessageId.getEntryId());
+                                if (PositionImpl.PROCESS_COODINATOR.get() != Integer.MAX_VALUE) {
+                                    PositionImpl.waitForValue(0, 1);
+
+                                    PositionImpl.waitForValue(3, 4);
+                                }
+                            }
+
                             if (topic.getName().equals(message.getKey())) {
                                 TransactionBufferSnapshot transactionBufferSnapshot = message.getValue();
                                 if (transactionBufferSnapshot != null) {
@@ -106,6 +126,7 @@ public class SingleSnapshotAbortedTxnProcessorImpl implements AbortedTxnProcesso
                         closeReader(reader);
                         return FutureUtil.failedFuture(ex);
                     }
+
 
                 },  topic.getBrokerService().getPulsar().getTransactionExecutorProvider()
                         .getExecutor(this));

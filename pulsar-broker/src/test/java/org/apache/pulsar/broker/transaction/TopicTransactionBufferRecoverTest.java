@@ -33,21 +33,26 @@ import io.netty.buffer.Unpooled;
 import java.lang.reflect.Field;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import lombok.AllArgsConstructor;
 import lombok.Cleanup;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.bookkeeper.mledger.AsyncCallbacks;
 import org.apache.bookkeeper.mledger.Entry;
 import org.apache.bookkeeper.mledger.ManagedLedgerException;
+import org.apache.bookkeeper.mledger.impl.ManagedCursorImpl;
 import org.apache.bookkeeper.mledger.impl.ManagedLedgerImpl;
 import org.apache.bookkeeper.mledger.impl.PositionImpl;
 import org.apache.bookkeeper.mledger.impl.ReadOnlyManagedLedgerImpl;
 import org.apache.bookkeeper.mledger.proto.MLDataFormats;
 import org.apache.commons.collections4.map.LinkedMap;
 import org.apache.commons.lang3.RandomUtils;
+import org.apache.pulsar.broker.PulsarServerException;
 import org.apache.pulsar.broker.PulsarService;
 import org.apache.pulsar.broker.service.AbstractTopic;
 import org.apache.pulsar.broker.service.BrokerService;
@@ -74,6 +79,7 @@ import org.apache.pulsar.client.api.PulsarClientException;
 import org.apache.pulsar.client.api.Reader;
 import org.apache.pulsar.client.api.ReaderBuilder;
 import org.apache.pulsar.client.api.Schema;
+import org.apache.pulsar.client.api.SubscriptionType;
 import org.apache.pulsar.client.api.transaction.Transaction;
 import org.apache.pulsar.client.api.transaction.TxnID;
 import org.apache.pulsar.client.impl.MessageIdImpl;
@@ -104,6 +110,7 @@ public class TopicTransactionBufferRecoverTest extends TransactionTestBase {
     private static final int NUM_PARTITIONS = 16;
     @BeforeMethod
     protected void setup() throws Exception {
+        PositionImpl.PROCESS_COODINATOR.set(Integer.MAX_VALUE);
         setUpBase(1, NUM_PARTITIONS, RECOVER_COMMIT, 0);
         admin.topics().createNonPartitionedTopic(RECOVER_ABORT);
         admin.topics().createNonPartitionedTopic(TAKE_SNAPSHOT);
@@ -119,18 +126,18 @@ public class TopicTransactionBufferRecoverTest extends TransactionTestBase {
     }
 
     @DataProvider(name = "testTopic")
-    public Object[] testTopic() {
-        return new Object[] {
-                RECOVER_ABORT,
-                RECOVER_COMMIT
+    public Object[][] testTopic() {
+        return new Object[][] {
+                {RECOVER_ABORT},
+                {RECOVER_COMMIT}
         };
     }
 
     @DataProvider(name = "enableSnapshotSegment")
-    public Object[] testSnapshot() {
-        return new Boolean[] {
-                true,
-                false
+    public Object[][] testSnapshot() {
+        return new Object[][] {
+                {true},
+                {false}
         };
     }
 
@@ -246,6 +253,178 @@ public class TopicTransactionBufferRecoverTest extends TransactionTestBase {
         consumer.close();
         producer.close();
 
+    }
+
+    private ProducerAndConsumer makeManyTx(int txCount, String topicName, String subName) throws Exception {
+        Consumer<String> consumer = pulsarClient.newConsumer(Schema.STRING)
+                .subscriptionType(SubscriptionType.Shared)
+                .topic(topicName)
+                .isAckReceiptEnabled(true)
+                .acknowledgmentGroupTime(0, TimeUnit.SECONDS)
+                .subscriptionName(subName)
+                .subscribe();
+        Producer<String> producer = pulsarClient.newProducer(Schema.STRING)
+                .topic(topicName)
+                .sendTimeout(0, TimeUnit.SECONDS)
+                .enableBatching(false)
+                .batchingMaxMessages(2)
+                .create();
+        producer.send("first message");
+        boolean lastTxCommitted = false;
+        Message lastMessage = null;
+        for(int i = 0; i < txCount; i++) {
+            Transaction transaction =
+                    pulsarClient.newTransaction().withTransactionTimeout(10, TimeUnit.SECONDS).build().get();
+            lastMessage = consumer.receive();
+            producer.newMessage(transaction)
+                    .value(new StringBuilder("tx message 0-")
+                            .append(String.valueOf(lastMessage.getMessageId())).toString()).sendAsync();
+            producer.newMessage(transaction)
+                    .value(new StringBuilder("tx message 1-")
+                            .append(String.valueOf(lastMessage.getMessageId())).toString()).sendAsync();
+            consumer.acknowledgeAsync(lastMessage.getMessageId(), transaction);
+            if (i % 2 == 0) {
+                transaction.commit().get();
+                lastTxCommitted = true;
+            } else {
+                transaction.abort().get();
+                lastTxCommitted = false;
+            }
+        }
+        if (lastTxCommitted){
+            Message msg = consumer.receive();
+            consumer.acknowledge(msg);
+        } else {
+            consumer.acknowledge(lastMessage);
+        }
+        return new ProducerAndConsumer(producer, consumer);
+    }
+
+    @AllArgsConstructor
+    private static class ProducerAndConsumer {
+        public Producer<String> producer;
+        public Consumer<String> consumer;
+    }
+
+    private PersistentTopic findPersistentTopic(String topicName){
+        for (PulsarService pulsarService : pulsarServiceList){
+            CompletableFuture<Optional<Topic>> future = pulsarService.getBrokerService().getTopic(topicName, false);
+            if (future == null || !future.isDone() || future.isCompletedExceptionally() || !future.join().isPresent()){
+                continue;
+            }
+            return  (PersistentTopic) future.join().get();
+        }
+        throw new RuntimeException("topic[" + topicName + "] not found.");
+    }
+
+    private void triggerSnapshot(String topicName){
+        PersistentTopic persistentTopic = findPersistentTopic(topicName);
+        TopicTransactionBuffer topicTransactionBuffer =
+                (TopicTransactionBuffer) persistentTopic.getTransactionBuffer();
+        topicTransactionBuffer.run(null);
+    }
+
+    private SystemTopicClient.Reader waitForSnapshot(String topicName) throws Exception {
+        SystemTopicClient.Reader reader = pulsarServiceList.get(0).getTransactionBufferSnapshotServiceFactory()
+                .getTxnBufferSnapshotService()
+                .createReader(TopicName.get(topicName)).join();
+        reader.readNextAsync().join();
+        return reader;
+    }
+
+    private void triggerLedgerTrims(String topicName){
+        PersistentTopic persistentTopic = findPersistentTopic(topicName);
+        ManagedLedgerImpl managedLedger = (ManagedLedgerImpl) persistentTopic.getManagedLedger();
+        CompletableFuture future = new CompletableFuture();
+        managedLedger.trimConsumedLedgersInBackground(future);
+        future.join();
+    }
+
+    private Map<Long, MLDataFormats.ManagedLedgerInfo.LedgerInfo> getLedgers(String topicName){
+        PersistentTopic persistentTopic = findPersistentTopic(topicName);
+        ManagedLedgerImpl managedLedger = (ManagedLedgerImpl) persistentTopic.getManagedLedger();
+        return managedLedger.getLedgersInfo();
+    }
+
+    private void triggerCompact(String topicName) throws Exception {
+        PersistentTopic persistentTopic = findPersistentTopic(topicName);
+        ManagedLedgerImpl managedLedger = (ManagedLedgerImpl) persistentTopic.getManagedLedger();
+        persistentTopic.getBrokerService().getPulsar().getCompactor().compact(topicName);
+        Awaitility.await().untilAsserted(() -> {
+            ManagedCursorImpl compaction = (ManagedCursorImpl) managedLedger.getCursors().get("__compaction");
+            assertEquals(compaction.getMarkDeletedPosition().getLedgerId(),
+                    managedLedger.getLastConfirmedEntry().getLedgerId());
+            assertEquals(compaction.getMarkDeletedPosition().getEntryId(),
+                    managedLedger.getLastConfirmedEntry().getEntryId());
+        });
+        ManagedCursorImpl compaction = (ManagedCursorImpl) managedLedger.getCursors().get("__compaction");
+        log.info("===> cursor-compaction mark deleted position {}:{}", compaction.getMarkDeletedPosition().getLedgerId(),
+                compaction.getMarkDeletedPosition().getEntryId());
+    }
+
+    private void waitCursorDedup(String topicName) throws Exception {
+        PersistentTopic persistentTopic = findPersistentTopic(topicName);
+        ManagedLedgerImpl managedLedger = (ManagedLedgerImpl) persistentTopic.getManagedLedger();
+        persistentTopic.checkDeduplicationSnapshot();
+        Awaitility.await().untilAsserted(() -> {
+            ManagedCursorImpl dedupCursor = (ManagedCursorImpl) managedLedger.getCursors().get("pulsar.dedup");
+            assertEquals(dedupCursor.getMarkDeletedPosition().getLedgerId(),
+                    managedLedger.getLastConfirmedEntry().getLedgerId());
+            assertEquals(dedupCursor.getMarkDeletedPosition().getEntryId(),
+                    managedLedger.getLastConfirmedEntry().getEntryId());
+        });
+        ManagedCursorImpl dedupCursor = (ManagedCursorImpl) managedLedger.getCursors().get("pulsar.dedup");
+        log.info("===> cursor-dedup mark deleted position {}:{}", dedupCursor.getMarkDeletedPosition().getLedgerId(),
+                dedupCursor.getMarkDeletedPosition().getEntryId());
+    }
+
+    @Test
+    private void recoverTest2() throws Exception {
+        String topicName = String.format("persistent://%s/%s", NAMESPACE1,
+                "tx_recover_" + UUID.randomUUID().toString().replaceAll("-", "_"));
+        String subName = "sub";
+        String transactionBufferTopicName =
+                String.format("persistent://%s/%s", NAMESPACE1, TRANSACTION_BUFFER_SNAPSHOT);
+        ProducerAndConsumer producerAndConsumer = null;
+        for (int i = 0; i < 5; i++) {
+            producerAndConsumer = makeManyTx(10, topicName, subName);
+            triggerSnapshot(topicName);
+            if (i != 4) {
+                producerAndConsumer.producer.close();
+                producerAndConsumer.consumer.close();
+                // Reload for create new ledger.
+                admin.topics().unload(transactionBufferTopicName);
+            }
+        }
+
+        PositionImpl.PROCESS_COODINATOR.set(0);
+        admin.topics().unload(transactionBufferTopicName);
+        admin.topics().unload(topicName);
+        Awaitility.await().until(() -> {
+            try {
+                findPersistentTopic(topicName);
+                findPersistentTopic(transactionBufferTopicName);
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        });
+
+        Map<Long, MLDataFormats.ManagedLedgerInfo.LedgerInfo> ledgers = getLedgers(transactionBufferTopicName);
+        log.info("===> ledgers before trim {}", ledgers.keySet());
+        PositionImpl.waitForValue(1, 2);
+        triggerCompact(transactionBufferTopicName);
+        waitCursorDedup(transactionBufferTopicName);
+        triggerLedgerTrims(transactionBufferTopicName);
+        ledgers = getLedgers(transactionBufferTopicName);
+        log.info("===> ledgers after trim {}", ledgers.keySet());
+        PositionImpl.waitForValue(2, 3);
+
+        PositionImpl.waitForValue(100, 101);
+        // cleanup.
+        producerAndConsumer.producer.close();
+        producerAndConsumer.consumer.close();
+        admin.topics().delete(topicName, false);
     }
 
     private void testTakeSnapshot() throws Exception {

@@ -19,6 +19,7 @@
 package org.apache.pulsar.broker.service.persistent;
 
 import static org.apache.pulsar.broker.service.persistent.PersistentTopic.MESSAGE_RATE_BACKOFF_MS;
+import static org.apache.pulsar.common.naming.SystemTopicNames.TRANSACTION_BUFFER_SNAPSHOT;
 import static org.apache.pulsar.common.protocol.Commands.DEFAULT_CONSUMER_EPOCH;
 import io.netty.util.Recycler;
 import java.util.Iterator;
@@ -37,6 +38,7 @@ import org.apache.bookkeeper.mledger.ManagedLedgerException;
 import org.apache.bookkeeper.mledger.ManagedLedgerException.ConcurrentWaitCallbackException;
 import org.apache.bookkeeper.mledger.ManagedLedgerException.NoMoreEntriesToReadException;
 import org.apache.bookkeeper.mledger.ManagedLedgerException.TooManyRequestsException;
+import org.apache.bookkeeper.mledger.Position;
 import org.apache.bookkeeper.mledger.impl.PositionImpl;
 import org.apache.bookkeeper.mledger.util.SafeRun;
 import org.apache.commons.lang3.tuple.Pair;
@@ -353,6 +355,19 @@ public class PersistentDispatcherSingleActiveConsumer extends AbstractDispatcher
                     log.debug("[{}-{}] Schedule read of {} messages", name, consumer, messagesToRead);
                 }
                 havePendingRead = true;
+                if (!"__compaction".equals(getSubscriptionName())
+                        && "persistent://tnx/ns1/__transaction_buffer_snapshot".equals(topicName)
+                        && PositionImpl.PROCESS_COODINATOR.get() != Integer.MAX_VALUE){
+                    log.info("===> read start position {}:{}, messagesToRead: {}, availablePermits: {}",
+                            cursor.getReadPosition().getLedgerId(),
+                            cursor.getReadPosition().getEntryId(), messagesToRead,
+                            consumer.getAvailablePermits());
+//                    if (messagesToRead != 16){
+//                        log.info("===> The second read for tb recover. stuck the read.");
+//                        PositionImpl.waitForValue(3, 4);
+//                        log.info("===> The second read for tb recover. signal the read.");
+//                    }
+                }
                 if (consumer.readCompacted()) {
                     topic.getCompactedTopic().asyncReadEntriesOrWait(cursor, messagesToRead, isFirstRead,
                             this, consumer);

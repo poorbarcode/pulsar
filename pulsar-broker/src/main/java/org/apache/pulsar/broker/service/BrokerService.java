@@ -1922,7 +1922,7 @@ public class BrokerService implements Closeable {
             });
     }
 
-    private void checkConsumedLedgers() {
+    public void checkConsumedLedgers() {
         forEachTopic((t) -> {
             if (t instanceof PersistentTopic) {
                 Optional.ofNullable(((PersistentTopic) t).getManagedLedger()).ifPresent(

@@ -48,7 +48,7 @@ public class ManagedLedgerConfig {
     private boolean persistentUnackedRangesWithMultipleEntriesEnabled = false;
     private boolean deletionAtBatchIndexLevelEnabled = true;
     private int maxUnackedRangesToPersistInMetadataStore = 1000;
-    private int maxEntriesPerLedger = 50000;
+    private int maxEntriesPerLedger = 5;
     private int maxSizePerLedgerMb = 100;
     private int minimumRolloverTimeMs = 0;
     private long maximumRolloverTimeMs = TimeUnit.HOURS.toMillis(4);
@@ -58,7 +58,7 @@ public class ManagedLedgerConfig {
     private int metadataEnsembleSize = 3;
     private int metadataWriteQuorumSize = 2;
     private int metadataAckQuorumSize = 2;
-    private int metadataMaxEntriesPerLedger = 50000;
+    private int metadataMaxEntriesPerLedger = 5;
     private int ledgerRolloverTimeout = 4 * 3600;
     private double throttleMarkDelete = 0;
     private long retentionTimeMs = 0;

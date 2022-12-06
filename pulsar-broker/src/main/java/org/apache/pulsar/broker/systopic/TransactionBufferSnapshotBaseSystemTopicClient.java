@@ -126,9 +126,9 @@ public class  TransactionBufferSnapshotBaseSystemTopicClient<T> extends SystemTo
         }
     }
 
-    protected static class TransactionBufferSnapshotReader<T> implements Reader<T> {
+    public static class TransactionBufferSnapshotReader<T> implements Reader<T> {
 
-        private final org.apache.pulsar.client.api.Reader<T> reader;
+        public final org.apache.pulsar.client.api.Reader<T> reader;
         private final TransactionBufferSnapshotBaseSystemTopicClient<T> transactionBufferSnapshotBaseSystemTopicClient;
 
         protected TransactionBufferSnapshotReader(
@@ -202,6 +202,7 @@ public class  TransactionBufferSnapshotBaseSystemTopicClient<T> extends SystemTo
                 .topic(topicName.toString())
                 .startMessageId(MessageId.earliest)
                 .readCompacted(true)
+                .receiverQueueSize(16)
                 .createAsync()
                 .thenApply(reader -> {
                     if (log.isDebugEnabled()) {

@@ -18,11 +18,33 @@
  */
 package org.apache.bookkeeper.mledger.impl;
 
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import org.apache.bookkeeper.mledger.Position;
 import org.apache.bookkeeper.mledger.proto.MLDataFormats.NestedPositionInfo;
 import org.apache.bookkeeper.mledger.proto.MLDataFormats.PositionInfo;
 
 public class PositionImpl implements Position, Comparable<PositionImpl> {
+
+    public static final AtomicInteger PROCESS_COODINATOR = new AtomicInteger();
+
+    public static boolean waitForValue(int expectValue, int toValue){
+        while (true){
+            if (PROCESS_COODINATOR.compareAndSet(expectValue, toValue)){
+                return true;
+            }
+            if (PROCESS_COODINATOR.get() >= toValue){
+                return false;
+            }
+            System.out.println("===> " + Thread.currentThread().getName() + ", wait for " + expectValue + " --> " + toValue + ", current:" + PROCESS_COODINATOR.get());
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
 
     protected long ledgerId;
     protected long entryId;
