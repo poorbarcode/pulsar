@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 这里的status代表log4j初始化的时候的日志级别 -->
+<Configuration status="DEBUG" monitorInterval="1800">
+
+    <Appenders>
+        <!-- 打印在控制台 -->
+        <Console name="Console" target="SYSTEM_OUT">
+            <!-- 日志打印表达式 -->
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} %p %tid %c.%M %L -%m%n"/>
+        </Console>
+    </Appenders>
+
+    <Loggers>
+        <!-- 统一配置Appender和日志级别 -->
+        <!-- OFF、FATAL、ERROR、WARN、INFO、DEBUG、TRACE、 ALL -->
+        <root level="INFO" includeLocation="true" >
+            <appender-ref ref="Console"/>
+        </root>
+    </Loggers>
+</Configuration>

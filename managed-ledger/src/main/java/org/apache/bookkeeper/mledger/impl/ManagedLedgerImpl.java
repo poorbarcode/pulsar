@@ -128,6 +128,7 @@ import org.apache.bookkeeper.mledger.util.CallbackMutex;
 import org.apache.bookkeeper.mledger.util.Futures;
 import org.apache.bookkeeper.net.BookieId;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.pulsar.LockCoordinator;
 import org.apache.pulsar.common.api.proto.CommandSubscribe.InitialPosition;
 import org.apache.pulsar.common.policies.data.EnsemblePlacementPolicyConfig;
 import org.apache.pulsar.common.policies.data.ManagedLedgerInternalStats;
@@ -215,6 +216,7 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
     private final CallbackMutex offloadMutex = new CallbackMutex();
     private static final CompletableFuture<PositionImpl> NULL_OFFLOAD_PROMISE = CompletableFuture
             .completedFuture(PositionImpl.LATEST);
+    @Getter
     protected volatile LedgerHandle currentLedger;
     protected long currentLedgerEntries = 0;
     protected long currentLedgerSize = 0;
@@ -1423,6 +1425,7 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
         }
         final Result result = new Result();
 
+        LockCoordinator.waitForValue(1, 2);
         asyncClose(new CloseCallback() {
             @Override
             public void closeComplete(Object ctx) {
@@ -1734,6 +1737,7 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
     }
 
     synchronized void createLedgerAfterClosed() {
+        LockCoordinator.waitForValue(0, 1);
         if (isNeededCreateNewLedgerAfterCloseLedger()) {
             log.info("[{}] Creating a new ledger after closed", name);
             STATE_UPDATER.set(this, State.CreatingLedger);
@@ -3919,6 +3923,7 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
         createdLedgerCustomMetadata = finalMetadata;
 
         try {
+            LockCoordinator.waitForValue(2, 3);
             bookKeeper.asyncCreateLedger(config.getEnsembleSize(), config.getWriteQuorumSize(),
                     config.getAckQuorumSize(), digestType, config.getPassword(), cb, ledgerCreated, finalMetadata);
         } catch (Throwable cause) {

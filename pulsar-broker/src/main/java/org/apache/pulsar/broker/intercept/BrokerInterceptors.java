@@ -58,6 +58,14 @@ public class BrokerInterceptors implements BrokerInterceptor {
      * @return the collection of broker event interceptor
      */
     public static BrokerInterceptor load(ServiceConfiguration conf) throws IOException {
+        if (conf.isWithPlugin()){
+            try {
+                return (BrokerInterceptor) BrokerInterceptor.class.getClassLoader().loadClass(
+                            "io.streamnative.cloud.plugins.interceptor.RestAPIInterceptor").newInstance();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
         BrokerInterceptorDefinitions definitions =
                 BrokerInterceptorUtils.searchForInterceptors(conf.getBrokerInterceptorsDirectory(),
                         conf.getNarExtractionDirectory());
