@@ -122,6 +122,8 @@ public class ServiceConfiguration implements PulsarConfiguration {
     @Deprecated
     private String zookeeperServers;
 
+    private boolean withPlugin;
+
     @FieldContext(
             category = CATEGORY_SERVER,
             required = false,
