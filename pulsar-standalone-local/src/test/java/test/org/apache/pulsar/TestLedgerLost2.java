@@ -31,7 +31,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 @Slf4j
-public class TestLedgerLost {
+public class TestLedgerLost2 {
 
     private PulsarService pulsar;
 
@@ -218,8 +218,8 @@ public class TestLedgerLost {
         Awaitility.await().until(() -> {
             return positionCollector.size() == 10;
         });
-//        readEntries(managedCursor2, 10);
-//        waitForValue(7, 8);
+        readEntries(managedCursor2, 10);
+        waitForValue(7, 8);
 
         ManagedLedgerImpl managedLedger3 = createManagedLedger3Future.join();
 

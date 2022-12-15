@@ -32,7 +32,8 @@ public class LockCoordinator {
             if (PROCESS_COODINATOR.get() >= toValue){
                 return false;
             }
-            System.out.println("===> " + Thread.currentThread().getName() + ", wait for " + expectValue + " --> " + toValue + ", current:" + PROCESS_COODINATOR.get());
+            System.out.println("===> " + Thread.currentThread().getName() + ", wait for "
+               + expectValue + " --> " + toValue + ", current:" + PROCESS_COODINATOR.get());
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {

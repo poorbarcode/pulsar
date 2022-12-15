@@ -104,14 +104,14 @@ public class MLPendingAckStoreProvider implements TransactionPendingAckStoreProv
                 .getTransactionPendingAckStoreSuffix(originPersistentTopic.getName(), subscription.getName());
         originPersistentTopic.getBrokerService().getManagedLedgerFactory()
                 .asyncExists(TopicName.get(pendingAckTopicName)
-                        .getPersistenceNamingEncoding()).thenAccept(exist -> {
+                        .getPersistenceNamingEncoding()).thenCompose(exist -> {
             TopicName topicName;
             if (exist) {
                 topicName = TopicName.get(pendingAckTopicName);
             } else {
                 topicName = TopicName.get(originPersistentTopic.getName());
             }
-            originPersistentTopic.getBrokerService()
+            return originPersistentTopic.getBrokerService()
                     .getManagedLedgerConfig(topicName).thenAccept(config -> {
                 config.setCreateIfMissing(true);
                 originPersistentTopic.getBrokerService().getManagedLedgerFactory()
