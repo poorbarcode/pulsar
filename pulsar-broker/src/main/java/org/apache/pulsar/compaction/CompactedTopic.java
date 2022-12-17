@@ -27,7 +27,8 @@ import org.apache.bookkeeper.mledger.Position;
 import org.apache.pulsar.broker.service.Consumer;
 
 public interface CompactedTopic {
-    CompletableFuture<CompactedTopicContext> newCompactedLedger(Position p, long compactedLedgerId);
+    CompletableFuture<CompactedTopicContext> newCompactedLedger(Position p, long compactedLedgerId,
+                                                                Integer lastMsgIdBatchIndex);
     CompletableFuture<Void> deleteCompactedLedger(long compactedLedgerId);
     void asyncReadEntriesOrWait(ManagedCursor cursor,
                                 int numberOfEntriesToRead,
@@ -36,4 +37,6 @@ public interface CompactedTopic {
                                 Consumer consumer);
     CompletableFuture<Entry> readLastEntryOfCompactedLedger();
     Optional<Position> getCompactionHorizon();
+
+    Optional<Integer> getLastMessageIdBatchIndex();
 }

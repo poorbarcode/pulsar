@@ -60,6 +60,7 @@ public class CompactedTopicImpl implements CompactedTopic {
     private final BookKeeper bk;
 
     private PositionImpl compactionHorizon = null;
+    private Integer lastMessageIdBatchIndex;
     private CompletableFuture<CompactedTopicContext> compactedTopicContext = null;
 
     public CompactedTopicImpl(BookKeeper bk) {
@@ -67,10 +68,11 @@ public class CompactedTopicImpl implements CompactedTopic {
     }
 
     @Override
-    public CompletableFuture<CompactedTopicContext> newCompactedLedger(Position p, long compactedLedgerId) {
+    public CompletableFuture<CompactedTopicContext> newCompactedLedger(Position p, long compactedLedgerId,
+                                                                       Integer lastMessageIdBatchIndex) {
         synchronized (this) {
             compactionHorizon = (PositionImpl) p;
-
+            lastMessageIdBatchIndex = lastMessageIdBatchIndex;
             CompletableFuture<CompactedTopicContext> previousContext = compactedTopicContext;
             compactedTopicContext = openCompactedLedger(bk, compactedLedgerId);
 
@@ -320,6 +322,11 @@ public class CompactedTopicImpl implements CompactedTopic {
     public synchronized Optional<Position> getCompactionHorizon() {
         return Optional.ofNullable(this.compactionHorizon);
     }
+
+    public synchronized Optional<Integer> getLastMessageIdBatchIndex() {
+        return Optional.ofNullable(this.lastMessageIdBatchIndex);
+    }
+
     private static final Logger log = LoggerFactory.getLogger(CompactedTopicImpl.class);
 }
 

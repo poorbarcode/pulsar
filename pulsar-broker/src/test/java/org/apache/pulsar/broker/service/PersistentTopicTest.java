@@ -25,6 +25,7 @@ import static org.apache.pulsar.broker.auth.MockedPulsarServiceBaseTest.createMo
 import static org.apache.pulsar.common.protocol.Commands.DEFAULT_CONSUMER_EPOCH;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.atLeast;
@@ -1874,7 +1875,7 @@ public class PersistentTopicTest extends MockedBookKeeperTestCase {
     public void testCompactorSubscription() throws Exception {
         PersistentTopic topic = new PersistentTopic(successTopicName, ledgerMock, brokerService);
         CompactedTopic compactedTopic = mock(CompactedTopic.class);
-        when(compactedTopic.newCompactedLedger(any(Position.class), anyLong()))
+        when(compactedTopic.newCompactedLedger(any(Position.class), anyLong(), anyInt()))
                 .thenReturn(CompletableFuture.completedFuture(mock(CompactedTopicContext.class)));
         PersistentSubscription sub = new CompactorSubscription(topic, compactedTopic,
                                                                Compactor.COMPACTION_SUBSCRIPTION,
@@ -1883,7 +1884,7 @@ public class PersistentTopicTest extends MockedBookKeeperTestCase {
         long ledgerId = 0xc0bfefeL;
         sub.acknowledgeMessage(Collections.singletonList(position), AckType.Cumulative,
                 Map.of(Compactor.COMPACTED_TOPIC_LEDGER_PROPERTY, ledgerId));
-        verify(compactedTopic, Mockito.times(1)).newCompactedLedger(position, ledgerId);
+        verify(compactedTopic, Mockito.times(1)).newCompactedLedger(position, ledgerId, null);
     }
 
 
@@ -1898,10 +1899,10 @@ public class PersistentTopicTest extends MockedBookKeeperTestCase {
 
         PersistentTopic topic = new PersistentTopic(successTopicName, ledgerMock, brokerService);
         CompactedTopic compactedTopic = mock(CompactedTopic.class);
-        when(compactedTopic.newCompactedLedger(any(Position.class), anyLong()))
+        when(compactedTopic.newCompactedLedger(any(Position.class), anyLong(), anyInt()))
                 .thenReturn(CompletableFuture.completedFuture(null));
         new CompactorSubscription(topic, compactedTopic, Compactor.COMPACTION_SUBSCRIPTION, cursorMock);
-        verify(compactedTopic, Mockito.times(1)).newCompactedLedger(position, ledgerId);
+        verify(compactedTopic, Mockito.times(1)).newCompactedLedger(position, ledgerId, null);
     }
 
     @Test

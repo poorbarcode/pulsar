@@ -47,7 +47,10 @@ public class CompactorSubscription extends PersistentSubscription {
         Map<String, Long> properties = cursor.getProperties();
         if (properties.containsKey(Compactor.COMPACTED_TOPIC_LEDGER_PROPERTY)) {
             long compactedLedgerId = properties.get(Compactor.COMPACTED_TOPIC_LEDGER_PROPERTY);
-            compactedTopic.newCompactedLedger(cursor.getMarkDeletedPosition(), compactedLedgerId)
+            Long lastMsgIdBatchIndex =
+                    properties.get(Compactor.COMPACTED_TOPIC_LAST_MESSAGE_ID_BATCH_INDEX_PROPERTY);
+            compactedTopic.newCompactedLedger(cursor.getMarkDeletedPosition(), compactedLedgerId,
+                            lastMsgIdBatchIndex == null ? null : lastMsgIdBatchIndex.intValue())
                     .thenAccept(previousContext -> {
                         if (previousContext != null) {
                             compactedTopic.deleteCompactedLedger(previousContext.getLedger().getId());
@@ -62,6 +65,7 @@ public class CompactorSubscription extends PersistentSubscription {
         checkArgument(positions.size() == 1);
         checkArgument(properties.containsKey(Compactor.COMPACTED_TOPIC_LEDGER_PROPERTY));
         long compactedLedgerId = properties.get(Compactor.COMPACTED_TOPIC_LEDGER_PROPERTY);
+        Long lastMsgIdBatchIndex = properties.get(Compactor.COMPACTED_TOPIC_LAST_MESSAGE_ID_BATCH_INDEX_PROPERTY);
 
         Position position = positions.get(0);
 
@@ -76,7 +80,8 @@ public class CompactorSubscription extends PersistentSubscription {
         // to read the complete compacted data again.
         // And we can only delete the previous ledger after the mark delete succeed, otherwise we will loss the
         // compacted data if mark delete failed.
-        compactedTopic.newCompactedLedger(position, compactedLedgerId).thenAccept(previousContext -> {
+        compactedTopic.newCompactedLedger(position, compactedLedgerId,
+                lastMsgIdBatchIndex == null ? null : lastMsgIdBatchIndex.intValue()).thenAccept(previousContext -> {
             cursor.asyncMarkDelete(position, properties, new MarkDeleteCallback() {
                 @Override
                 public void markDeleteComplete(Object ctx) {

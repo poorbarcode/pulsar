@@ -39,6 +39,7 @@ import org.apache.pulsar.client.api.MessageId;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.RawMessage;
 import org.apache.pulsar.client.api.RawReader;
+import org.apache.pulsar.client.impl.BatchMessageIdImpl;
 import org.apache.pulsar.client.impl.MessageIdImpl;
 import org.apache.pulsar.client.impl.RawBatchConverter;
 import org.apache.pulsar.common.api.proto.MessageMetadata;
@@ -59,7 +60,6 @@ import org.slf4j.LoggerFactory;
 public class TwoPhaseCompactor extends Compactor {
     private static final Logger log = LoggerFactory.getLogger(TwoPhaseCompactor.class);
     private static final int MAX_OUTSTANDING = 500;
-    private static final String COMPACTED_TOPIC_LEDGER_PROPERTY = "CompactedTopicLedger";
     private final Duration phaseOneLoopReadTimeout;
 
     public TwoPhaseCompactor(ServiceConfiguration conf,
@@ -183,6 +183,16 @@ public class TwoPhaseCompactor extends Compactor {
         });
     }
 
+    private MessageId calculateLastMessageId(Map<String, MessageId> latestForKey){
+        MessageId lastMessageId = MessageId.earliest;
+        for (MessageId messageId : latestForKey.values()){
+            if (lastMessageId.compareTo(messageId) < 0){
+                lastMessageId = messageId;
+            }
+        }
+        return lastMessageId;
+    }
+
     private CompletableFuture<Long> phaseTwo(RawReader reader, MessageId from, MessageId to, MessageId lastReadId,
             Map<String, MessageId> latestForKey, BookKeeper bk) {
         Map<String, byte[]> metadata =
@@ -204,16 +214,25 @@ public class TwoPhaseCompactor extends Compactor {
             phaseTwoLoop(reader, to, latestForKey, ledger, outstanding, loopPromise);
             return loopPromise;
         }).thenCompose((v) -> closeLedger(ledger))
-                .thenCompose((v) -> reader.acknowledgeCumulativeAsync(lastReadId,
-                        Map.of(COMPACTED_TOPIC_LEDGER_PROPERTY, ledger.getId())))
-                .whenComplete((res, exception) -> {
+                .thenCompose((v) -> {
+                    Map props;
+                    MessageId lastMessageId = calculateLastMessageId(latestForKey);
+                    if (lastMessageId instanceof BatchMessageIdImpl){
+                        int lastMessageIdBatchIndex = ((BatchMessageIdImpl) lastMessageId).getBatchIndex();
+                        props = Map.of(COMPACTED_TOPIC_LEDGER_PROPERTY, ledger.getId(),
+                                COMPACTED_TOPIC_LAST_MESSAGE_ID_BATCH_INDEX_PROPERTY, lastMessageIdBatchIndex);
+                    } else {
+                        props = Map.of(COMPACTED_TOPIC_LEDGER_PROPERTY, ledger.getId());
+                    }
+                    return reader.acknowledgeCumulativeAsync(lastReadId, props);
+                }).whenComplete((res, exception) -> {
                     if (exception != null) {
                         deleteLedger(bk, ledger).whenComplete((res2, exception2) -> {
                             if (exception2 != null) {
                                 log.warn("Cleanup of ledger {} for failed", ledger, exception2);
                             }
                             // complete with original exception
-                            promise.completeExceptionally(exception);
+                            promise.completeExceptionally((Throwable) exception);
                         });
                     } else {
                         promise.complete(ledger.getId());

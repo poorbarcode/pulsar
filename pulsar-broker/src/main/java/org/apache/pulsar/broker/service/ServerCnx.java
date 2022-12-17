@@ -1998,7 +1998,10 @@ public class ServerCnx extends PulsarHandler implements TransportCnx {
                 MessageMetadata metadata = Commands.parseMessageMetadata(payload);
                 int largestBatchIndex;
                 try {
-                    largestBatchIndex = calculateTheLastBatchIndexInBatch(metadata, payload);
+                    Optional<Integer> lastMsgBatchIndex =
+                            persistentTopic.getCompactedTopic().getLastMessageIdBatchIndex();
+                    largestBatchIndex = lastMsgBatchIndex.isPresent() ? lastMsgBatchIndex.get()
+                            : calculateTheLastBatchIndexInBatch(metadata, payload);
                 } catch (IOException ioEx){
                     ctx.writeAndFlush(Commands.newError(requestId, ServerError.MetadataError,
                             "Failed to deserialize batched message from the last entry of the compacted Ledger: "

@@ -233,7 +233,7 @@ public class CompactedTopicTest extends MockedPulsarServiceBaseTest {
 
         // set the compacted topic ledger
         CompactedTopicImpl compactedTopic = new CompactedTopicImpl(bk);
-        compactedTopic.newCompactedLedger(new PositionImpl(1,2), oldCompactedLedger.getId()).get();
+        compactedTopic.newCompactedLedger(new PositionImpl(1,2), oldCompactedLedger.getId(), null).get();
 
         // ensure both ledgers still exist, can be opened
         bk.openLedger(oldCompactedLedger.getId(),
@@ -245,7 +245,7 @@ public class CompactedTopicTest extends MockedPulsarServiceBaseTest {
 
         // update the compacted topic ledger
         PositionImpl newHorizon = new PositionImpl(1,3);
-        compactedTopic.newCompactedLedger(newHorizon, newCompactedLedger.getId()).get();
+        compactedTopic.newCompactedLedger(newHorizon, newCompactedLedger.getId(), null).get();
 
         // Make sure the old compacted ledger still exist after the new compacted ledger created.
         bk.openLedger(oldCompactedLedger.getId(),
