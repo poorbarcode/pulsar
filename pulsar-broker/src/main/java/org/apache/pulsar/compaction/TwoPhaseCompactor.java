@@ -76,6 +76,7 @@ public class TwoPhaseCompactor extends Compactor {
                 .thenCompose(available -> {
                     if (available) {
                         return phaseOne(reader).thenCompose(
+                                // TODO calculate the last messageId in the kv map.
                                 (r) -> phaseTwo(reader, r.from, r.to, r.lastReadId, r.latestForKey, bk));
                     } else {
                         log.info("Skip compaction of the empty topic {}", reader.getTopic());
