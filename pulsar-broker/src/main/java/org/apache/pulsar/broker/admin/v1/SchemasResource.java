@@ -103,7 +103,8 @@ public class SchemasResource extends SchemasResourceBase {
     @GET
     @Path("/{tenant}/{cluster}/{namespace}/{topic}/schema/{version}")
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Get the schema of a topic at a given version", response = GetSchemaResponse.class)
+    @ApiOperation(value = "Get the schema of a topic at a given version", response = GetSchemaResponse.class,
+            nickname = "getSchemaByVersion")
     @ApiResponses(value = {
             @ApiResponse(code = 307, message = "Current broker doesn't serve the namespace of this topic"),
             @ApiResponse(code = 401, message = "Client is not authorized or Don't have admin permission"),
