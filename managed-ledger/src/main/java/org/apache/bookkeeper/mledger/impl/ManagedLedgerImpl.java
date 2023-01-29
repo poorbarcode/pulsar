@@ -603,6 +603,7 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
                         });
                     }
                 } else {
+                    // TODO 异步初始化 cursor 会导致 `messagesConsumedCounter` 不正确
                     // Lazily recover cursors by put them to uninitializedCursors map.
                     for (final String cursorName : consumers) {
                         if (log.isDebugEnabled()) {
@@ -998,6 +999,7 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
                     cursor.initializeCursorPosition(InitialPosition.Earliest == initialPosition
                             ? getFirstPositionAndCounter()
                             : getLastPositionAndCounter());
+                    // TODO add cursor 之前 trim ledger
                     addCursor(cursor);
                     uninitializedCursors.remove(cursorName).complete(cursor);
                 }
@@ -3635,7 +3637,7 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
         do {
             pos = lastConfirmedEntry;
             count = ENTRIES_ADDED_COUNTER_UPDATER.get(this);
-
+            // TODO 用一个变量 check 两个变量都没改过？
             // Ensure no entry was written while reading the two values
         } while (pos.compareTo(lastConfirmedEntry) != 0);
 
@@ -3654,6 +3656,7 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
             pos = getFirstPosition();
             lastPositionAndCounter = getLastPositionAndCounter();
             count = lastPositionAndCounter.getRight()
+                    // TODO 如何保证这时候 ledgers 没有动过？
                     - getNumberOfEntries(Range.openClosed(pos, lastPositionAndCounter.getLeft()));
         } while (pos.compareTo(getFirstPosition()) != 0
                 || lastPositionAndCounter.getLeft().compareTo(getLastPosition()) != 0);

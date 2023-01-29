@@ -1104,6 +1104,7 @@ public class ManagedCursorImpl implements ManagedCursor {
                     messagesConsumedCounter, markDeletePosition, readPosition);
         }
         if (isPrecise) {
+            // TODO 修正已经错误的 `messagesConsumedCounter`
             return getNumberOfEntries(Range.openClosed(markDeletePosition, ledger.getLastPosition()));
         }
 
