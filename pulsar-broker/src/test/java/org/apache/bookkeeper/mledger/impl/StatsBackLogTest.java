@@ -270,7 +270,6 @@ public class StatsBackLogTest extends ProducerConsumerBase {
 
     @Test(timeOut = 1000 * 3600)
     public void testBacklogIfCursorCreateAfterTrimLedger2() throws Exception {
-        ProcessCoordinator.stop();
         String topicName = String.format("persistent://my-property/my-ns/%s",
                 BrokerTestUtil.newUniqueName("tp_"));
         String subName1 = "sub1";
@@ -291,7 +290,6 @@ public class StatsBackLogTest extends ProducerConsumerBase {
         log.info("{}-messagesConsumedCounter: {}", subName1,
                 getManagedCursor(topicName, subName1).getMessagesConsumedCounter());
 
-        ProcessCoordinator.start();
         CompletableFuture<Void> unloadFuture = new CompletableFuture<>();
         new Thread(() -> {
             try {
@@ -306,7 +304,6 @@ public class StatsBackLogTest extends ProducerConsumerBase {
         new Thread(() -> {
             try {
                 send2Future.complete(sendMessages(1, entryCountPerLedger, producer, topicName));
-//                ProcessCoordinator.waitAndChangeStep(1);
             } catch (Exception e) {
                 send2Future.completeExceptionally(e);
             }
@@ -323,6 +320,62 @@ public class StatsBackLogTest extends ProducerConsumerBase {
                 sendInfo1.messageIds.size() + send2Future.join().messageIds.size());
         assertEquals(getManagedCursor(topicName, subName2).getNumberOfEntriesInBacklog(true),
                 sendInfo1.messageIds.size() + send2Future.join().messageIds.size());
+
+        // cleanup.
+        producer.close();
+        consumer1.close();
+        consumer2.close();
+        admin.topics().delete(topicName, false);
+    }
+
+    @Test(timeOut = 1000 * 3600)
+    public void testBacklogIfCursorCreateAfterTrimLedger3() throws Exception {
+        String topicName = String.format("persistent://my-property/my-ns/%s",
+                BrokerTestUtil.newUniqueName("tp_"));
+        String subName1 = "sub1";
+        String subName2 = "sub2";
+
+        Consumer<String> consumer1 = pulsarClient.newConsumer(Schema.STRING).topic(topicName.toString())
+                .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+                .subscriptionName(subName1).subscribe();
+        Producer<String> producer = pulsarClient.newProducer(Schema.STRING).topic(topicName.toString())
+                .enableBatching(false).create();
+
+        CompletableFuture<SendInfo> sendFuture = new CompletableFuture<>();
+        new Thread(() -> {
+            try {
+                sendFuture.complete(sendMessages(1, 1, producer, topicName));
+            } catch (Exception e) {
+                sendFuture.completeExceptionally(e);
+            }
+        }).start();
+
+        Consumer<String> consumer2 = pulsarClient.newConsumer(Schema.STRING).topic(topicName.toString())
+                .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+                .subscriptionName(subName2).subscribe();
+        sendFuture.join();
+
+        int backlog = 0;
+        PositionImpl sub2MarkDeleted = (PositionImpl) getManagedCursor(topicName, subName2).getMarkDeletedPosition();
+        for (MessageId msgId : sendFuture.join().messageIds){
+            MessageIdImpl msgIdImpl = (MessageIdImpl) msgId;
+            if (msgIdImpl.getLedgerId() > sub2MarkDeleted.getLedgerId()){
+                backlog++;
+            } else if (msgIdImpl.getLedgerId() == sub2MarkDeleted.getLedgerId()){
+                if (msgIdImpl.getEntryId() > sub2MarkDeleted.getEntryId()){
+                    backlog++;
+                }
+            }
+        }
+
+        assertEquals(getManagedCursor(topicName, subName1).getNumberOfEntriesInBacklog(false),
+                sendFuture.join().messageIds.size());
+        assertEquals(getManagedCursor(topicName, subName1).getNumberOfEntriesInBacklog(true),
+                sendFuture.join().messageIds.size());
+        assertEquals(getManagedCursor(topicName, subName2).getNumberOfEntriesInBacklog(false), backlog);
+        assertEquals(getManagedCursor(topicName, subName2).getNumberOfEntriesInBacklog(true), backlog);
+
+        assertEquals(getManagedCursor(topicName, subName2).messagesConsumedCounter, 0);
 
         // cleanup.
         producer.close();
