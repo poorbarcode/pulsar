@@ -235,12 +235,12 @@ public class OpAddEntry extends SafeRunnable implements AddCallback, CloseCallba
 
         PositionImpl lastEntry = PositionImpl.get(ledgerId, entryId);
         ManagedLedgerImpl.ENTRIES_ADDED_COUNTER_UPDATER.incrementAndGet(ml);
-        if (ml.name.startsWith("my-property/my-ns/persistent/tp_")){
-            log.info("========> step 1");
-            ProcessCoordinator.waitAndChangeStep(1);
-            log.info("========> step 4");
-            ProcessCoordinator.waitAndChangeStep(4);
-        }
+//        if (ml.name.startsWith("my-property/my-ns/persistent/tp_")){
+//            log.info("========> step 1");
+//            ProcessCoordinator.waitAndChangeStep(1);
+//            log.info("========> step 4");
+//            ProcessCoordinator.waitAndChangeStep(4);
+//        }
         ml.lastConfirmedEntry = lastEntry;
 
         if (closeWhenDone) {
