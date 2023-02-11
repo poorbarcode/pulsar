@@ -18,6 +18,8 @@
  */
 package org.apache.pulsar.client.api;
 
+import static org.apache.pulsar.client.util.RetryMessageUtil.DLQ_GROUP_TOPIC_SUFFIX;
+import static org.apache.pulsar.client.util.RetryMessageUtil.RETRY_GROUP_TOPIC_SUFFIX;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNull;
@@ -30,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import lombok.Cleanup;
 import lombok.Data;
 import org.apache.avro.AvroRuntimeException;
@@ -61,6 +64,61 @@ public class RetryTopicTest extends ProducerConsumerBase {
     @Override
     protected void cleanup() throws Exception {
         super.internalCleanup();
+    }
+
+    @Test
+    public void testRetryTopicWillNotCreatedForRetryTopic() throws Exception {
+        final String topic = "persistent://my-property/my-ns/retry-topic";
+        Producer<byte[]> producer = pulsarClient.newProducer(Schema.BYTES)
+                .topic(topic)
+                .create();
+        for (int i = 0; i < 100; i++) {
+            producer.send(String.format("Hello Pulsar [%d]", i).getBytes());
+        }
+        producer.close();
+
+        for (int i =0; i< 10; i++) {
+            Consumer<byte[]> consumer = pulsarClient.newConsumer(Schema.BYTES)
+                    .topicsPattern("my-property/my-ns/.*")
+                    .subscriptionName("sub" + i)
+                    .enableRetry(true)
+                    .deadLetterPolicy(DeadLetterPolicy.builder().maxRedeliverCount(2).build())
+                    .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+                    .subscribe();
+            Message<byte[]> message = consumer.receive();
+            log.info("consumer received message : {} {}", message.getMessageId(), new String(message.getData()));
+            consumer.reconsumeLater(message, 1, TimeUnit.SECONDS);
+            consumer.close();
+        }
+
+        Set<String> tps = pulsar.getBrokerService().getTopics().keys().stream().collect(Collectors.toSet());
+        try {
+            for (String tp : tps) {
+                assertTrue(howManyKeyWordRetryInTopicName(tp, RETRY_GROUP_TOPIC_SUFFIX) <= 1, tp);
+                assertTrue(howManyKeyWordRetryInTopicName(tp, DLQ_GROUP_TOPIC_SUFFIX) <= 1, tp);
+            }
+        } finally {
+            // cleanup.
+            for (String tp : tps){
+                if (tp.startsWith(topic)) {
+                    admin.topics().delete(tp ,true);
+                }
+            }
+        }
+    }
+
+    private int howManyKeyWordRetryInTopicName(String topicName, String keyWord) {
+        int retryCountInTopicName = 0;
+        String tpCp = topicName;
+        while (true) {
+            int index = tpCp.indexOf(keyWord);
+            if (index < 0) {
+                break;
+            }
+            tpCp = tpCp.substring(index + keyWord.length());
+            retryCountInTopicName++;
+        }
+        return  retryCountInTopicName;
     }
 
     @Test
