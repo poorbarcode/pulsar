@@ -778,8 +778,9 @@ public class PulsarService implements AutoCloseable, ShutdownService {
             offloaderStats = LedgerOffloaderStats.create(config.isExposeManagedLedgerMetricsInPrometheus(),
                     exposeTopicMetrics, offloaderScheduler, interval);
             this.defaultOffloader = createManagedLedgerOffloader(defaultOffloadPolicies);
-
             this.brokerInterceptor = BrokerInterceptors.load(config);
+//            this.brokerInterceptor = new io.streamnative.pulsar.plugins.auditlog.AuditLogger();
+//            config.setDisableBrokerInterceptors(false);
             // use getter to support mocking getBrokerInterceptor method in tests
             BrokerInterceptor interceptor = getBrokerInterceptor();
             if (interceptor != null) {
