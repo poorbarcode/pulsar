@@ -246,6 +246,16 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
     protected static final int DEFAULT_LEDGER_DELETE_BACKOFF_TIME_SEC = 60;
     private static final String MIGRATION_STATE_PROPERTY = "migrated";
 
+    public final StringBuffer errorContainer = new StringBuffer();
+
+    public AtomicBoolean startCollectLog = new AtomicBoolean();
+
+    public void collectLogs(){
+        for (StackTraceElement stackTraceElement : Thread.currentThread().getStackTrace()){
+            errorContainer.append("    " + stackTraceElement.toString());
+        }
+    }
+
     public enum State {
         None, // Uninitialized
         LedgerOpened, // A ledger is ready to write into
@@ -1469,6 +1479,7 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
 
         factory.close(this);
         STATE_UPDATER.set(this, State.Closed);
+        collectLogs();
         cancelScheduledTasks();
 
         LedgerHandle lh = currentLedger;
@@ -1544,6 +1555,7 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
                 STATE_UPDATER.set(this, State.ClosedLedger);
             } else {
                 STATE_UPDATER.set(this, State.WriteFailed);
+                collectLogs();
             }
 
             // Empty the list of pending requests and make all of them fail

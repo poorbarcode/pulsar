@@ -510,6 +510,7 @@ public class ManagedLedgerErrorsTest extends MockedBookKeeperTestCase {
     @Test
     public void recoverLongTimeAfterMultipleWriteErrors() throws Exception {
         ManagedLedgerImpl ledger = (ManagedLedgerImpl) factory.open("recoverLongTimeAfterMultipleWriteErrors");
+        ledger.startCollectLog.set(true);
         ManagedCursor cursor = ledger.openCursor("c1");
 
         bkc.failAfter(0, BKException.Code.BookieHandleNotAvailableException);
@@ -538,7 +539,7 @@ public class ManagedLedgerErrorsTest extends MockedBookKeeperTestCase {
         ledger.asyncAddEntry("entry-2".getBytes(), cb, null);
 
         counter.await();
-        assertNull(ex.get());
+        assertNull(ex.get(), ledger.errorContainer.toString());
 
         assertEquals(cursor.getNumberOfEntriesInBacklog(false), 2);
 
