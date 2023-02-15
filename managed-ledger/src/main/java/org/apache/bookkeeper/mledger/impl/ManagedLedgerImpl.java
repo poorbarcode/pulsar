@@ -246,7 +246,7 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
     protected static final int DEFAULT_LEDGER_DELETE_BACKOFF_TIME_SEC = 60;
     private static final String MIGRATION_STATE_PROPERTY = "migrated";
 
-    public final StringBuffer errorContainer = new StringBuffer();
+    public final StringBuilder errorContainer = new StringBuilder();
 
     public AtomicBoolean startCollectLog = new AtomicBoolean();
 
