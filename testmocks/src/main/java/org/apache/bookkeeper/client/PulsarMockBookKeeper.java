@@ -129,7 +129,7 @@ public class PulsarMockBookKeeper extends BookKeeper {
                 }
             }, executor).whenCompleteAsync((lh, exception) -> {
                     if (exception != null) {
-                        cb.createComplete(getExceptionCode(exception), null, ctx);
+                        cb.createComplete(getExceptionCode(exception), null, exception);
                     } else {
                         cb.createComplete(BKException.Code.OK, lh, ctx);
                     }

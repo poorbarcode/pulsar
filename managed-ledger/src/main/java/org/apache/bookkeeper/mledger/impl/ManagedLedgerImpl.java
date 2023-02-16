@@ -250,9 +250,16 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
 
     public AtomicBoolean startCollectLog = new AtomicBoolean();
 
-    public void collectLogs(){
+    public void collectLogs(Integer rc, Exception ex){
+        errorContainer.append("\n").append("rc: ").append(rc == null ? "null" : rc.toString()).append("\n");
         for (StackTraceElement stackTraceElement : Thread.currentThread().getStackTrace()){
-            errorContainer.append("    " + stackTraceElement.toString());
+            errorContainer.append("    " + stackTraceElement.toString()).append("\n");
+        }
+        if (ex != null) {
+            errorContainer.append(" ===> Original Ex").append("\n");
+            for (StackTraceElement stackTraceElement : ex.getStackTrace()) {
+                errorContainer.append("    " + stackTraceElement.toString()).append("\n");
+            }
         }
     }
 
@@ -1479,7 +1486,7 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
 
         factory.close(this);
         STATE_UPDATER.set(this, State.Closed);
-        collectLogs();
+        collectLogs(null, null);
         cancelScheduledTasks();
 
         LedgerHandle lh = currentLedger;
@@ -1555,7 +1562,7 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
                 STATE_UPDATER.set(this, State.ClosedLedger);
             } else {
                 STATE_UPDATER.set(this, State.WriteFailed);
-                collectLogs();
+                collectLogs(rc, (Exception) ctx);
             }
 
             // Empty the list of pending requests and make all of them fail
