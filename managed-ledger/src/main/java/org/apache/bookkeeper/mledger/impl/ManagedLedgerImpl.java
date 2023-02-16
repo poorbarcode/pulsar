@@ -256,7 +256,7 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
             errorContainer.append("    " + stackTraceElement.toString()).append("\n");
         }
         if (ex != null) {
-            errorContainer.append(" ===> Original Ex").append("\n");
+            errorContainer.append(" ===> Original Ex: ").append(ex.getMessage()).append("\n");
             for (StackTraceElement stackTraceElement : ex.getStackTrace()) {
                 errorContainer.append("    " + stackTraceElement.toString()).append("\n");
             }
