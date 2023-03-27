@@ -135,6 +135,7 @@ public class ReplicatorTest extends ReplicatorTestBase {
         super.cleanup();
     }
 
+
     @DataProvider(name = "partitionedTopic")
     public Object[][] partitionedTopicProvider() {
         return new Object[][] { { Boolean.TRUE }, { Boolean.FALSE } };
