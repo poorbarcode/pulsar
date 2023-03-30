@@ -1,0 +1,123 @@
+{
+  "configMap" : {
+    "/admin/v2/namespaces/{tenant}/{namespace}/backlogQuota" : {
+      "POST" : {
+        "conditions" : {
+          "limitSize" : "^[1-9]\\d{0,8}?$"
+        },
+        "errorCode" : 412,
+        "tip" : "The backlog must lower than 1000000000"
+      }
+    },
+    "/admin/v2/namespaces/{tenant}/{namespace}/retention" : {
+      "POST" : {
+        "conditions" : {
+          "retentionSizeInMB" : "^[1-9]\\d{0,2}?$"
+        },
+        "errorCode" : 412,
+        "tip" : "The retention size must lower than 1000MB"
+      }
+    },
+    "/admin/v2/persistent/{tenant}/{namespace}/{topic}/partitions" : {
+      "PUT" : {
+        "conditions" : {
+          "partitions" : "^(0|[1-9]|[1][0-6])$"
+        },
+        "tip" : "Allowed max partitions are 16",
+        "errorCode" : 412
+      },
+      "POST" : {
+        "conditions" : {
+          "partitions" : "^(0|[1-9]|[1][0-6])$"
+        },
+        "tip" : "Allowed max partitions are 16",
+        "errorCode" : 412
+      }
+    },
+    "/admin/v3/sinks/.*" : {
+      ".*" : {
+        "errorCode" : 405,
+        "tip" : "Resources not allowed to access"
+      }
+    },
+    "/admin/v3/sink/.*" : {
+      ".*" : {
+        "errorCode" : 405,
+        "tip" : "Resources not allowed to access"
+      }
+    },
+    "/admin/v2/functions/.*" : {
+      ".*" : {
+        "errorCode" : 405,
+        "tip" : "Resources not allowed to access"
+      }
+    },
+    "/admin/v3/functions/.*" : {
+      ".*" : {
+        "errorCode" : 405,
+        "tip" : "Resources not allowed to access"
+      }
+    },
+    "/admin/v3/sources/.*" : {
+      ".*" : {
+        "errorCode" : 405,
+        "tip" : "Resources not allowed to access"
+      }
+    },
+    "/admin/v3/source/.*" : {
+      ".*" : {
+        "errorCode" : 405,
+        "tip" : "Resources not allowed to access"
+      }
+    },
+    "/admin/v2/worker/.*" : {
+      ".*" : {
+        "errorCode" : 405,
+        "tip" : "Resources not allowed to access"
+      }
+    },
+    "/admin/v2/worker-stats/.*" : {
+      ".*" : {
+        "errorCode" : 405,
+        "tip" : "Resources not allowed to access"
+      }
+    },
+    "/admin/v2/bookies/.*" : {
+      ".*" : {
+        "errorCode" : 405,
+        "tip" : "Resources not allowed to access"
+      }
+    },
+    "/admin/v2/brokers/.*" : {
+      ".*" : {
+        "errorCode" : 405,
+        "tip" : "Resources not allowed to access"
+      }
+    },
+    "/admin/v1/brokers/.*" : {
+      ".*" : {
+        "errorCode" : 405,
+        "tip" : "Resources not allowed to access"
+      }
+    },
+    "/admin/v2/broker-stats/.*" : {
+      ".*" : {
+        "errorCode" : 405,
+        "tip" : "Resources not allowed to access"
+      }
+    },
+    "/admin/v1/broker-stats/.*" : {
+      ".*" : {
+        "errorCode" : 405,
+        "tip" : "Resources not allowed to access"
+      }
+    }
+  },
+  "properties" : {
+    "maxTenants" : 3,
+    "maxNamespaces" : 5,
+    "maxTopics" : 10,
+    "maxBundlesPerNamespace" : 1,
+    "resourceCacheRefreshInternalInMillis": 1000
+  }
+}
