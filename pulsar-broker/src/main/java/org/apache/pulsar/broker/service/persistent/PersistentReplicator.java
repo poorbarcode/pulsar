@@ -29,6 +29,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import org.apache.bookkeeper.mledger.AsyncCallbacks;
 import org.apache.bookkeeper.mledger.AsyncCallbacks.ClearBacklogCallback;
@@ -79,7 +80,7 @@ public abstract class PersistentReplicator extends AbstractReplicator
 
     private final int producerQueueThreshold;
 
-    protected static final AtomicIntegerFieldUpdater<PersistentReplicator> PENDING_MESSAGES_UPDATER =
+    public static final AtomicIntegerFieldUpdater<PersistentReplicator> PENDING_MESSAGES_UPDATER =
             AtomicIntegerFieldUpdater
                     .newUpdater(PersistentReplicator.class, "pendingMessages");
     private volatile int pendingMessages = 0;
@@ -291,7 +292,7 @@ public abstract class PersistentReplicator extends AbstractReplicator
 
         HAVE_PENDING_READ_UPDATER.set(this, FALSE);
 
-        if (atLeastOneMessageSentForReplication && !isWritable()) {
+        if (atLeastOneMessageSentForReplication && makeNoWritable() && !isWritable()) {
             // Don't read any more entries until the current pending entries are persisted
             if (log.isDebugEnabled()) {
                 log.debug("[{}] Pausing replication traffic. at-least-one: {} is-writable: {}", replicatorId,
@@ -300,6 +301,27 @@ public abstract class PersistentReplicator extends AbstractReplicator
         } else {
             readMoreEntries();
         }
+    }
+
+    AtomicInteger makeWritableTimes = new AtomicInteger();
+
+    public boolean makeNoWritable() {
+        log.info("===> Replicator is running.");
+        // Just make no-writable 10 times;
+        if (makeWritableTimes.incrementAndGet() > 10){
+            return true;
+        }
+        // write a lot data to make no-writable.
+        int j = 0;
+        while (j < 100000) {
+            byte[] bs =
+                    new byte[]{0, 0, 0, 47, 0, 0, 0, 8, 8, 6, 50, 4, 8, 0, 16, 25, 14, 1, 17, 72, -106, 115, 0, 0,
+                            0, 19, 10, 6, 114, 49, 45, 48, 45, 48, 16, 25, 24, -111, -61, -55, -85, -13, 48, 72, 6,
+                            116, 101, 115, 116, 45, 48};
+            producer.getClientCnx().ctx().writeAndFlush(bs);
+            j++;
+        }
+        return true;
     }
 
     protected abstract boolean replicateEntries(List<Entry> entries);
@@ -351,7 +373,7 @@ public abstract class PersistentReplicator extends AbstractReplicator
             if (pending < replicator.producerQueueThreshold //
                     && HAVE_PENDING_READ_UPDATER.get(replicator) == FALSE //
             ) {
-                if (pending == 0 || replicator.producer.isWritable()) {
+                if (pending == 0 || (replicator.makeNoWritable() && replicator.producer.isWritable())) {
                     replicator.readMoreEntries();
                 } else {
                     if (log.isDebugEnabled()) {

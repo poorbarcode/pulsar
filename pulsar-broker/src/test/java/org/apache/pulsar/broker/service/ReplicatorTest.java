@@ -393,6 +393,49 @@ public class ReplicatorTest extends ReplicatorTestBase {
         consumer3.receive(1);
     }
 
+    @Test(timeOut = 3600 * 1000)
+    public void testReplicationStuck() throws Exception {
+        final TopicName dest = TopicName.get(BrokerTestUtil.newUniqueName("persistent://pulsar/ns1/tp"));
+        @Cleanup
+        final MessageProducer producer1 = new MessageProducer(url1, dest);
+        @Cleanup
+        MessageConsumer consumer2 = new MessageConsumer(url2, dest);
+        producer1.produce(1);
+
+        // Mock hit the issue.
+        PersistentReplicator persistentReplicator = (PersistentReplicator) pulsar1.getBrokerService()
+                .getTopic(dest.toString(), false).get().get()
+                .getReplicators().values().iterator().next();
+        PersistentReplicator.PENDING_MESSAGES_UPDATER.incrementAndGet(persistentReplicator);
+
+        // Start two task: send & receive.
+        Thread producerThread = new Thread(() -> {
+            while (true) {
+                try {
+                    producer1.produce(1);
+                    Thread.sleep(1000);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        Thread consumerThread = new Thread(() -> {
+            while (true) {
+                try {
+                    consumer2.receive(1);
+                    Thread.sleep(100);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        producerThread.start();
+        consumerThread.start();
+
+        // See logs.
+        Thread.sleep(3600 * 1000);
+    }
+
     @Test(invocationCount = 5)
     public void testReplicationWithSchema() throws Exception {
         config1.setBrokerDeduplicationEnabled(true);
