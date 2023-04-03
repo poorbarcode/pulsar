@@ -276,7 +276,7 @@ OPTS="$OPTS -Dzookeeper.clientTcpKeepAlive=true"
 # Allow Netty to use reflection access
 OPTS="$OPTS -Dio.netty.tryReflectionSetAccessible=true"
 
-OPTS="-cp $PULSAR_CLASSPATH $OPTS"
+OPTS="-cp $PULSAR_CLASSPATH $OPTS -Djava.security.auth.login.config=/home/fengyubiao/Data/Git-Reposirtory/fork/pulsar/conf/pulsar_jaas.conf -Djava.security.krb5.conf=/home/fengyubiao/Data/Git-Reposirtory/fork/pulsar/conf/krb5.conf"
 
 if [ $COMMAND == "bookie" ]; then
   # Pass BOOKIE_EXTRA_OPTS option defined in bkenv.sh

@@ -48,10 +48,10 @@ PULSAR_MEM=${PULSAR_MEM:-"-Xmx128m -XX:MaxDirectMemorySize=128m"}
 PULSAR_GC=${PULSAR_GC:-" -client "}
 
 # Extra options to be passed to the jvm
-PULSAR_EXTRA_OPTS="${PULSAR_MEM} ${PULSAR_GC} ${PULSAR_GC_LOG} -Dio.netty.leakDetectionLevel=disabled ${PULSAR_EXTRA_OPTS}"
+PULSAR_EXTRA_OPTS="${PULSAR_MEM} ${PULSAR_GC} ${PULSAR_GC_LOG} -Dio.netty.leakDetectionLevel=disabled ${PULSAR_EXTRA_OPTS} -Djava.security.auth.login.config=/home/fengyubiao/Data/Git-Reposirtory/fork/pulsar/conf/pulsar_jaas.conf -Djava.security.krb5.conf=/home/fengyubiao/Data/Git-Reposirtory/fork/pulsar/conf/krb5.conf"
 
 # Add extra paths to the bookkeeper classpath
-# PULSAR_EXTRA_CLASSPATH=
+# PULSAR_EXTRA_CLASSPATH="-Djava.security.auth.login.config=/home/fengyubiao/Data/Git-Reposirtory/fork/pulsar/conf/pulsar_jaas.conf -Djava.security.krb5.conf=/etc/krb5.conf"
 
 #Folder where the Bookie server PID file should be stored
 #PULSAR_PID_DIR=
