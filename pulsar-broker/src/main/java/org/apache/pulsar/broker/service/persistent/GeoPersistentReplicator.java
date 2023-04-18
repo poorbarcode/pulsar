@@ -151,7 +151,7 @@ public class GeoPersistentReplicator extends PersistentReplicator {
                 dispatchRateLimiter.ifPresent(rateLimiter -> rateLimiter.tryDispatchPermit(1, entry.getLength()));
 
                 msgOut.recordEvent(headersAndPayload.readableBytes());
-
+                // TODO 会不会因为这个字段导致 Entry size > 5m 从而发送失败？
                 msg.setReplicatedFrom(localCluster);
 
                 headersAndPayload.retain();

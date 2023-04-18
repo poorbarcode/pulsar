@@ -440,6 +440,8 @@ public class PersistentTopic extends AbstractTopic implements Topic, AddEntryCal
      * @throws UnsupportedSubscriptionException If the subscription is typed compaction.
      * @throws SubscriptionConflictUnloadException Conflict topic-close, topic-delete, another-subscribe-unload,
      *     cannot unload subscription now
+     *     TODO: PendingAck 怎么处理
+     *     TODO: 与 unsubscribe 的并发怎么处理？
      */
     public CompletableFuture<Void> unloadSubscription(@Nonnull String subName) {
         final PersistentSubscription sub = subscriptions.get(subName);

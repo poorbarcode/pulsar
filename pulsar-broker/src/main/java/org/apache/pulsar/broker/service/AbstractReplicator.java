@@ -144,6 +144,7 @@ public abstract class AbstractReplicator {
 
         log.info("[{}] Starting replicator", replicatorId);
         producerBuilder.createAsync().thenAccept(producer -> {
+            // TODO producer 的初始化没在 synchronized 语句块里面，在 disconnect 方法里面有可能拿不到这个变量的正确值。
             readEntries(producer);
         }).exceptionally(ex -> {
             if (STATE_UPDATER.compareAndSet(this, State.Starting, State.Stopped)) {
