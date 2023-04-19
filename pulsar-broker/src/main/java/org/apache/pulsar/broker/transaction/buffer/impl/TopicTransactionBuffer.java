@@ -115,6 +115,8 @@ public class TopicTransactionBuffer extends TopicTransactionBufferState implemen
         } else {
             snapshotAbortedTxnProcessor = new SingleSnapshotAbortedTxnProcessorImpl(topic);
         }
+        // TODO 1. 在 topic meta 中增加一个属性：是否有需要 recover 的日志，可以避免无效的 recover.
+        // TODO 2. topic 在 load 的时候不执行 recover, 有 `read` 或 `add txn to TB` 需求再执行 recover.
         this.recover();
     }
 

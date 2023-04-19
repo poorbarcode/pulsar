@@ -66,6 +66,9 @@ public class CompactedTopicImpl implements CompactedTopic {
         this.bk = bk;
     }
 
+    // TODO compaction 执行完成之后，再增加一个 ledger 作为 索引.
+    // TODO 这个新 ledger 里面存储一个 map(key: message-key, value: entryId of compacted value).
+    // TODO 这个新 ledger 可以只有一个 Entry; 如果数据太大，可以分成多个 Entry, 但是每个 Entry 都可以解析成一个小点儿的 map.
     @Override
     public CompletableFuture<CompactedTopicContext> newCompactedLedger(Position p, long compactedLedgerId) {
         synchronized (this) {
