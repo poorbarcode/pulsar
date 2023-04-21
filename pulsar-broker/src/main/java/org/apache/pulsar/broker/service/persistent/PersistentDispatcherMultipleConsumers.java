@@ -514,6 +514,7 @@ public class PersistentDispatcherMultipleConsumers extends AbstractDispatcherMul
 
     @Override
     protected void cancelPendingRead() {
+        // TODO 有可能有飞行中的读任务。
         if (havePendingRead && cursor.cancelPendingReadRequest()) {
             havePendingRead = false;
         }

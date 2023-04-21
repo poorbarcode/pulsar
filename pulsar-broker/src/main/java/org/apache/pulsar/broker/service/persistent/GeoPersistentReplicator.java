@@ -168,11 +168,13 @@ public class GeoPersistentReplicator extends PersistentReplicator {
                     cursor.cancelPendingReadRequest();
                     log.info("[{}] Pause the data replication due to new detected schema", replicatorId);
                     schemaFuture.whenComplete((__, e) -> {
+                        // TODO pending 后面的读到的消息，future 完成之后继续处理这批剩余的消息，如果出现了异常就 close Replicator.
                         if (e != null) {
                             log.warn("[{}] Failed to get schema from local cluster, will try in the next loop",
                                     replicatorId, e);
                         }
                         log.info("[{}] Resume the data replication after the schema fetching done", replicatorId);
+                        // TODO 删除所有的 rewind 调用，取而代之的是重启 Replicator.
                         cursor.rewind();
                         fetchSchemaInProgress = false;
                         readMoreEntries();
