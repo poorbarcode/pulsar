@@ -85,6 +85,8 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.pulsar.PulsarVersion;
 import org.apache.pulsar.broker.PulsarService;
+import org.apache.pulsar.broker.service.persistent.MessageRedeliveryController;
+import org.apache.pulsar.broker.service.persistent.PersistentStickyKeyDispatcherMultipleConsumers;
 import org.apache.pulsar.broker.service.persistent.PersistentTopic;
 import org.apache.pulsar.client.admin.PulsarAdminException;
 import org.apache.pulsar.client.api.schema.GenericRecord;
@@ -112,7 +114,9 @@ import org.apache.pulsar.common.policies.data.TopicStats;
 import org.apache.pulsar.common.protocol.Commands;
 import org.apache.pulsar.common.schema.SchemaType;
 import org.apache.pulsar.common.util.FutureUtil;
+import org.apache.pulsar.common.util.collections.ConcurrentLongLongPairHashMap;
 import org.awaitility.Awaitility;
+import org.awaitility.reflect.WhiteboxImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -4612,5 +4616,89 @@ public class SimpleProducerConsumerTest extends ProducerConsumerBase {
         producer1.close();
         producer2.close();
         client.close();
+    }
+
+    @Override
+    protected void doInitConf() throws Exception {
+        conf.setMaxUnackedMessagesPerConsumer(10);
+        conf.setMaxUnackedMessagesPerSubscription(20);
+    }
+
+    @Test
+    public void testReplayQueueInfiniteExpand()
+            throws PulsarClientException, InterruptedException {
+        pulsar.getConfiguration().setMaxUnackedMessagesPerConsumer(10);
+        pulsar.getConfiguration().setMaxUnackedMessagesPerSubscription(20);
+        final String topic = "persistent://my-property/my-ns/tp_1";
+
+        @Cleanup
+        Consumer<String> consumer = pulsarClient.newConsumer(Schema.STRING)
+                .topic(topic).subscriptionName("sub")
+                .subscriptionType(SubscriptionType.Key_Shared)
+                .receiverQueueSize(100)
+                .acknowledgmentGroupTime(0, TimeUnit.SECONDS)
+                .subscribe();
+
+        @Cleanup
+        Consumer<String> consumer2 = pulsarClient.newConsumer(Schema.STRING)
+                .topic(topic).subscriptionName("sub")
+                .subscriptionType(SubscriptionType.Key_Shared)
+                .receiverQueueSize(100)
+                .acknowledgmentGroupTime(0, TimeUnit.SECONDS)
+                .subscribe();
+
+        @Cleanup
+        Producer<String> producer = pulsarClient.newProducer(Schema.STRING)
+                .enableBatching(false)
+                .topic(topic)
+                .create();
+
+        new Thread(() -> {
+            int i = 0;
+            while(true) {
+                i++;
+                producer.newMessage().key("" + i).value("" + i).sendAsync();
+                try {
+                    Thread.sleep(20);
+                } catch (InterruptedException e) {
+                }
+            }
+        }).start();
+
+        new Thread(() -> {
+            int i = 0;
+            while(true) {
+                try {
+                    Message<String> received =  consumer.receive();
+                    log.info("Received message {} with message ID {}", received.getValue(), received.getMessageId());
+                    consumer.acknowledge(received);
+                } catch (PulsarClientException e) {
+                    log.warn("", e);
+                }
+            }
+        }).start();
+
+        PersistentTopic persistentTopic =
+                (PersistentTopic) pulsar.getBrokerService().getTopic(topic, false).join().get();
+        PersistentStickyKeyDispatcherMultipleConsumers dispatcher =
+                (PersistentStickyKeyDispatcherMultipleConsumers) persistentTopic
+                        .getSubscription("sub").getDispatcher();
+        MessageRedeliveryController redeliveryMessages =
+                WhiteboxImpl.getInternalState(dispatcher, "redeliveryMessages");
+        ConcurrentLongLongPairHashMap hashesToBeBlocked =
+                WhiteboxImpl.getInternalState(redeliveryMessages, "hashesToBeBlocked");
+
+
+        new Thread(() -> {
+            while(true) {
+                log.info("hashesToBeBlocked_size: {}", hashesToBeBlocked.size());
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                }
+            }
+        }).start();
+
+        Thread.sleep(1000 * 60 * 5);
     }
 }
