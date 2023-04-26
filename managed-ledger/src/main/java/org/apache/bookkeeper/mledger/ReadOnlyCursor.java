@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.function.Predicate;
 import org.apache.bookkeeper.common.annotation.InterfaceAudience;
 import org.apache.bookkeeper.common.annotation.InterfaceStability;
-import org.apache.bookkeeper.mledger.AsyncCallbacks.ReadEntriesCallback;
 import org.apache.bookkeeper.mledger.impl.PositionImpl;
 
 @InterfaceAudience.LimitedPrivate
@@ -47,7 +46,7 @@ public interface ReadOnlyCursor {
      * @param maxPosition           max position can read
      * @see #readEntries(int)
      */
-    void asyncReadEntries(int numberOfEntriesToRead, ReadEntriesCallback callback,
+    void asyncReadEntries(int numberOfEntriesToRead, AsyncCallbacks.LinearReadEntriesCallback callback,
                           Object ctx, PositionImpl maxPosition);
 
     /**
@@ -59,8 +58,8 @@ public interface ReadOnlyCursor {
      * @param ctx                   opaque context
      * @param maxPosition           max position can read
      */
-    void asyncReadEntries(int numberOfEntriesToRead, long maxSizeBytes, ReadEntriesCallback callback,
-                          Object ctx, PositionImpl maxPosition);
+    void asyncReadEntries(int numberOfEntriesToRead, long maxSizeBytes,
+                          AsyncCallbacks.LinearReadEntriesCallback callback, Object ctx, PositionImpl maxPosition);
 
     /**
      * Get the read position. This points to the next message to be read from the cursor.

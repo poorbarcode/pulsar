@@ -59,6 +59,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import lombok.Getter;
 import org.apache.bookkeeper.client.AsyncCallback.CloseCallback;
 import org.apache.bookkeeper.client.AsyncCallback.OpenCallback;
 import org.apache.bookkeeper.client.BKException;
@@ -69,6 +70,7 @@ import org.apache.bookkeeper.client.api.BKException.Code;
 import org.apache.bookkeeper.mledger.AsyncCallbacks;
 import org.apache.bookkeeper.mledger.AsyncCallbacks.ClearBacklogCallback;
 import org.apache.bookkeeper.mledger.AsyncCallbacks.FindEntryCallback;
+import org.apache.bookkeeper.mledger.AsyncCallbacks.LinearReadEntriesCallback;
 import org.apache.bookkeeper.mledger.AsyncCallbacks.MarkDeleteCallback;
 import org.apache.bookkeeper.mledger.AsyncCallbacks.ReadEntriesCallback;
 import org.apache.bookkeeper.mledger.AsyncCallbacks.ReadEntryCallback;
@@ -219,6 +221,9 @@ public class ManagedCursorImpl implements ManagedCursor {
 
     // active state cache in ManagedCursor. It should be in sync with the state in activeCursors in ManagedLedger.
     private volatile boolean isActive = false;
+
+    @Getter
+    private volatile long epoch = 1;
 
     class MarkDeleteEntry {
         final PositionImpl newPosition;
@@ -762,20 +767,21 @@ public class ManagedCursorImpl implements ManagedCursor {
     }
 
     @Override
-    public void asyncReadEntries(final int numberOfEntriesToRead, final ReadEntriesCallback callback,
+    public void asyncReadEntries(final int numberOfEntriesToRead, final LinearReadEntriesCallback callback,
                                  final Object ctx, PositionImpl maxPosition) {
         asyncReadEntries(numberOfEntriesToRead, NO_MAX_SIZE_LIMIT, callback, ctx, maxPosition);
     }
 
     @Override
-    public void asyncReadEntries(int numberOfEntriesToRead, long maxSizeBytes, ReadEntriesCallback callback,
+    public void asyncReadEntries(int numberOfEntriesToRead, long maxSizeBytes, LinearReadEntriesCallback callback,
                                  Object ctx, PositionImpl maxPosition) {
         asyncReadEntriesWithSkip(numberOfEntriesToRead, maxSizeBytes, callback, ctx, maxPosition, null);
     }
 
     @Override
-    public void asyncReadEntriesWithSkip(int numberOfEntriesToRead, long maxSizeBytes, ReadEntriesCallback callback,
-                                 Object ctx, PositionImpl maxPosition, Predicate<PositionImpl> skipCondition) {
+    public void asyncReadEntriesWithSkip(int numberOfEntriesToRead, long maxSizeBytes,
+                                         LinearReadEntriesCallback callback, Object ctx, PositionImpl maxPosition,
+                                         Predicate<PositionImpl> skipCondition) {
         checkArgument(numberOfEntriesToRead > 0);
         if (isClosed()) {
             callback.readEntriesFailed(new ManagedLedgerException
@@ -901,26 +907,26 @@ public class ManagedCursorImpl implements ManagedCursor {
     }
 
     @Override
-    public void asyncReadEntriesOrWait(int numberOfEntriesToRead, ReadEntriesCallback callback, Object ctx,
+    public void asyncReadEntriesOrWait(int numberOfEntriesToRead, LinearReadEntriesCallback callback, Object ctx,
                                        PositionImpl maxPosition) {
         asyncReadEntriesOrWait(numberOfEntriesToRead, NO_MAX_SIZE_LIMIT, callback, ctx, maxPosition);
     }
 
     @Override
-    public void asyncReadEntriesOrWait(int maxEntries, long maxSizeBytes, ReadEntriesCallback callback, Object ctx,
+    public void asyncReadEntriesOrWait(int maxEntries, long maxSizeBytes, LinearReadEntriesCallback callback, Object ctx,
                                        PositionImpl maxPosition) {
         asyncReadEntriesWithSkipOrWait(maxEntries, maxSizeBytes, callback, ctx, maxPosition, null);
     }
 
     @Override
-    public void asyncReadEntriesWithSkipOrWait(int maxEntries, ReadEntriesCallback callback,
+    public void asyncReadEntriesWithSkipOrWait(int maxEntries, LinearReadEntriesCallback callback,
                                                Object ctx, PositionImpl maxPosition,
                                                Predicate<PositionImpl> skipCondition) {
         asyncReadEntriesWithSkipOrWait(maxEntries, NO_MAX_SIZE_LIMIT, callback, ctx, maxPosition, skipCondition);
     }
 
     @Override
-    public void asyncReadEntriesWithSkipOrWait(int maxEntries, long maxSizeBytes, ReadEntriesCallback callback,
+    public void asyncReadEntriesWithSkipOrWait(int maxEntries, long maxSizeBytes, LinearReadEntriesCallback callback,
                                                Object ctx, PositionImpl maxPosition,
                                                Predicate<PositionImpl> skipCondition) {
         checkArgument(maxEntries > 0);
@@ -965,7 +971,7 @@ public class ManagedCursorImpl implements ManagedCursor {
         }
     }
 
-    private void checkForNewEntries(OpReadEntry op, ReadEntriesCallback callback, Object ctx) {
+    private void checkForNewEntries(OpReadEntry op, LinearReadEntriesCallback callback, Object ctx) {
         try {
             if (log.isDebugEnabled()) {
                 log.debug("[{}] [{}] Re-trying the read at position {}", ledger.getName(), name, op.readPosition);
@@ -1305,6 +1311,7 @@ public class ManagedCursorImpl implements ManagedCursor {
                                         + "cursor {}", ledger.getName(), newReadPosition, oldReadPosition, name);
                     }
                     readPosition = newReadPosition;
+                    epoch = epoch + 1;
                     ledger.onCursorReadPositionUpdated(ManagedCursorImpl.this, newReadPosition);
                 } finally {
                     lock.writeLock().unlock();
@@ -1521,7 +1528,11 @@ public class ManagedCursorImpl implements ManagedCursor {
         };
 
         positions.stream().filter(position -> !alreadyAcknowledgedPositions.contains(position))
+                .forEach(p -> ledger.asyncReadEntry((PositionImpl) p, cb, ctx));
+
+        positions.stream().filter(position -> !alreadyAcknowledgedPositions.contains(position))
                 .forEach(p ->{
+                    // TODO 为什么会和 read position 一样？
                     if (((PositionImpl) p).compareTo(this.readPosition) == 0) {
                         this.setReadPosition(this.readPosition.getNext());
                         log.warn("[{}][{}] replayPosition{} equals readPosition{}," + " need set next readPosition",
@@ -2483,6 +2494,7 @@ public class ManagedCursorImpl implements ManagedCursor {
             log.info("[{}-{}] Rewind from {} to {}", ledger.getName(), name, oldReadPosition, newReadPosition);
 
             readPosition = newReadPosition;
+            epoch = epoch + 1;
             ledger.onCursorReadPositionUpdated(ManagedCursorImpl.this, newReadPosition);
         } finally {
             lock.writeLock().unlock();
@@ -2501,6 +2513,7 @@ public class ManagedCursorImpl implements ManagedCursor {
                 newReadPosition = ledger.getNextValidPosition(markDeletePosition);
             }
             readPosition = newReadPosition;
+            epoch = epoch + 1;
             ledger.onCursorReadPositionUpdated(ManagedCursorImpl.this, newReadPosition);
         } finally {
             lock.writeLock().unlock();

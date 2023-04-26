@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import org.apache.bookkeeper.mledger.AsyncCallbacks;
+import org.apache.bookkeeper.mledger.AsyncCallbacks.LinearReadEntriesCallback;
 import org.apache.bookkeeper.mledger.Entry;
 import org.apache.bookkeeper.mledger.ManagedCursor;
 import org.apache.bookkeeper.mledger.ManagedCursorMXBean;
@@ -101,14 +102,14 @@ public class MockManagedCursor implements ManagedCursor {
     }
 
     @Override
-    public void asyncReadEntries(int numberOfEntriesToRead, AsyncCallbacks.ReadEntriesCallback callback, Object ctx,
+    public void asyncReadEntries(int numberOfEntriesToRead, AsyncCallbacks.LinearReadEntriesCallback callback, Object ctx,
                                  PositionImpl maxPosition) {
 
     }
 
     @Override
     public void asyncReadEntries(int numberOfEntriesToRead, long maxSizeBytes,
-                                 AsyncCallbacks.ReadEntriesCallback callback, Object ctx, PositionImpl maxPosition) {
+                                 AsyncCallbacks.LinearReadEntriesCallback callback, Object ctx, PositionImpl maxPosition) {
 
     }
 
@@ -137,13 +138,13 @@ public class MockManagedCursor implements ManagedCursor {
     }
 
     @Override
-    public void asyncReadEntriesOrWait(int numberOfEntriesToRead, AsyncCallbacks.ReadEntriesCallback callback,
+    public void asyncReadEntriesOrWait(int numberOfEntriesToRead, LinearReadEntriesCallback callback,
                                        Object ctx, PositionImpl maxPosition) {
 
     }
 
     @Override
-    public void asyncReadEntriesOrWait(int maxEntries, long maxSizeBytes, AsyncCallbacks.ReadEntriesCallback callback,
+    public void asyncReadEntriesOrWait(int maxEntries, long maxSizeBytes, LinearReadEntriesCallback callback,
                                        Object ctx, PositionImpl maxPosition) {
 
     }

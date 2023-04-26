@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
+import org.apache.bookkeeper.mledger.AsyncCallbacks.LinearReadEntriesCallback;
 import org.apache.bookkeeper.mledger.AsyncCallbacks.ReadEntriesCallback;
 import org.apache.bookkeeper.mledger.Entry;
 import org.apache.bookkeeper.mledger.ManagedLedgerException;
@@ -38,21 +39,25 @@ class OpReadEntry implements ReadEntriesCallback {
     ManagedCursorImpl cursor;
     PositionImpl readPosition;
     private int count;
-    private ReadEntriesCallback callback;
+    private LinearReadEntriesCallback callback;
     Object ctx;
 
     // Results
     private List<Entry> entries;
     private PositionImpl nextReadPosition;
+
+    private long cursorEpoch = Integer.MIN_VALUE;
     PositionImpl maxPosition;
 
     Predicate<PositionImpl> skipCondition;
 
     public static OpReadEntry create(ManagedCursorImpl cursor, PositionImpl readPositionRef, int count,
-            ReadEntriesCallback callback, Object ctx, PositionImpl maxPosition, Predicate<PositionImpl> skipCondition) {
+                                     LinearReadEntriesCallback callback, Object ctx, PositionImpl maxPosition,
+                                     Predicate<PositionImpl> skipCondition) {
         OpReadEntry op = RECYCLER.get();
         op.readPosition = cursor.ledger.startReadOperationOnLedger(readPositionRef);
         op.cursor = cursor;
+        op.cursorEpoch = cursor.getEpoch();
         op.count = count;
         op.callback = callback;
         op.entries = new ArrayList<>();
@@ -64,6 +69,10 @@ class OpReadEntry implements ReadEntriesCallback {
         op.ctx = ctx;
         op.nextReadPosition = PositionImpl.get(op.readPosition);
         return op;
+    }
+
+    boolean checkCursorNoChanges() {
+        return cursor.getEpoch() == cursorEpoch;
     }
 
     void internalReadEntriesComplete(List<Entry> returnedEntries, Object ctx, PositionImpl lastPosition) {
@@ -92,7 +101,7 @@ class OpReadEntry implements ReadEntriesCallback {
         // if entries have been filtered out then try to skip reading of already deletedMessages in that range
         final Position nexReadPosition = entriesCount != filteredEntries.size()
                 ? cursor.getNextAvailablePosition(lastPosition) : lastPosition.getNext();
-        updateReadPosition(nexReadPosition);
+        updateReadPositionIfCursorEpochMatches(nexReadPosition);
         checkReadCompletion();
     }
 
@@ -108,7 +117,7 @@ class OpReadEntry implements ReadEntriesCallback {
         if (!entries.isEmpty()) {
             // There were already some entries that were read before, we can return them
             cursor.ledger.getExecutor().execute(() -> {
-                callback.readEntriesComplete(entries, ctx);
+                callback.readEntriesComplete(entries, checkCursorNoChanges(), ctx);
                 recycle();
             });
         } else if (cursor.config.isAutoSkipNonRecoverableData() && exception instanceof NonRecoverableLedgerException) {
@@ -132,7 +141,7 @@ class OpReadEntry implements ReadEntriesCallback {
                 recycle();
                 return;
             }
-            updateReadPosition(nexReadPosition);
+            updateReadPositionIfCursorEpochMatches(nexReadPosition);
             if (lostLedger != null) {
                 cursor.getManagedLedger().skipNonRecoverableLedger(lostLedger);
             }
@@ -147,16 +156,45 @@ class OpReadEntry implements ReadEntriesCallback {
                             cursor.getName(), readPosition);
                 }
             }
-
+            // TODO 这里会不会丢数据？
             callback.readEntriesFailed(exception, ctx);
             cursor.ledger.mbean.recordReadEntriesError();
             recycle();
         }
     }
 
-    void updateReadPosition(Position newReadPosition) {
-        nextReadPosition = (PositionImpl) newReadPosition;
-        cursor.setReadPosition(nextReadPosition);
+    /***
+     * Solution: compare and swap.
+     * case-1 start: 10; update_by_read: 10 -> 20; rewind: 10 -> 1. resulting repeated read.
+     * case-2 start: 10; rewind: 1; update_by_read: 10 -> 20(update failure, read success).
+     *          resulting repeated read and out of order(0~02, 0~20, it is OK).
+     * case-3 start: 10; reset_cursor: 10 -> 30; update_by_read: 10 -> 20(update failure, read success).
+     * case-4 start: 10; reset_cursor: 10 -> 20; update_by_read: 10 -> 20(update failure, read success).
+     *          update_by_read: 20 -> 30(update success, read success).
+     * case-5 start: 10; update_by_read: 10 -> 20; rewind: 10 -> 1, resulting repeated read;
+     *          reading 20 -> 30
+     *          reading 1 -> 10  will above read will complete first?
+     *          TODO 如果直接用 cursor 的 API，多个 ledger 并不能保证顺序，
+     *          TODO 因为缓存的存在同一个 ledger 也不能保证顺序。
+     * @param newReadPosition
+     */
+    void updateReadPositionIfCursorEpochMatches(Position newReadPosition) {
+        if (checkCursorNoChanges()) {
+            nextReadPosition = (PositionImpl) newReadPosition;
+            /**
+             * Solution: water marker.
+             * case-1 set_pos: true; readComplete: true; seek. it is OK.
+             * case-2 seek; set_pos: false; readComplete: false. it is OK.
+             * case-3 set_pos: true; seek; readComplete: false. it is OK, callback will discard these entries;
+             * case-4 set_pos: true; readComplete: false; seek; do callback: false.
+             *   TODO 怎么办？客户端需要保证 do-callback 和 seek 没有并发的可能。
+             *   TODO 而且 checkCursorNoChanges() 需要 do-callback 自己完成。
+             *   it is ok. 因为 cursor_change 之前的读取是连续的，cursor 之后的读取也是连续的，
+             * case-5 checkCursorNoChanges:true; seek; set position.
+             *   TODO 这个怎么办？加锁还是CAS？建议 read_lock, CAS 更好。
+             */
+            cursor.setReadPosition(nextReadPosition);
+        }
     }
 
     void checkReadCompletion() {
@@ -176,7 +214,7 @@ class OpReadEntry implements ReadEntriesCallback {
 
             } finally {
                 cursor.ledger.getExecutor().execute(() -> {
-                    callback.readEntriesComplete(entries, ctx);
+                    callback.readEntriesComplete(entries, checkCursorNoChanges(), ctx);
                     recycle();
                 });
             }
@@ -211,6 +249,7 @@ class OpReadEntry implements ReadEntriesCallback {
         maxPosition = null;
         recyclerHandle.recycle(this);
         skipCondition = null;
+        cursorEpoch = Integer.MIN_VALUE;
     }
 
     private static final Logger log = LoggerFactory.getLogger(OpReadEntry.class);

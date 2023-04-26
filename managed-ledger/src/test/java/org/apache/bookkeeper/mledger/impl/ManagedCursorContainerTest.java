@@ -38,6 +38,7 @@ import java.util.function.Predicate;
 import org.apache.bookkeeper.mledger.AsyncCallbacks;
 import org.apache.bookkeeper.mledger.AsyncCallbacks.ClearBacklogCallback;
 import org.apache.bookkeeper.mledger.AsyncCallbacks.DeleteCallback;
+import org.apache.bookkeeper.mledger.AsyncCallbacks.LinearReadEntriesCallback;
 import org.apache.bookkeeper.mledger.AsyncCallbacks.MarkDeleteCallback;
 import org.apache.bookkeeper.mledger.AsyncCallbacks.ReadEntriesCallback;
 import org.apache.bookkeeper.mledger.AsyncCallbacks.ReadEntryCallback;
@@ -110,15 +111,15 @@ public class ManagedCursorContainerTest {
         }
 
         @Override
-        public void asyncReadEntries(int numberOfEntriesToRead, ReadEntriesCallback callback, Object ctx,
+        public void asyncReadEntries(int numberOfEntriesToRead, LinearReadEntriesCallback callback, Object ctx,
                                      PositionImpl maxPosition) {
-            callback.readEntriesComplete(null, ctx);
+            callback.readEntriesComplete(null, true, ctx);
         }
 
         @Override
-        public void asyncReadEntries(int numberOfEntriesToRead, long maxSizeBytes, ReadEntriesCallback callback,
+        public void asyncReadEntries(int numberOfEntriesToRead, long maxSizeBytes, LinearReadEntriesCallback callback,
                                      Object ctx, PositionImpl maxPosition) {
-            callback.readEntriesComplete(null, ctx);
+            callback.readEntriesComplete(null, true, ctx);
         }
 
         @Override
@@ -301,12 +302,12 @@ public class ManagedCursorContainerTest {
         }
 
         @Override
-        public void asyncReadEntriesOrWait(int numberOfEntriesToRead, ReadEntriesCallback callback, Object ctx,
+        public void asyncReadEntriesOrWait(int numberOfEntriesToRead, LinearReadEntriesCallback callback, Object ctx,
                                            PositionImpl maxPosition) {
         }
 
         @Override
-        public void asyncReadEntriesOrWait(int maxEntries, long maxSizeBytes, ReadEntriesCallback callback,
+        public void asyncReadEntriesOrWait(int maxEntries, long maxSizeBytes, LinearReadEntriesCallback callback,
                                            Object ctx, PositionImpl maxPosition) {
 
         }

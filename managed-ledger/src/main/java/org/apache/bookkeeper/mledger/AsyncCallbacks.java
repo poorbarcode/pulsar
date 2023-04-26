@@ -83,8 +83,18 @@ public interface AsyncCallbacks {
         void closeFailed(ManagedLedgerException exception, Object ctx);
     }
 
-    interface ReadEntriesCallback {
+    interface ReadEntriesCallback extends LinearReadEntriesCallback{
         void readEntriesComplete(List<Entry> entries, Object ctx);
+
+        void readEntriesFailed(ManagedLedgerException exception, Object ctx);
+
+        default void readEntriesComplete(List<Entry> entries, boolean isCursorNoChanges, Object ctx) {
+            readEntriesComplete(entries, ctx);
+        }
+    }
+
+    interface LinearReadEntriesCallback {
+        void readEntriesComplete(List<Entry> entries, boolean isCursorNoChanges, Object ctx);
 
         void readEntriesFailed(ManagedLedgerException exception, Object ctx);
     }

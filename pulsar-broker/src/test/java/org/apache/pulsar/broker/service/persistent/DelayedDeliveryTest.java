@@ -622,4 +622,55 @@ public class DelayedDeliveryTest extends ProducerConsumerBase {
         }
     }
 
+    @Test
+    public void testSendOneAndReceiveOne() throws Exception {
+        String topic = BrokerTestUtil.newUniqueName("persistent://public/default/tp_");
+
+        Consumer<String> consumer1 = pulsarClient.newConsumer(Schema.STRING)
+                .topic(topic)
+                .subscriptionName("sub1")
+                .subscriptionType(SubscriptionType.Shared)
+                .subscribe();
+        Consumer<String> consumer2 = pulsarClient.newConsumer(Schema.STRING)
+                .topic(topic)
+                .subscriptionName("sub2")
+                .subscriptionType(SubscriptionType.Shared)
+                .subscribe();
+        Producer<String> producer = pulsarClient.newProducer(Schema.STRING)
+                .topic(topic)
+                .create();
+        consumer2.close();
+
+        producer.newMessage().value("msg-1").deliverAfter(5, TimeUnit.SECONDS).send();
+
+        Thread.sleep(5000);
+
+        // Verify consumer1 only receive one message.
+        List<String> messagesConsumer1Received = new ArrayList<>();
+        while (true) {
+            Message<String> msg = consumer1.receive(2, TimeUnit.SECONDS);
+            if (msg == null) {
+                break;
+            }
+            messagesConsumer1Received.add(msg.getValue());
+        }
+        assertEquals(messagesConsumer1Received.size(), 1);
+
+        // Verify consumer2 only receive one message event if it is restarted.
+        consumer2 = pulsarClient.newConsumer(Schema.STRING)
+                .topic(topic)
+                .subscriptionName("sub2")
+                .subscriptionType(SubscriptionType.Shared)
+                .subscribe();
+        List<String> messagesConsumer2Received = new ArrayList<>();
+        while (true) {
+            Message<String> msg = consumer2.receive(2, TimeUnit.SECONDS);
+            if (msg == null) {
+                break;
+            }
+            messagesConsumer2Received.add(msg.getValue());
+        }
+        assertEquals(messagesConsumer2Received.size(), 1);
+    }
+
 }

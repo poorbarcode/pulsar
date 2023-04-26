@@ -30,6 +30,7 @@ import org.apache.bookkeeper.common.annotation.InterfaceStability;
 import org.apache.bookkeeper.mledger.AsyncCallbacks.ClearBacklogCallback;
 import org.apache.bookkeeper.mledger.AsyncCallbacks.DeleteCallback;
 import org.apache.bookkeeper.mledger.AsyncCallbacks.FindEntryCallback;
+import org.apache.bookkeeper.mledger.AsyncCallbacks.LinearReadEntriesCallback;
 import org.apache.bookkeeper.mledger.AsyncCallbacks.MarkDeleteCallback;
 import org.apache.bookkeeper.mledger.AsyncCallbacks.ReadEntriesCallback;
 import org.apache.bookkeeper.mledger.AsyncCallbacks.ReadEntryCallback;
@@ -151,7 +152,7 @@ public interface ManagedCursor {
      * @param maxPosition
      *            max position can read
      */
-    void asyncReadEntries(int numberOfEntriesToRead, ReadEntriesCallback callback, Object ctx,
+    void asyncReadEntries(int numberOfEntriesToRead, LinearReadEntriesCallback callback, Object ctx,
                           PositionImpl maxPosition);
 
 
@@ -164,7 +165,7 @@ public interface ManagedCursor {
      * @param ctx                   opaque context
      * @param maxPosition           max position can read
      */
-    void asyncReadEntries(int numberOfEntriesToRead, long maxSizeBytes, ReadEntriesCallback callback,
+    void asyncReadEntries(int numberOfEntriesToRead, long maxSizeBytes, LinearReadEntriesCallback callback,
                           Object ctx, PositionImpl maxPosition);
 
     /**
@@ -177,8 +178,9 @@ public interface ManagedCursor {
      * @param maxPosition           max position can read
      * @param skipCondition         predicate of read filter out
      */
-    default void asyncReadEntriesWithSkip(int numberOfEntriesToRead, long maxSizeBytes, ReadEntriesCallback callback,
-                                          Object ctx, PositionImpl maxPosition, Predicate<PositionImpl> skipCondition) {
+    default void asyncReadEntriesWithSkip(int numberOfEntriesToRead, long maxSizeBytes,
+                                          LinearReadEntriesCallback callback, Object ctx, PositionImpl maxPosition,
+                                          Predicate<PositionImpl> skipCondition) {
         asyncReadEntries(numberOfEntriesToRead, maxSizeBytes, callback, ctx, maxPosition);
     }
 
@@ -255,7 +257,7 @@ public interface ManagedCursor {
      * @param maxPosition
      *            max position can read
      */
-    void asyncReadEntriesOrWait(int numberOfEntriesToRead, ReadEntriesCallback callback, Object ctx,
+    void asyncReadEntriesOrWait(int numberOfEntriesToRead, LinearReadEntriesCallback callback, Object ctx,
                                 PositionImpl maxPosition);
 
     /**
@@ -276,7 +278,7 @@ public interface ManagedCursor {
      * @param maxPosition
      *            max position can read
      */
-    void asyncReadEntriesOrWait(int maxEntries, long maxSizeBytes, ReadEntriesCallback callback, Object ctx,
+    void asyncReadEntriesOrWait(int maxEntries, long maxSizeBytes, LinearReadEntriesCallback callback, Object ctx,
                                 PositionImpl maxPosition);
 
     /**
@@ -297,7 +299,7 @@ public interface ManagedCursor {
      * @param skipCondition
      *            predicate of read filter out
      */
-    default void asyncReadEntriesWithSkipOrWait(int maxEntries, ReadEntriesCallback callback, Object ctx,
+    default void asyncReadEntriesWithSkipOrWait(int maxEntries, LinearReadEntriesCallback callback, Object ctx,
                                                 PositionImpl maxPosition, Predicate<PositionImpl> skipCondition) {
         asyncReadEntriesOrWait(maxEntries, callback, ctx, maxPosition);
     }
@@ -322,7 +324,7 @@ public interface ManagedCursor {
      * @param skipCondition
      *            predicate of read filter out
      */
-    default void asyncReadEntriesWithSkipOrWait(int maxEntries, long maxSizeBytes, ReadEntriesCallback callback,
+    default void asyncReadEntriesWithSkipOrWait(int maxEntries, long maxSizeBytes, LinearReadEntriesCallback callback,
                                                 Object ctx, PositionImpl maxPosition,
                                                 Predicate<PositionImpl> skipCondition) {
         asyncReadEntriesOrWait(maxEntries, maxSizeBytes, callback, ctx, maxPosition);
@@ -331,7 +333,7 @@ public interface ManagedCursor {
     /**
      * Cancel a previously scheduled asyncReadEntriesOrWait operation.
      *
-     * @see #asyncReadEntriesOrWait(int, ReadEntriesCallback, Object, PositionImpl)
+     * @see #asyncReadEntriesOrWait(int, LinearReadEntriesCallback, Object, PositionImpl)
      * @return true if the read operation was canceled or false if there was no pending operation
      */
     boolean cancelPendingReadRequest();
