@@ -1,4 +1,4 @@
-package feng;
+package acktool;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
@@ -22,15 +22,14 @@ import org.apache.pulsar.common.policies.data.TopicStats;
 public class ResetCursors {
 
     public static void main(String[] args) throws Exception {
-        if (args.length != 1) {
-            print("pulsar-reset-cursor.sh <topics-and-missing-ledgers.json>");
+        if (args.length != 2) {
+            print("pulsar-reset-cursor.sh <topics-and-missing-ledgers.json> <auth-token>");
             System.exit(0);
         }
 
         String brokerUrl = "pulsar://pulsar-proxy:6650";
         String webUrl = "http://pulsar-proxy:8080";
-        // Please rewrite the token.
-        String token = "token of client";
+        String token = args[1];
 
         final PulsarClient client = PulsarClient.builder().serviceUrl(brokerUrl)
             .authentication(AuthenticationFactory.token(token)).build();
