@@ -273,7 +273,7 @@ public class PulsarCommandSenderImpl implements PulsarCommandSender {
 
                 int redeliveryCount = redeliveryTracker
                         .getRedeliveryCount(entry.getLedgerId(), entry.getEntryId());
-
+                // TODO ctx.writeAndFlush 是会抛出异常的，如果抛出异常，将导致 entriesToRelease 和 循环中剩余的 Entry 内存泄漏。
                 ctx.write(
                         cnx.newMessageAndIntercept(consumerId, entry.getLedgerId(), entry.getEntryId(), partitionIdx,
                                 redeliveryCount, metadataAndPayload,
@@ -283,6 +283,7 @@ public class PulsarCommandSenderImpl implements PulsarCommandSender {
             }
 
             // Use an empty write here so that we can just tie the flush with the write promise for last entry
+            // TODO ctx.writeAndFlush 是会抛出异常的，如果抛出异常，将导致 entriesToRelease 内存泄漏。
             ctx.writeAndFlush(Unpooled.EMPTY_BUFFER, writePromise);
             writePromise.addListener((future) -> {
                 // release the entries only after flushing the channel

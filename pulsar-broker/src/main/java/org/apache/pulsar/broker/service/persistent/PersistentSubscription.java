@@ -755,6 +755,7 @@ public class PersistentSubscription extends AbstractSubscription implements Subs
                 disconnectFuture = CompletableFuture.completedFuture(null);
             }
         }
+        // TODO if a new consumer was joined now?
 
         disconnectFuture.whenComplete((aVoid, throwable) -> {
             if (dispatcher != null) {
