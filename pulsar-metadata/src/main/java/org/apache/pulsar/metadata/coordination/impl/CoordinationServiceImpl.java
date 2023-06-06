@@ -55,7 +55,7 @@ public class CoordinationServiceImpl implements CoordinationService {
     private final MetadataStoreExtended store;
 
     private final Map<Object, LockManager<?>> lockManagers = new ConcurrentHashMap<>();
-    private final Map<String, LeaderElection<?>> leaderElections = new ConcurrentHashMap<>();
+    private final Map<String, LeaderElection<?>> leaderElections = new ConcurrentHashMap<>(2);
 
     private final ScheduledExecutorService executor;
 
