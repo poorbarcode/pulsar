@@ -836,6 +836,11 @@ public class Consumer {
         stats.chunkedMessageRate = chunkedMessageRate.getRate();
     }
 
+    /**
+     * Only used by test.
+     */
+    @VisibleForTesting
+    @Deprecated
     public void updateStats(ConsumerStatsImpl consumerStats) {
         msgOutCounter.add(consumerStats.msgOutCounter);
         bytesOutCounter.add(consumerStats.bytesOutCounter);

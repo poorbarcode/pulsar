@@ -1494,6 +1494,7 @@ public class PersistentTopic extends AbstractTopic implements Topic, AddEntryCal
 
                 @Override
                 public void closeFailed(ManagedLedgerException exception, Object ctx) {
+                    // TODO memory leak.
                     log.error("[{}] Failed to close managed ledger, proceeding anyway.", topic, exception);
                     disposeTopic(closeFuture);
                 }
