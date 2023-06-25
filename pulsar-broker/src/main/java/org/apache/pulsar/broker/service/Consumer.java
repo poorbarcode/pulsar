@@ -387,6 +387,7 @@ public class Consumer {
     }
 
     public void close(boolean isResetCursor) throws BrokerServiceException {
+        // TODO 如果这时候还没注册到 dispatcher， 就不会删除任何 consumer，但是后面又注册上了。怎么办？
         subscription.removeConsumer(this, isResetCursor);
         cnx.removedConsumer(this);
     }

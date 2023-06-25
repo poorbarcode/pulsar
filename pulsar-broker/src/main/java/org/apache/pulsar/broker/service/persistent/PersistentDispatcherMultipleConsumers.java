@@ -204,6 +204,7 @@ public class PersistentDispatcherMultipleConsumers extends AbstractDispatcherMul
             consumerList.remove(consumer);
             log.info("Removed consumer {} with pending {} acks", consumer, consumer.getPendingAcks().size());
             if (consumerList.isEmpty()) {
+                // TODO 这里阻止不了 in-flight 的 read。
                 cancelPendingRead();
 
                 redeliveryMessages.clear();

@@ -387,6 +387,7 @@ public class PersistentSubscription extends AbstractSubscription implements Subs
             }
 
             if (dispatcher != null) {
+                // TODO 如果两种 ack 模式混用，那会不会出现内存泄漏？
                 dispatcher.getRedeliveryTracker().removeBatch(positions);
             }
         }

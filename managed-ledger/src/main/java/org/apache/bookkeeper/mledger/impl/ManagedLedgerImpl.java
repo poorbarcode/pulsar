@@ -2431,7 +2431,7 @@ public class ManagedLedgerImpl implements ManagedLedger, CreateCallback {
             } else {
                 log.warn("Cursor: {} does not exist in the managed-ledger.", cursor);
             }
-
+            // TODO 这里应该用大于或小于，不应该用 equals 吧.
             if (!lastAckedPosition.equals(cursor.getMarkDeletedPosition())) {
                 try {
                     log.info("Reset cursor:{} to {} since ledger consumed completely", cursor, lastAckedPosition);

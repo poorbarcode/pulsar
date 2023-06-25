@@ -158,6 +158,28 @@ public abstract class AbstractDispatcherSingleActiveConsumer extends AbstractBas
         return Collections.unmodifiableNavigableMap(hashRing);
     }
 
+    private void failIfExistsConsumersInExclusiveMode(Consumer newConsumer) throws BrokerServiceException {
+        if (subscriptionType != SubType.Exclusive || consumers.isEmpty()) {
+            return;
+        }
+
+        // If all consumers are going offline, let the new consumer retry, otherwise let the new consumer not retry.
+        boolean nonConsumerIsInConnected = true;
+        for (Consumer oldConsumer : consumers) {
+            if (oldConsumer.cnx().isActive()) {
+                nonConsumerIsInConnected = false;
+            }
+        }
+        if (nonConsumerIsInConnected) {
+            log.info("[{}] There is still one consumer going offline, let the new consumer try again. old consumer: {},"
+                    + " new consumer: {}", this.topicName, consumers.get(0), newConsumer);
+            throw new BrokerServiceException.ServiceUnitNotReadyException("There is still one consumer going"
+                    + " offline, please try again.");
+        } else {
+            throw new ConsumerBusyException("Exclusive consumer is already connected");
+        }
+    }
+
     public synchronized CompletableFuture<Void> addConsumer(Consumer consumer) {
         if (IS_CLOSED_UPDATER.get(this) == TRUE) {
             log.warn("[{}] Dispatcher is already closed. Closing consumer {}", this.topicName, consumer);
