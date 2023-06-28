@@ -86,6 +86,7 @@ public class IsolatedBookieEnsemblePlacementPolicy extends RackawareEnsemblePlac
             }
             // Only add the bookieMappingCache if we have defined an isolation group
             bookieMappingCache = store.getMetadataCache(BookiesRackConfiguration.class);
+            // TODO try to remove the sync action: "join()"
             bookieMappingCache.get(BookieRackAffinityMapping.BOOKIE_INFO_ROOT_PATH).join();
         }
         if (conf.getProperty(SECONDARY_ISOLATION_BOOKIE_GROUPS) != null) {
@@ -189,7 +190,7 @@ public class IsolatedBookieEnsemblePlacementPolicy extends RackawareEnsemblePlac
             if (bookieMappingCache != null) {
                 CompletableFuture<Optional<BookiesRackConfiguration>> future =
                         bookieMappingCache.get(BookieRackAffinityMapping.BOOKIE_INFO_ROOT_PATH);
-
+                // TODO join().
                 Optional<BookiesRackConfiguration> optRes = (future.isDone() && !future.isCompletedExceptionally())
                         ? future.join() : Optional.empty();
 
