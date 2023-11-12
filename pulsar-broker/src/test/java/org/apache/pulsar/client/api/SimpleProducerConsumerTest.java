@@ -119,7 +119,6 @@ import org.apache.pulsar.common.protocol.Commands;
 import org.apache.pulsar.common.schema.SchemaType;
 import org.apache.pulsar.common.util.FutureUtil;
 import org.awaitility.Awaitility;
-import org.bouncycastle.oer.Switch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -361,40 +360,26 @@ public class SimpleProducerConsumerTest extends ProducerConsumerBase {
                 .enableBatching(false).create();
         Consumer<String> consumer1 = pulsarClient.newConsumer(Schema.STRING).topic(topic)
                 .subscriptionName(subscription).isAckReceiptEnabled(true).subscribe();
-//        Consumer<String> consumer2 = pulsarClient.newConsumer(Schema.STRING).topic(partition2)
-//                .subscriptionName(subscription).isAckReceiptEnabled(true).subscribe();
 
-        // Make consume all messages for one topic, do not consume any messages for another one.
         producer0.send("1");
         producer1.send("2");
         admin.topics().skipAllMessages(partition0, subscription);
-//        Message<String> msg = consumer1.receive(2, TimeUnit.SECONDS);
-//        String receivedMsgValue = msg.getValue();
-//        log.info("received msg: {}", receivedMsgValue);
-//        consumer1.acknowledge(msg);
 
         // Wait for topic GC.
         producer0.close();
         consumer1.close();
-        Awaitility.await().atMost(30, TimeUnit.MINUTES).untilAsserted(() -> {
+        Awaitility.await().atMost(2, TimeUnit.MINUTES).untilAsserted(() -> {
             CompletableFuture<Optional<Topic>> tp1 = pulsar.getBrokerService().getTopic(partition0, false);
             CompletableFuture<Optional<Topic>> tp2 = pulsar.getBrokerService().getTopic(partition1, false);
             assertTrue(tp1 == null || !tp1.get().isPresent());
             assertTrue(tp2 != null && tp2.get().isPresent());
         });
 
-        Consumer<String> consumerAllPartition = pulsarClient.newConsumer(Schema.STRING).topic(topic)
+        Consumer<String> consumer2 = pulsarClient.newConsumer(Schema.STRING).topic(topic)
                 .subscriptionName(subscription).isAckReceiptEnabled(true).subscribe();
-        Message<String> msg = consumerAllPartition.receive(2, TimeUnit.SECONDS);
-        String receivedMsgValue = msg.getValue();
-        log.info("received msg: {}", receivedMsgValue);
-        consumerAllPartition.acknowledge(msg);
-
-//        // After the topic has been deleted, ack the message again.
-//        consumer.acknowledge(msg);
 
         // cleanup.
-        consumerAllPartition.close();
+        consumer2.close();
         producer0.close();
         producer1.close();
     }

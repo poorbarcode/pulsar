@@ -3473,7 +3473,6 @@ public class PersistentTopic extends AbstractTopic implements Topic, AddEntryCal
                     || (userCreatedProducerCount > 0)
                     || (numActiveConsumersWithoutAutoSchema != 0)
                     || (ledger.getTotalSize() != 0)) {
-                log.info("===> checkSchemaCompatibleForConsumer {}", topic);
                 return checkSchemaCompatibleForConsumer(schema);
             } else {
                 return addSchema(schema).thenCompose(schemaVersion ->
