@@ -1031,6 +1031,9 @@ public class BrokerService implements Closeable {
                         || (topicFuture.isDone() && !topicFuture.getNow(Optional.empty()).isPresent())) {
                     // Exceptional topics should be recreated.
                     topics.remove(topicName.toString(), topicFuture);
+                    if (!createIfMissing) {
+                        return null;
+                    }
                 } else {
                     // a non-existing topic in the cache shouldn't prevent creating a topic
                     if (createIfMissing) {
@@ -1050,6 +1053,10 @@ public class BrokerService implements Closeable {
                     } else {
                         return topicFuture;
                     }
+                }
+            } else {
+                if (!createIfMissing) {
+                    return null;
                 }
             }
             final boolean isPersistentTopic = topicName.getDomain().equals(TopicDomain.persistent);

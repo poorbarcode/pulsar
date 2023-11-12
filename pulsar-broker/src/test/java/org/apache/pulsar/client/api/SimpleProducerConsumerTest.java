@@ -89,6 +89,7 @@ import org.apache.pulsar.PulsarVersion;
 import org.apache.pulsar.broker.BrokerTestUtil;
 import org.apache.pulsar.broker.PulsarService;
 import org.apache.pulsar.broker.service.ServerCnx;
+import org.apache.pulsar.broker.service.Topic;
 import org.apache.pulsar.broker.service.persistent.PersistentTopic;
 import org.apache.pulsar.client.admin.PulsarAdminException;
 import org.apache.pulsar.client.api.schema.GenericRecord;
@@ -111,12 +112,14 @@ import org.apache.pulsar.common.api.proto.SingleMessageMetadata;
 import org.apache.pulsar.common.compression.CompressionCodec;
 import org.apache.pulsar.common.compression.CompressionCodecProvider;
 import org.apache.pulsar.common.naming.TopicName;
+import org.apache.pulsar.common.policies.data.InactiveTopicDeleteMode;
 import org.apache.pulsar.common.policies.data.PublisherStats;
 import org.apache.pulsar.common.policies.data.TopicStats;
 import org.apache.pulsar.common.protocol.Commands;
 import org.apache.pulsar.common.schema.SchemaType;
 import org.apache.pulsar.common.util.FutureUtil;
 import org.awaitility.Awaitility;
+import org.bouncycastle.oer.Switch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -332,6 +335,94 @@ public class SimpleProducerConsumerTest extends ProducerConsumerBase {
             assertEquals(1L, msg.getPublishTime());
             assertEquals(100L * (i + 1), msg.getEventTime());
         }
+    }
+
+    @EqualsAndHashCode.Include
+    protected void doInitConf() throws Exception {
+        super.doInitConf();
+        this.conf.setBrokerDeleteInactiveTopicsEnabled(true);
+        this.conf.setBrokerDeleteInactiveTopicsMode(InactiveTopicDeleteMode.delete_when_subscriptions_caught_up);
+        this.conf.setBrokerDeleteInactiveTopicsFrequencySeconds(10);
+    }
+
+    @Test
+    public void test1() throws Exception {
+        final String topic = "persistent://my-property/my-ns/test-publish-timestamp";
+        final String partition0 = topic + "-partition-0";
+        final String partition1 = topic + "-partition-1";
+        final String subscription = "s1";
+        admin.topics().createPartitionedTopic(topic, 2);
+        admin.topics().createSubscription(topic, subscription, MessageId.earliest);
+
+        // create consumers and producers.
+        Producer<String> producer0 = pulsarClient.newProducer(Schema.STRING).topic(partition0)
+                .enableBatching(false).create();
+        Producer<String> producer1 = pulsarClient.newProducer(Schema.STRING).topic(partition1)
+                .enableBatching(false).create();
+        Consumer<String> consumer1 = pulsarClient.newConsumer(Schema.STRING).topic(topic)
+                .subscriptionName(subscription).isAckReceiptEnabled(true).subscribe();
+//        Consumer<String> consumer2 = pulsarClient.newConsumer(Schema.STRING).topic(partition2)
+//                .subscriptionName(subscription).isAckReceiptEnabled(true).subscribe();
+
+        // Make consume all messages for one topic, do not consume any messages for another one.
+        producer0.send("1");
+        producer1.send("2");
+        admin.topics().skipAllMessages(partition0, subscription);
+//        Message<String> msg = consumer1.receive(2, TimeUnit.SECONDS);
+//        String receivedMsgValue = msg.getValue();
+//        log.info("received msg: {}", receivedMsgValue);
+//        consumer1.acknowledge(msg);
+
+        // Wait for topic GC.
+        producer0.close();
+        consumer1.close();
+        Awaitility.await().atMost(30, TimeUnit.MINUTES).untilAsserted(() -> {
+            CompletableFuture<Optional<Topic>> tp1 = pulsar.getBrokerService().getTopic(partition0, false);
+            CompletableFuture<Optional<Topic>> tp2 = pulsar.getBrokerService().getTopic(partition1, false);
+            assertTrue(tp1 == null || !tp1.get().isPresent());
+            assertTrue(tp2 != null && tp2.get().isPresent());
+        });
+
+        Consumer<String> consumerAllPartition = pulsarClient.newConsumer(Schema.STRING).topic(topic)
+                .subscriptionName(subscription).isAckReceiptEnabled(true).subscribe();
+        Message<String> msg = consumerAllPartition.receive(2, TimeUnit.SECONDS);
+        String receivedMsgValue = msg.getValue();
+        log.info("received msg: {}", receivedMsgValue);
+        consumerAllPartition.acknowledge(msg);
+
+//        // After the topic has been deleted, ack the message again.
+//        consumer.acknowledge(msg);
+
+        // cleanup.
+        consumerAllPartition.close();
+        producer0.close();
+        producer1.close();
+    }
+
+    @Test
+    public void test2() throws Exception {
+        final String topic = "persistent://my-property/my-ns/test-publish-timestamp";
+        final String partition0 = topic + "-partition-0";
+        final String partition1 = topic + "-partition-1";
+        final String subscription = "s1";
+        admin.topics().createPartitionedTopic(topic, 2);
+        admin.topics().createSubscription(topic, subscription, MessageId.earliest);
+
+        Producer<String> producer0 = pulsarClient.newProducer(Schema.STRING).topic(partition0)
+                .enableBatching(false).create();
+        Producer<String> producer1 = pulsarClient.newProducer(Schema.STRING).topic(partition1)
+                .enableBatching(false).create();
+
+        producer0.close();
+        admin.topics().delete(partition0, false);
+
+        Consumer<String> consumer = pulsarClient.newConsumer(Schema.STRING).topic(topic)
+                .subscriptionName(subscription).isAckReceiptEnabled(true).subscribe();
+
+        // cleanup.
+        consumer.close();
+        producer0.close();
+        producer1.close();
     }
 
     @DataProvider(name = "batchAndAckReceipt")
