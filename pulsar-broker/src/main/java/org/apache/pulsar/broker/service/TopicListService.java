@@ -112,7 +112,7 @@ public class TopicListService {
     public void handleWatchTopicList(NamespaceName namespaceName, long watcherId, long requestId, Pattern topicsPattern,
                                      String topicsHash, Semaphore lookupSemaphore) {
 
-        if (!enableSubscriptionPatternEvaluation || topicsPattern.pattern().length() > maxSubscriptionPatternLength) {
+        if (topicsPattern.pattern().length() > maxSubscriptionPatternLength) {
             String msg = "Unable to create topic list watcher: ";
             if (!enableSubscriptionPatternEvaluation) {
                 msg += "Evaluating subscription patterns is disabled.";

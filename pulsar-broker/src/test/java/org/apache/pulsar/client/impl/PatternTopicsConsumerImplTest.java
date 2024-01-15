@@ -52,7 +52,6 @@ import org.apache.pulsar.common.api.proto.BaseCommand;
 import org.apache.pulsar.common.api.proto.CommandWatchTopicListSuccess;
 import org.apache.pulsar.common.naming.NamespaceName;
 import org.apache.pulsar.common.policies.data.TenantInfoImpl;
-import org.apache.pulsar.common.topics.TopicList;
 import org.awaitility.Awaitility;
 import org.awaitility.reflect.WhiteboxImpl;
 import org.slf4j.Logger;
@@ -684,16 +683,24 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
     @DataProvider(name= "partitioned")
     public Object[][] partitioned(){
         return new Object[][]{
-                {true},
-                {false}
+                {true, true},
+                {false, true},
+                {true, false},
+                {false, false}
         };
     }
 
     @Test(timeOut = testTimeout, dataProvider = "partitioned")
-    public void testPreciseRegexpSubscribe(boolean partitioned) throws Exception {
+    public void testPreciseRegexpSubscribe(boolean partitioned, boolean brokerSidePatternMatches) throws Exception {
         final String topicName = BrokerTestUtil.newUniqueName("persistent://public/default/tp");
         final String subscriptionName = "s1";
         final Pattern pattern = Pattern.compile(String.format("%s$", topicName));
+
+        if (!brokerSidePatternMatches) {
+            // Close all ServerCnx by close client-side sockets to make the config changes effect.
+            pulsar.getConfig().setEnableBrokerSideSubscriptionPatternEvaluation(false);
+            reconnectAllConnections();
+        }
 
         Consumer<byte[]> consumer = pulsarClient.newConsumer()
                 .topicsPattern(pattern)
@@ -730,6 +737,11 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
             admin.topics().deletePartitionedTopic(topicName);
         } else {
             admin.topics().delete(topicName);
+        }
+        if (!brokerSidePatternMatches) {
+            // Close all ServerCnx by close client-side sockets to make the config changes effect.
+            pulsar.getConfig().setEnableBrokerSideSubscriptionPatternEvaluation(true);
+            reconnectAllConnections();
         }
     }
 

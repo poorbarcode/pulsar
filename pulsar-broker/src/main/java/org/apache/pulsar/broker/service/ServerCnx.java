@@ -740,7 +740,9 @@ public class ServerCnx extends PulsarHandler implements TransportCnx {
             }
             maybeScheduleAuthenticationCredentialsRefresh();
         }
-        writeAndFlush(Commands.newConnected(clientProtoVersion, maxMessageSize, enableSubscriptionPatternEvaluation));
+        // After PIP-145(>=2.11), Pulsar supported Topic Watcher, so set supportsTopicWatchers -> true.
+        boolean supportsTopicWatchers = true;
+        writeAndFlush(Commands.newConnected(clientProtoVersion, maxMessageSize, supportsTopicWatchers));
         state = State.Connected;
         service.getPulsarStats().recordConnectionCreateSuccess();
         if (log.isDebugEnabled()) {
