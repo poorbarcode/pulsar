@@ -46,7 +46,7 @@ import org.apache.commons.lang3.StringUtils;
 @Slf4j
 @Data
 @NoArgsConstructor
-public class OffloadPoliciesImpl implements Serializable, OffloadPolicies {
+public class OffloadPoliciesImpl implements Serializable, OffloadPolicies, Cloneable {
 
     private static final long serialVersionUID = 0L;
 

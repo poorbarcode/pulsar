@@ -18,19 +18,20 @@
  */
 package org.apache.pulsar.common.policies.data;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 
-/**
- * Definition of the inactive topic policy.
- */
-@Getter
 @AllArgsConstructor
-@NoArgsConstructor
-public class InactiveTopicPolicies {
-    private InactiveTopicDeleteMode inactiveTopicDeleteMode;
-    private int maxInactiveDurationSeconds;
-    private boolean deleteWhileInactive;
+public class ImmutableSubscriptionPolicies {
+
+    private SubscriptionPolicies delegate;
+
+    @JsonIgnore
+    public boolean checkEmpty() {
+        return delegate.checkEmpty();
+    }
+
+    public DispatchRate getDispatchRate() {
+        return delegate.getDispatchRate();
+    }
 }

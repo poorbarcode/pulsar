@@ -42,7 +42,7 @@ import org.apache.pulsar.common.policies.data.impl.DispatchRateImpl;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class TopicPolicies {
+public class TopicPolicies extends ImmutableTopicPolicies implements Cloneable {
 
     @Builder.Default
     private Map<String, BacklogQuotaImpl> backLogQuotaMap = new HashMap<>();

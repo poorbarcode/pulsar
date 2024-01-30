@@ -20,13 +20,14 @@ package org.apache.pulsar.common.policies.data.impl;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.apache.pulsar.common.policies.data.AutoSubscriptionCreationOverride;
 
 /**
  * Override of autoSubscriptionCreation settings on a topic or namespace level.
  */
-@Data
+@Getter
 @AllArgsConstructor
 @NoArgsConstructor
 public class AutoSubscriptionCreationOverrideImpl implements AutoSubscriptionCreationOverride {

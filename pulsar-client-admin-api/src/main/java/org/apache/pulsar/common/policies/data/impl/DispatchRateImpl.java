@@ -19,14 +19,14 @@
 package org.apache.pulsar.common.policies.data.impl;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.apache.pulsar.common.policies.data.DispatchRate;
 
 /**
  * Dispatch rate.
  */
-@Data
+@Getter
 @AllArgsConstructor
 @NoArgsConstructor
 public final class DispatchRateImpl implements DispatchRate {
