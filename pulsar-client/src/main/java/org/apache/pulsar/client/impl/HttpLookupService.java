@@ -137,15 +137,7 @@ public class HttpLookupService implements LookupService {
         httpClient
             .get(String.format(format, namespace, mode.toString()), String[].class)
             .thenAccept(topics -> {
-                List<String> result = new ArrayList<>();
-                // do not keep partition part of topic name
-                Arrays.asList(topics).forEach(topic -> {
-                    String filtered = TopicName.get(topic).getPartitionedTopicName();
-                    if (!result.contains(filtered)) {
-                        result.add(filtered);
-                    }
-                });
-                future.complete(new GetTopicsResult(result, topicsHash, false, true));
+                future.complete(new GetTopicsResult(Arrays.asList(topics), topicsHash, false, true));
             }).exceptionally(ex -> {
                 Throwable cause = FutureUtil.unwrapCompletionException(ex);
                 log.warn("Failed to getTopicsUnderNamespace namespace {} {}.", namespace, cause.getMessage());

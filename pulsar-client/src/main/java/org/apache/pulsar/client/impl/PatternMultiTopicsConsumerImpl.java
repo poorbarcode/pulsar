@@ -167,11 +167,13 @@ public class PatternMultiTopicsConsumerImpl<T> extends MultiTopicsConsumerImpl<T
                         return CompletableFuture.completedFuture(null);
                     }
                     if (log.isDebugEnabled()) {
-                        log.debug("Get topics under namespace {}, topics.size: {}, topicsHash: {}, filtered: {}",
+                        log.debug("Get topics under namespace {}, partitioned-topics.size: {}, topicsHash: {},"
+                                        + " filtered: {}",
                                 namespaceName, getTopicsResult.getTopics().size(), getTopicsResult.getTopicsHash(),
                                 getTopicsResult.isFiltered());
                         getTopicsResult.getTopics().forEach(topicName ->
-                                log.debug("Get topics under namespace {}, topic: {}", namespaceName, topicName));
+                                log.debug("Get partitioned topic under namespace {}, topic: {}", namespaceName,
+                                        topicName));
                     }
 
                     final List<String> oldTopics = new ArrayList<>(getPartitionedTopics());
@@ -199,9 +201,9 @@ public class PatternMultiTopicsConsumerImpl<T> extends MultiTopicsConsumerImpl<T
 
         List<String> newTopics;
         if (getTopicsResult.isFiltered()) {
-            newTopics = getTopicsResult.getTopics();
+            newTopics = getTopicsResult.getGroupedTopicNames();
         } else {
-            newTopics = TopicList.filterTopics(getTopicsResult.getTopics(), topicsPattern);
+            newTopics = TopicList.filterTopics(getTopicsResult.getGroupedTopicNames(), topicsPattern);
         }
 
         final List<CompletableFuture<?>> listenersCallback = new ArrayList<>(2);

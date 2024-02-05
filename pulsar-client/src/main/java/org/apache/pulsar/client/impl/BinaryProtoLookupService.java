@@ -335,21 +335,7 @@ public class BinaryProtoLookupService implements LookupService {
                 if (t != null) {
                     getTopicsResultFuture.completeExceptionally(t);
                 } else {
-                    if (log.isDebugEnabled()) {
-                        log.debug("[namespace: {}] Success get topics list in request: {}",
-                                namespace, requestId);
-                    }
-                    // do not keep partition part of topic name
-                    List<String> result = new ArrayList<>();
-                    r.getTopics().forEach(topic -> {
-                        String filtered = TopicName.get(topic).getPartitionedTopicName();
-                        if (!result.contains(filtered)) {
-                            result.add(filtered);
-                        }
-                    });
-
-                    getTopicsResultFuture.complete(new GetTopicsResult(result, r.getTopicsHash(),
-                            r.isFiltered(), r.isChanged()));
+                    getTopicsResultFuture.complete(r);
                 }
                 client.getCnxPool().releaseConnection(clientCnx);
             });

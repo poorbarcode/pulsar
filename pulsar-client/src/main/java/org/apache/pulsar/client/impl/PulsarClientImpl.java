@@ -574,17 +574,17 @@ public class PulsarClientImpl implements PulsarClient {
         lookup.getTopicsUnderNamespace(namespaceName, subscriptionMode, regex, null)
             .thenAccept(getTopicsResult -> {
                 if (log.isDebugEnabled()) {
-                    log.debug("Get topics under namespace {}, topics.size: {},"
+                    log.debug("Get topics under namespace {}, partitioned-topics.size: {},"
                                     + " topicsHash: {}, changed: {}, filtered: {}",
                             namespaceName, getTopicsResult.getTopics().size(), getTopicsResult.getTopicsHash(),
                             getTopicsResult.isChanged(), getTopicsResult.isFiltered());
                     getTopicsResult.getTopics().forEach(topicName ->
-                        log.debug("Get topics under namespace {}, topic: {}", namespaceName, topicName));
+                        log.debug("Get partitioned topic under namespace {}, topic: {}", namespaceName, topicName));
                 }
 
-                List<String> topicsList = getTopicsResult.getTopics();
+                List<String> topicsList = getTopicsResult.getGroupedTopicNames();
                 if (!getTopicsResult.isFiltered()) {
-                   topicsList = TopicList.filterTopics(getTopicsResult.getTopics(), conf.getTopicsPattern());
+                   topicsList = TopicList.filterTopics(topicsList, conf.getTopicsPattern());
                 }
                 conf.getTopicNames().addAll(topicsList);
                 ConsumerBase<T> consumer = new PatternMultiTopicsConsumerImpl<>(conf.getTopicsPattern(),
