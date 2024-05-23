@@ -20,6 +20,7 @@ package org.apache.pulsar.client.impl;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
+import static org.apache.pulsar.common.api.proto.CommandGetTopicsOfNamespace.Mode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
@@ -1047,7 +1048,7 @@ public class MultiTopicsConsumerImpl<T> extends ConsumerBase<T> {
             log.debug("Subscribe to topic {} metadata.partitions: {}", topicName, numPartitions);
         }
 
-        List<CompletableFuture<Consumer<T>>> futureList;
+        CompletableFuture<Void> subscribeFuture;
         if (numPartitions != PartitionedTopicMetadata.NON_PARTITIONED) {
             // Below condition is true if subscribeAsync() has been invoked second time with same
             // topicName before the first invocation had reached this point.
@@ -1067,15 +1068,33 @@ public class MultiTopicsConsumerImpl<T> extends ConsumerBase<T> {
             ConsumerConfigurationData<T> configurationData = getInternalConsumerConfig();
             configurationData.setReceiverQueueSize(receiverQueueSize);
 
-            futureList = IntStream
-                .range(0, numPartitions)
+            TopicName topicNameObj = TopicName.get(topicName);
+            CompletableFuture<IntStream> partitionStream;
+            if (!createIfDoesNotExist) {
+                partitionStream = client.getLookup().getTopicsUnderNamespace(
+                        topicNameObj.getNamespaceObject(),
+                        topicNameObj.isPersistent() ? Mode.PERSISTENT : Mode.NON_PERSISTENT,
+                        "^" + topicName + "$",
+                        null).thenApply(res -> {
+                    IntStream.Builder builder = IntStream.builder();
+                    for (String s : res.getTopicsSrc()) {
+                        builder.add(TopicName.get(s).getPartitionIndex());
+                    }
+                    return builder.build();
+                });
+            } else {
+                partitionStream = CompletableFuture.completedFuture(IntStream.range(0, numPartitions));
+            }
+
+            subscribeFuture = partitionStream.thenCompose(intStream -> FutureUtil.waitForAll(intStream
                 .mapToObj(
                     partitionIndex -> {
-                        String partitionName = TopicName.get(topicName).getPartition(partitionIndex).toString();
+                        String partitionName = topicNameObj.getPartition(partitionIndex).toString();
                         CompletableFuture<Consumer<T>> subFuture = new CompletableFuture<>();
                         configurationData.setStartPaused(paused);
-                        ConsumerImpl<T> newConsumer = createInternalConsumer(configurationData, partitionName,
-                                partitionIndex, subFuture, createIfDoesNotExist, schema);
+                        ConsumerImpl<T> newConsumer =
+                                createInternalConsumer(configurationData, partitionName,
+                                        partitionIndex, subFuture, createIfDoesNotExist, schema);
                         synchronized (pauseMutex) {
                             if (paused) {
                                 newConsumer.pause();
@@ -1086,7 +1105,7 @@ public class MultiTopicsConsumerImpl<T> extends ConsumerBase<T> {
                         }
                         return subFuture;
                     })
-                .collect(Collectors.toList());
+                .collect(Collectors.toList())));
         } else {
             allTopicPartitionsNumber.incrementAndGet();
 
@@ -1114,10 +1133,10 @@ public class MultiTopicsConsumerImpl<T> extends ConsumerBase<T> {
                     }
                 });
             }
-            futureList = Collections.singletonList(subFuture);
+            subscribeFuture = subFuture.thenAccept(__ -> {});
         }
 
-        FutureUtil.waitForAll(futureList)
+        subscribeFuture
             .thenAccept(finalFuture -> {
                 if (allTopicPartitionsNumber.get() > getCurrentReceiverQueueSize()) {
                     setCurrentReceiverQueueSize(allTopicPartitionsNumber.get());
@@ -1137,8 +1156,7 @@ public class MultiTopicsConsumerImpl<T> extends ConsumerBase<T> {
                                 + " allTopicPartitionsNumber: {}",
                     topic, subscription, topicName, numPartitions, allTopicPartitionsNumber.get());
                 return;
-            })
-            .exceptionally(ex -> {
+            }).exceptionally(ex -> {
                 handleSubscribeOneTopicError(topicName, ex, subscribeResult);
                 return null;
             });

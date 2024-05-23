@@ -187,7 +187,7 @@ public class HttpLookupService implements LookupService {
                         result.add(filtered);
                     }
                 });
-                future.complete(new GetTopicsResult(result, topicsHash, false, true));
+                future.complete(new GetTopicsResult(result, topicsHash, false, true, Arrays.asList(topics)));
             }).exceptionally(ex -> {
                 Throwable cause = FutureUtil.unwrapCompletionException(ex);
                 log.warn("Failed to getTopicsUnderNamespace namespace {} {}.", namespace, cause.getMessage());

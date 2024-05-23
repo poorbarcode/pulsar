@@ -19,7 +19,6 @@
 package org.apache.pulsar.common.lookup;
 
 import java.util.List;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -27,7 +26,6 @@ import lombok.ToString;
 
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
 @ToString
 public class GetTopicsResult {
@@ -35,4 +33,22 @@ public class GetTopicsResult {
     private String topicsHash;
     private boolean filtered;
     private boolean changed;
+
+    private List<String> topicsSrc;
+
+    public GetTopicsResult(List<String> topics, String topicsHash, boolean filtered, boolean changed) {
+        this.topics = topics;
+        this.topicsHash = topicsHash;
+        this.filtered = filtered;
+        this.changed = changed;
+    }
+
+    public GetTopicsResult(List<String> topics, String topicsHash, boolean filtered, boolean changed,
+                           List<String> topicsSrc) {
+        this.topics = topics;
+        this.topicsHash = topicsHash;
+        this.filtered = filtered;
+        this.changed = changed;
+        this.topicsSrc = topicsSrc;
+    }
 }
