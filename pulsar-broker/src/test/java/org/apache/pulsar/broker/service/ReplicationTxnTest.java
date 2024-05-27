@@ -33,6 +33,8 @@ import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pulsar.broker.BrokerTestUtil;
 import org.apache.pulsar.broker.ServiceConfiguration;
+import org.apache.pulsar.broker.loadbalance.extensions.ExtensibleLoadManagerImpl;
+import org.apache.pulsar.broker.loadbalance.extensions.scheduler.TransferShedder;
 import org.apache.pulsar.broker.service.persistent.GeoPersistentReplicator;
 import org.apache.pulsar.broker.service.persistent.PersistentTopic;
 import org.apache.pulsar.broker.transaction.pendingack.impl.MLPendingAckStore;
@@ -92,6 +94,11 @@ public class ReplicationTxnTest extends OneWayReplicatorTestBase {
         config.setTransactionLogBatchedWriteEnabled(true);
         config.setTransactionPendingAckBatchedWriteEnabled(true);
         config.setTransactionBufferSegmentedSnapshotEnabled(transactionBufferSegmentedSnapshotEnabled);
+
+        config.setLoadManagerClassName(ExtensibleLoadManagerImpl.class.getName());
+        config.setLoadBalancerLoadSheddingStrategy(TransferShedder.class.getName());
+        config.setLoadBalancerSheddingEnabled(false);
+        config.setLoadBalancerDebugModeEnabled(true);
     }
 
     @Override
@@ -99,16 +106,16 @@ public class ReplicationTxnTest extends OneWayReplicatorTestBase {
         super.createDefaultTenantsAndClustersAndNamespace();
 
         // Create resource that transaction function relies on.
-        admin1.tenants().createTenant(SYSTEM_NAMESPACE.getTenant(), new TenantInfoImpl(Collections.emptySet(),
-                Sets.newHashSet(cluster1, cluster2)));
-        admin1.namespaces().createNamespace(SYSTEM_NAMESPACE.toString(), 4);
+        // admin1.tenants().createTenant(SYSTEM_NAMESPACE.getTenant(), new TenantInfoImpl(Collections.emptySet(),
+        //        Sets.newHashSet(cluster1, cluster2)));
+        // admin1.namespaces().createNamespace(SYSTEM_NAMESPACE.toString(), 4);
         pulsar1.getPulsarResources().getNamespaceResources().getPartitionedTopicResources().createPartitionedTopic(
                 SystemTopicNames.TRANSACTION_COORDINATOR_ASSIGN, new PartitionedTopicMetadata(txnLogPartitions));
         //admin1.topics().createPartitionedTopic(SystemTopicNames.TRANSACTION_COORDINATOR_ASSIGN.toString(), 4);
 
-        admin2.tenants().createTenant(SYSTEM_NAMESPACE.getTenant(), new TenantInfoImpl(Collections.emptySet(),
-                Sets.newHashSet(cluster1, cluster2)));
-        admin2.namespaces().createNamespace(SYSTEM_NAMESPACE.toString(), 4);
+        //  admin2.tenants().createTenant(SYSTEM_NAMESPACE.getTenant(), new TenantInfoImpl(Collections.emptySet(),
+        //        Sets.newHashSet(cluster1, cluster2)));
+        //  admin2.namespaces().createNamespace(SYSTEM_NAMESPACE.toString(), 4);
         pulsar2.getPulsarResources().getNamespaceResources().getPartitionedTopicResources().createPartitionedTopic(
                 SystemTopicNames.TRANSACTION_COORDINATOR_ASSIGN, new PartitionedTopicMetadata(txnLogPartitions));
     }
