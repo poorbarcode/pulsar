@@ -18,17 +18,14 @@
  */
 package org.apache.pulsar.common.naming;
 
+import com.github.benmanes.caffeine.cache.CacheLoader;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.common.base.Splitter;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.re2j.Pattern;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.pulsar.common.util.Codec;
 
@@ -54,11 +51,11 @@ public class TopicName implements ServiceUnitId {
 
     private final int partitionIndex;
 
-    private static final LoadingCache<String, TopicName> cache = CacheBuilder.newBuilder().maximumSize(100000)
-            .expireAfterAccess(30, TimeUnit.MINUTES).build(new CacheLoader<String, TopicName>() {
+    private static final LoadingCache<String, TopicName> cache =
+            Caffeine.newBuilder().maximumSize(100_000).build(new CacheLoader<String, TopicName>() {
                 @Override
-                public TopicName load(String name) throws Exception {
-                    return new TopicName(name);
+                public TopicName load(String key) throws Exception {
+                    return new TopicName(key);
                 }
             });
 
@@ -79,11 +76,7 @@ public class TopicName implements ServiceUnitId {
     }
 
     public static TopicName get(String topic) {
-        try {
-            return cache.get(topic);
-        } catch (ExecutionException | UncheckedExecutionException e) {
-            throw (RuntimeException) e.getCause();
-        }
+        return cache.get(topic);
     }
 
     public static TopicName getPartitionedTopicName(String topic) {
