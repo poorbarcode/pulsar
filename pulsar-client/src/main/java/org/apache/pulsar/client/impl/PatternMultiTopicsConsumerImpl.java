@@ -79,7 +79,8 @@ public class PatternMultiTopicsConsumerImpl<T> extends MultiTopicsConsumerImpl<T
         checkArgument(getNameSpaceFromPattern(topicsPattern).toString().equals(this.namespaceName.toString()));
 
         this.topicsChangeListener = new PatternTopicsChangedListener();
-        this.recheckPatternTimeout = client.timer()
+        log.info("===> patternAutoDiscoveryPeriod: {}", conf.getPatternAutoDiscoveryPeriod());
+        this.recheckPatternTimeout = client.newTimer()
                 .newTimeout(this, Math.max(1, conf.getPatternAutoDiscoveryPeriod()), TimeUnit.SECONDS);
         this.watcherFuture = new CompletableFuture<>();
         if (subscriptionMode == Mode.PERSISTENT) {
@@ -106,6 +107,7 @@ public class PatternMultiTopicsConsumerImpl<T> extends MultiTopicsConsumerImpl<T
         if (timeout.isCancelled()) {
             return;
         }
+        log.info("===> recheck getTopicsUnderNamespace");
         client.getLookup().getTopicsUnderNamespace(namespaceName, subscriptionMode, topicsPattern.pattern(), topicsHash)
             .thenCompose(getTopicsResult -> {
 
@@ -131,7 +133,7 @@ public class PatternMultiTopicsConsumerImpl<T> extends MultiTopicsConsumerImpl<T
                 return null;
             }).thenAccept(__ -> {
                 // schedule the next re-check task
-                this.recheckPatternTimeout = client.timer()
+                this.recheckPatternTimeout = client.newTimer()
                         .newTimeout(PatternMultiTopicsConsumerImpl.this,
                         Math.max(1, conf.getPatternAutoDiscoveryPeriod()), TimeUnit.SECONDS);
             });

@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -952,6 +953,22 @@ public class PulsarClientImpl implements PulsarClient {
                                                       final InetSocketAddress physicalAddress,
                                                       final int randomKeyForSelectConnection) {
         return cnxPool.getConnection(logicalAddress, physicalAddress, randomKeyForSelectConnection);
+    }
+
+    /** visible for pulsar-functions. **/
+
+    private List<Timer> timerList = new ArrayList<>();
+
+    {
+        for (int i = 0; i < 16; i++) {
+            timerList.add(new HashedWheelTimer(getThreadFactory("pulsar-timer"), 1,
+                    TimeUnit.MILLISECONDS));
+        }
+    }
+
+    public Timer newTimer() {
+        Random random = new Random();
+        return timerList.get(Math.abs(random.nextInt()) % 16);
     }
 
     /** visible for pulsar-functions. **/
