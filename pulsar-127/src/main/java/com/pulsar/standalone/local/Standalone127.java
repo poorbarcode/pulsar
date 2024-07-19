@@ -23,7 +23,8 @@ public class Standalone127 {
     public static void main(String[] args) throws Exception {
         PathExtractor.INSTANCE.initEnv(true);
         String[] pulsarArgs = new String[]{
-                "--broker-conf", PathExtractor.INSTANCE.standaloneConfPath
+                "--config", PathExtractor.INSTANCE.standaloneConfPath,
+                "--no-functions-worker"
         };
         org.apache.pulsar.PulsarStandaloneStarter.main(pulsarArgs);
     }

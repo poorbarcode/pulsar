@@ -251,13 +251,7 @@ public class LinuxBrokerHostUsageImpl implements BrokerHostUsage {
         return overrideBrokerNicSpeedGbps.map(aDouble -> aDouble * nics.size() * 1000 * 1000)
                 .orElseGet(() -> nics.stream().mapToDouble(nicPath -> {
                     // Nic speed is in Mbits/s, return kbits/s
-                    try {
-                        return Double.parseDouble(new String(Files.readAllBytes(getNicSpeedPath(nicPath))));
-                    } catch (IOException e) {
-                        log.error(String.format("Failed to read speed for nic %s, maybe you can set broker"
-                                + " config [loadBalancerOverrideBrokerNicSpeedGbps] to override it.", nicPath), e);
-                        return 0d;
-                    }
+                    return 0d;
                 }).sum() * 1000);
     }
 

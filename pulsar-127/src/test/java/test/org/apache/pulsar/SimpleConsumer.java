@@ -32,8 +32,14 @@ public class SimpleConsumer {
 
     public static void main(String[] args) throws Exception{
         PulsarClient client = PulsarClient.builder()
-                .operationTimeout(30000, TimeUnit.SECONDS)
-                .serviceUrl("pulsar://127.0.0.1:6650")
+                .serviceUrl("pulsar+ssl://127.0.0.1:6661")
+                .enableTls(true)
+                .tlsTrustCertsFilePath("/home/fengyubiao/Data/Git-Reposirtory/fork/pulsar/pulsar-127/src/main/resources/tsl/ca.cert.pem")
+                .enableTlsHostnameVerification(false)
+                .allowTlsInsecureConnection(false)
+                .authentication("org.apache.pulsar.client.impl.auth.AuthenticationTls",
+                        "tlsCertFile:/home/fengyubiao/Data/Git-Reposirtory/fork/pulsar/pulsar-127/src/main/resources/tsl/client.cert.pem," +
+                                "tlsKeyFile:/home/fengyubiao/Data/Git-Reposirtory/fork/pulsar/pulsar-127/src/main/resources/tsl/client.key-pk8.pem")
                 .build();
         Consumer consumer = client.newConsumer(Schema.BYTES)
                 .subscriptionType(SubscriptionType.Shared)
