@@ -728,6 +728,9 @@ public class MetadataStoreTest extends BaseMetadataStoreTest {
 
     @Test(dataProvider = "impl", timeOut = 30 * 1000)
     public void testDeadlockOps(String provider, Supplier<String> urlSupplier) throws Exception {
+
+        System.setProperty("pulsar.metedatastore.threadDeadlockCheckable", "true");
+
         @Cleanup
         MetadataStoreExtended store1 = (MetadataStoreExtended) MetadataStoreFactory.create(urlSupplier.get(),
                 MetadataStoreConfig.builder().fsyncEnable(false).build());
@@ -827,6 +830,7 @@ public class MetadataStoreTest extends BaseMetadataStoreTest {
         }
 
         // cleanup.
+        System.setProperty("pulsar.metedatastore.threadDeadlockCheckable", "false");
         store1.close();
     }
 }

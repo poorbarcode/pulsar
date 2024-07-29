@@ -69,8 +69,8 @@ import org.apache.pulsar.metadata.impl.stats.MetadataStoreStats;
 public abstract class AbstractMetadataStore implements MetadataStoreExtended, Consumer<Notification> {
     private static final long CACHE_REFRESH_TIME_MILLIS = TimeUnit.MINUTES.toMillis(5);
 
-    private static final boolean deadlockCheckable = Boolean.TRUE.toString()
-            .equals(System.getProperty("pulsar.metedatastore.threadDeadlockCheckable", "true"));
+    private final boolean deadlockCheckable = Boolean.TRUE.toString()
+            .equals(System.getProperty("pulsar.metedatastore.threadDeadlockCheckable", "false"));
 
     private final CopyOnWriteArrayList<Consumer<Notification>> listeners = new CopyOnWriteArrayList<>();
     private final CopyOnWriteArrayList<Consumer<SessionEvent>> sessionListeners = new CopyOnWriteArrayList<>();
