@@ -167,7 +167,7 @@ public class ZKMetadataStore extends AbstractBatchedMetadataStore
     }
 
     @Override
-    public CompletableFuture<Void> sync(String path) {
+    protected CompletableFuture<Void> doSync(String path) {
         CompletableFuture<Void> result = new CompletableFuture<>();
         zkc.sync(path, new AsyncCallback.VoidCallback() {
             @Override
@@ -181,7 +181,7 @@ public class ZKMetadataStore extends AbstractBatchedMetadataStore
                 }
             }
         }, null);
-        return result;
+        return convertToDeadlockCheckableIfNeeded(result);
     }
 
     @Override

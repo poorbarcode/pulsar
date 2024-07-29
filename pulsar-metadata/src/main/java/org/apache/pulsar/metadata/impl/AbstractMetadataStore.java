@@ -25,6 +25,7 @@ import com.github.benmanes.caffeine.cache.AsyncLoadingCache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.common.annotations.VisibleForTesting;
+import io.netty.util.concurrent.DefaultEventExecutor;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import io.opentelemetry.api.OpenTelemetry;
 import java.time.Instant;
@@ -38,8 +39,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
@@ -48,6 +47,7 @@ import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.pulsar.common.util.DeadlockCheckableCompletableFuture;
 import org.apache.pulsar.common.util.FutureUtil;
 import org.apache.pulsar.metadata.api.GetResult;
 import org.apache.pulsar.metadata.api.MetadataCache;
@@ -69,10 +69,13 @@ import org.apache.pulsar.metadata.impl.stats.MetadataStoreStats;
 public abstract class AbstractMetadataStore implements MetadataStoreExtended, Consumer<Notification> {
     private static final long CACHE_REFRESH_TIME_MILLIS = TimeUnit.MINUTES.toMillis(5);
 
+    private static final boolean deadlockCheckable = Boolean.TRUE.toString()
+            .equals(System.getProperty("pulsar.metedatastore.threadDeadlockCheckable", "true"));
+
     private final CopyOnWriteArrayList<Consumer<Notification>> listeners = new CopyOnWriteArrayList<>();
     private final CopyOnWriteArrayList<Consumer<SessionEvent>> sessionListeners = new CopyOnWriteArrayList<>();
     protected final String metadataStoreName;
-    protected final ScheduledExecutorService executor;
+    protected final DefaultEventExecutor executor;
     private final AsyncLoadingCache<String, List<String>> childrenCache;
     private final AsyncLoadingCache<String, Boolean> existsCache;
     private final CopyOnWriteArrayList<MetadataCacheImpl<?>> metadataCaches = new CopyOnWriteArrayList<>();
@@ -90,9 +93,8 @@ public abstract class AbstractMetadataStore implements MetadataStoreExtended, Co
     protected abstract CompletableFuture<Boolean> existsFromStore(String path);
 
     protected AbstractMetadataStore(String metadataStoreName, OpenTelemetry openTelemetry) {
-        this.executor = new ScheduledThreadPoolExecutor(1,
-                new DefaultThreadFactory(
-                        StringUtils.isNotBlank(metadataStoreName) ? metadataStoreName : getClass().getSimpleName()));
+        this.executor = new DefaultEventExecutor( new DefaultThreadFactory(
+                StringUtils.isNotBlank(metadataStoreName) ? metadataStoreName : getClass().getSimpleName()));
         registerListener(this);
 
         this.childrenCache = Caffeine.newBuilder()
@@ -257,6 +259,10 @@ public abstract class AbstractMetadataStore implements MetadataStoreExtended, Co
 
     @Override
     public CompletableFuture<Optional<GetResult>> get(String path) {
+        return convertToDeadlockCheckableIfNeeded(doGet(path));
+    }
+
+    protected CompletableFuture<Optional<GetResult>> doGet(String path) {
         if (isClosed()) {
             return alreadyClosedFailedFuture();
         }
@@ -279,30 +285,52 @@ public abstract class AbstractMetadataStore implements MetadataStoreExtended, Co
     protected abstract CompletableFuture<Optional<GetResult>> storeGet(String path);
 
     @Override
+    public CompletableFuture<Void> sync(String path) {
+        return convertToDeadlockCheckableIfNeeded(doSync(path));
+    }
+
+    protected CompletableFuture<Void> doSync(String path) {
+        return CompletableFuture.completedFuture(null);
+    }
+
+    @Override
     public CompletableFuture<Stat> put(String path, byte[] value, Optional<Long> expectedVersion) {
-        return put(path, value, expectedVersion, EnumSet.noneOf(CreateOption.class));
+        return convertToDeadlockCheckableIfNeeded(doPut(path, value, expectedVersion));
+    }
+
+    protected CompletableFuture<Stat> doPut(String path, byte[] value, Optional<Long> expectedVersion) {
+        return convertToDeadlockCheckableIfNeeded(put(path, value, expectedVersion,
+                EnumSet.noneOf(CreateOption.class)));
     }
 
     @Override
     public final CompletableFuture<List<String>> getChildren(String path) {
+        return convertToDeadlockCheckableIfNeeded(doGetChildren(path));
+    }
+
+    protected final CompletableFuture<List<String>> doGetChildren(String path) {
         if (isClosed()) {
             return alreadyClosedFailedFuture();
         }
         if (!isValidPath(path)) {
             return FutureUtil.failedFuture(new MetadataStoreException.InvalidPathException(path));
         }
-        return childrenCache.get(path);
+        return convertToDeadlockCheckableIfNeeded(childrenCache.get(path));
     }
 
     @Override
     public final CompletableFuture<Boolean> exists(String path) {
+        return convertToDeadlockCheckableIfNeeded(doExists(path));
+    }
+
+    protected final CompletableFuture<Boolean> doExists(String path) {
         if (isClosed()) {
             return alreadyClosedFailedFuture();
         }
         if (!isValidPath(path)) {
             return FutureUtil.failedFuture(new MetadataStoreException.InvalidPathException(path));
         }
-        return existsCache.get(path);
+        return convertToDeadlockCheckableIfNeeded(existsCache.get(path));
     }
 
     @Override
@@ -358,6 +386,10 @@ public abstract class AbstractMetadataStore implements MetadataStoreExtended, Co
 
     @Override
     public final CompletableFuture<Void> delete(String path, Optional<Long> expectedVersion) {
+        return convertToDeadlockCheckableIfNeeded(doDelete(path, expectedVersion));
+    }
+
+    protected final CompletableFuture<Void> doDelete(String path, Optional<Long> expectedVersion) {
         log.info("Deleting path: {} (v. {})", path, expectedVersion);
         if (isClosed()) {
             return alreadyClosedFailedFuture();
@@ -409,6 +441,10 @@ public abstract class AbstractMetadataStore implements MetadataStoreExtended, Co
 
     @Override
     public CompletableFuture<Void> deleteRecursive(String path) {
+        return convertToDeadlockCheckableIfNeeded(doDeleteRecursive(path));
+    }
+
+    protected CompletableFuture<Void> doDeleteRecursive(String path) {
         log.info("Deleting recursively path: {}", path);
         if (isClosed()) {
             return alreadyClosedFailedFuture();
@@ -429,6 +465,11 @@ public abstract class AbstractMetadataStore implements MetadataStoreExtended, Co
 
     @Override
     public final CompletableFuture<Stat> put(String path, byte[] data, Optional<Long> optExpectedVersion,
+            EnumSet<CreateOption> options) {
+        return convertToDeadlockCheckableIfNeeded(doPut(path, data, optExpectedVersion, options));
+    }
+
+    protected final CompletableFuture<Stat> doPut(String path, byte[] data, Optional<Long> optExpectedVersion,
             EnumSet<CreateOption> options) {
         if (isClosed()) {
             return alreadyClosedFailedFuture();
@@ -593,5 +634,20 @@ public abstract class AbstractMetadataStore implements MetadataStoreExtended, Co
             receivedNotification(new Notification(NotificationType.ChildrenChanged, parent));
             parent = parent(parent);
         }
+    }
+
+    protected <T> CompletableFuture<T> convertToDeadlockCheckableIfNeeded(CompletableFuture<T> future) {
+        if (!deadlockCheckable || future.isDone() || future instanceof DeadlockCheckableCompletableFuture) {
+            return future;
+        }
+        DeadlockCheckableCompletableFuture res = new DeadlockCheckableCompletableFuture(() -> executor.inEventLoop());
+        future.whenComplete((v, ex) -> {
+            if (ex != null) {
+                res.completeExceptionally(ex);
+            } else {
+                res.complete(v);
+            }
+        });
+        return res;
     }
 }

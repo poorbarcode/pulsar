@@ -26,6 +26,7 @@ import static org.testng.Assert.fail;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -51,6 +52,8 @@ import org.apache.pulsar.metadata.api.MetadataStoreFactory;
 import org.apache.pulsar.metadata.api.Notification;
 import org.apache.pulsar.metadata.api.NotificationType;
 import org.apache.pulsar.metadata.api.Stat;
+import org.apache.pulsar.metadata.api.extended.CreateOption;
+import org.apache.pulsar.metadata.api.extended.MetadataStoreExtended;
 import org.apache.pulsar.metadata.impl.ZKMetadataStore;
 import org.assertj.core.util.Lists;
 import org.awaitility.Awaitility;
@@ -721,5 +724,109 @@ public class MetadataStoreTest extends BaseMetadataStoreTest {
 
         // There is a chance watcher event is not triggered before the store1.exists() call.
         assertFalse(store1.exists(parent + "/b").get());
+    }
+
+    @Test(dataProvider = "impl", timeOut = 30 * 1000)
+    public void testDeadlockOps(String provider, Supplier<String> urlSupplier) throws Exception {
+        @Cleanup
+        MetadataStoreExtended store1 = (MetadataStoreExtended) MetadataStoreFactory.create(urlSupplier.get(),
+                MetadataStoreConfig.builder().fsyncEnable(false).build());
+
+        // Metadata store: get.
+        try {
+            store1.get("/a").thenCompose(v -> {
+                return CompletableFuture.completedFuture(store1.get("/b").join());
+            }).join();
+        } catch (Exception ex) {
+            assertTrue(ex.getMessage().contains("Deadlock check failed"));
+        }
+
+        // Metadata store: sync.
+        try {
+            store1.get("/a").thenCompose(v -> {
+                return CompletableFuture.completedFuture(store1.sync("/b").join());
+            }).join();
+        } catch (Exception ex) {
+            assertTrue(ex.getMessage().contains("Deadlock check failed"));
+        }
+
+        // Metadata store: getChildren.
+        try {
+            store1.get("/a").thenCompose(v -> {
+                return CompletableFuture.completedFuture(store1.getChildren("/b").join());
+            }).join();
+        } catch (Exception ex) {
+            assertTrue(ex.getMessage().contains("Deadlock check failed"));
+        }
+
+        // Metadata store: exists.
+        try {
+            store1.get("/a").thenCompose(v -> {
+                return CompletableFuture.completedFuture(store1.getChildren("/b").join());
+            }).join();
+        } catch (Exception ex) {
+            assertTrue(ex.getMessage().contains("Deadlock check failed"));
+        }
+
+        // Metadata store: put.
+        try {
+            store1.get("/a").thenCompose(v -> {
+                return CompletableFuture.completedFuture(store1.put("/b", new byte[]{1}, Optional.empty()).join());
+            }).join();
+        } catch (Exception ex) {
+            assertTrue(ex.getMessage().contains("Deadlock check failed"));
+        }
+
+        // Metadata store extended: put.
+        try {
+            store1.get("/a").thenCompose(v -> {
+                return CompletableFuture.completedFuture(store1.put("/b", new byte[]{1}, Optional.empty(),
+                        EnumSet.of(CreateOption.Ephemeral)).join());
+            }).join();
+        } catch (Exception ex) {
+            assertTrue(ex.getMessage().contains("Deadlock check failed"));
+        }
+
+        // CompletableFuture: get.
+        try {
+            store1.get("/a").thenCompose(v -> {
+                try {
+                    return CompletableFuture.completedFuture(store1.get("/b").get());
+                } catch (Exception ex) {
+                    throw new RuntimeException(ex);
+                }
+            }).join();
+        } catch (Exception ex) {
+            assertTrue(ex.getMessage().contains("Deadlock check failed"));
+        }
+
+        // CompletableFuture: get timeout.
+        try {
+            store1.get("/a").thenCompose(v -> {
+                try {
+                    return CompletableFuture.completedFuture(store1.get("/b").get(2, TimeUnit.SECONDS));
+                } catch (Exception ex) {
+                    throw new RuntimeException(ex);
+                }
+            }).join();
+        } catch (Exception ex) {
+            assertTrue(ex.getMessage().contains("Deadlock check failed"));
+        }
+
+        // CompletableFuture: get now.
+        try {
+            store1.get("/a").thenCompose(v -> {
+                try {
+                    return CompletableFuture.completedFuture(store1.get("/b").getNow(null));
+                } catch (Exception ex) {
+                    throw new RuntimeException(ex);
+                }
+            }).join();
+        } catch (Exception ex) {
+            assertTrue(ex.getMessage().contains("Deadlock check failed"));
+        }
+
+        // cleanup.
+        store1.close();
     }
 }
