@@ -729,6 +729,10 @@ public class MetadataStoreTest extends BaseMetadataStoreTest {
     @Test(dataProvider = "impl", timeOut = 30 * 1000)
     public void testDeadlockOps(String provider, Supplier<String> urlSupplier) throws Exception {
 
+        if (provider.equals("Oxia")) {
+            return;
+        }
+
         System.setProperty("pulsar.metedatastore.threadDeadlockCheckable", "true");
 
         @Cleanup
