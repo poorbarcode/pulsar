@@ -59,6 +59,7 @@ public interface TransactionBuffer {
      * @return a future represents the result of the operation
      * @throws TransactionBufferException.TransactionNotFoundException if the transaction is not in the buffer.
      */
+    @Deprecated
     CompletableFuture<TransactionMeta> getTransactionMeta(TxnID txnID);
 
     /**
@@ -83,6 +84,7 @@ public interface TransactionBuffer {
      * @return a future represents the result of open operation.
      * @throws TransactionBufferException.TransactionNotFoundException if the transaction is not in the buffer.
      */
+    @Deprecated
     CompletableFuture<TransactionBufferReader> openTransactionBufferReader(TxnID txnID, long startSequenceId);
 
     /**
@@ -118,6 +120,7 @@ public interface TransactionBuffer {
      * @param dataLedgers the list of data ledgers.
      * @return a future represents the result of purge operations.
      */
+    @Deprecated
     CompletableFuture<Void> purgeTxns(List<Long> dataLedgers);
 
     /**
@@ -192,6 +195,7 @@ public interface TransactionBuffer {
      * @param isTxn
      * @return a future which has completely if isTxn = false. Or a future return by takeSnapshot.
      */
+    // TODO it can be removed.
     CompletableFuture<Void> checkIfTBRecoverCompletely(boolean isTxn);
 
 
