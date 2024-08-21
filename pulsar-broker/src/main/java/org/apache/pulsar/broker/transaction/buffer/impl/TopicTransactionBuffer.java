@@ -23,7 +23,6 @@ import io.netty.buffer.ByteBuf;
 import io.netty.util.Timeout;
 import io.netty.util.Timer;
 import io.netty.util.TimerTask;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -45,7 +44,6 @@ import org.apache.bookkeeper.mledger.impl.ManagedLedgerImpl;
 import org.apache.commons.collections4.map.LinkedMap;
 import org.apache.pulsar.broker.service.BrokerServiceException;
 import org.apache.pulsar.broker.service.BrokerServiceException.PersistenceException;
-import org.apache.pulsar.broker.service.PersistentTopicAttributes;
 import org.apache.pulsar.broker.service.persistent.PersistentTopic;
 import org.apache.pulsar.broker.systopic.SystemTopicClient;
 import org.apache.pulsar.broker.transaction.buffer.AbortedTxnProcessor;
@@ -56,6 +54,7 @@ import org.apache.pulsar.broker.transaction.buffer.metadata.TransactionBufferSna
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.apache.pulsar.client.api.transaction.TxnID;
 import org.apache.pulsar.common.api.proto.MessageMetadata;
+import org.apache.pulsar.common.naming.TopicSystemProperties;
 import org.apache.pulsar.common.policies.data.TransactionBufferStats;
 import org.apache.pulsar.common.policies.data.TransactionInBufferStats;
 import org.apache.pulsar.common.protocol.Commands;
@@ -133,14 +132,24 @@ public class TopicTransactionBuffer extends TopicTransactionBufferState implemen
             snapshotType = AbortedTxnProcessor.SnapshotType.Single;
         }
         this.maxReadPositionCallBack = topic.getMaxReadPositionCallBack();
-        // TODO initialize the boolean variable "topicContainsTxnMessages" from persistent topic's properties.
-        this.topicContainsTxnMessages = true;
+        this.topicContainsTxnMessages = topic.containsTxnMessages();
         if (topicContainsTxnMessages) {
             initializeBeforeWriteTxnMessagesFuture = recoverFuture;
         } else {
             initializeBeforeWriteTxnMessagesFuture = new CompletableFuture<>();
         }
         this.recover();
+    }
+
+    private void recover() {
+        recoverTime.setRecoverStartTime(System.currentTimeMillis());
+        TopicTransactionBufferRecoverCallBackImpl recoverCb = new TopicTransactionBufferRecoverCallBackImpl();
+        if (!topicContainsTxnMessages) {
+            recoverCb.noNeedToRecover();
+            return;
+        }
+        this.topic.getBrokerService().getPulsar().getTransactionExecutorProvider().getExecutor(this)
+                .execute(new TopicTransactionBufferRecover(recoverCb, this.topic, this, snapshotAbortedTxnProcessor));
     }
 
     private class TopicTransactionBufferRecoverCallBackImpl implements TopicTransactionBufferRecoverCallBack {
@@ -218,17 +227,6 @@ public class TopicTransactionBuffer extends TopicTransactionBufferState implemen
         }
     }
 
-    private void recover() {
-        recoverTime.setRecoverStartTime(System.currentTimeMillis());
-        TopicTransactionBufferRecoverCallBackImpl recoverCb = new TopicTransactionBufferRecoverCallBackImpl();
-        if (!topicContainsTxnMessages) {
-            recoverCb.noNeedToRecover();
-            return;
-        }
-        this.topic.getBrokerService().getPulsar().getTransactionExecutorProvider().getExecutor(this)
-                .execute(new TopicTransactionBufferRecover(recoverCb, this.topic, this, snapshotAbortedTxnProcessor));
-    }
-
     @Override
     public CompletableFuture<TransactionMeta> getTransactionMeta(TxnID txnID) {
         return CompletableFuture.completedFuture(null);
@@ -240,12 +238,13 @@ public class TopicTransactionBuffer extends TopicTransactionBufferState implemen
         }
         // Write topic properties.
         CompletableFuture<Void> updateTopicPropsFuture = new CompletableFuture<>();
-        Map<String, String> map = Collections.singletonMap("__topicContainsTxnMessages", "true");
+        Map<String, String> map = TopicSystemProperties.containsTxnMessages(true);
         topic.getManagedLedger().asyncSetProperties(map, new AsyncCallbacks.UpdatePropertiesCallback() {
 
             @Override
             public void updatePropertiesComplete(Map<String, String> properties, Object ctx) {
                 updateTopicPropsFuture.complete(null);
+                topicContainsTxnMessages = true;
             }
 
             @Override
@@ -280,8 +279,7 @@ public class TopicTransactionBuffer extends TopicTransactionBufferState implemen
             CompletableFuture<Void> completableFuture = new CompletableFuture<>();
             recoverFuture.thenRun(() -> {
                 if (checkIfNoSnapshot()) {
-                    // TODO Why it needed a first snapshot?
-                    //  to avoid recovering with too many messages in the original topic.
+                    // Take the first snapshot to avoid recovering with too many messages in the original topic.
                     snapshotAbortedTxnProcessor.takeAbortedTxnsSnapshot(maxReadPosition).thenRun(() -> {
                         if (changeToReadyStateFromNoSnapshot()) {
                             timer.newTimeout(TopicTransactionBuffer.this,
@@ -325,7 +323,7 @@ public class TopicTransactionBuffer extends TopicTransactionBufferState implemen
         if (!topicContainsTxnMessages) {
             initializeBeforeWriteTxnMessages();
         }
-        // TODO pending tasks to a list.
+        // TODO pending tasks to a queue.
         CompletableFuture<Position> completableFuture = new CompletableFuture<>();
         Long lowWaterMark = lowWaterMarks.get(txnId.getMostSigBits());
         if (lowWaterMark != null && lowWaterMark >= txnId.getLeastSigBits()) {

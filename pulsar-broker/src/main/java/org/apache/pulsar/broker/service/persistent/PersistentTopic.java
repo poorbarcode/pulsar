@@ -159,6 +159,7 @@ import org.apache.pulsar.common.api.proto.TxnAction;
 import org.apache.pulsar.common.naming.NamespaceName;
 import org.apache.pulsar.common.naming.SystemTopicNames;
 import org.apache.pulsar.common.naming.TopicName;
+import org.apache.pulsar.common.naming.TopicSystemProperties;
 import org.apache.pulsar.common.policies.data.BacklogQuota;
 import org.apache.pulsar.common.policies.data.BacklogQuota.BacklogQuotaType;
 import org.apache.pulsar.common.policies.data.ClusterData;
@@ -4411,6 +4412,14 @@ public class PersistentTopic extends AbstractTopic implements Topic, AddEntryCal
 
     public TransactionInBufferStats getTransactionInBufferStats(TxnID txnID) {
         return this.transactionBuffer.getTransactionInBufferStats(txnID);
+    }
+    public boolean containsTxnMessages() {
+        String propValue = ledger.getProperties().get(TopicSystemProperties.CONTAINS_TXN_MESSAGES);
+        if (Boolean.TRUE.toString().equalsIgnoreCase(propValue)) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     @Override
