@@ -369,6 +369,10 @@ public class PersistentDispatcherMultipleConsumers extends AbstractDispatcherMul
                             totalUnackedMessages, topic.getMaxUnackedMessagesOnSubscription());
                 }
             } else if (!havePendingRead && hasConsumersNeededNormalRead()) {
+                if (!redeliveryMessages.isEmpty() && !cursor.hasMoreEntries()) {
+                    readMoreEntriesAsync();
+                    return;
+                }
                 if (shouldPauseOnAckStatePersist(ReadType.Normal)) {
                     if (log.isDebugEnabled()) {
                         log.debug("[{}] [{}] Skipping read for the topic, Due to blocked on ack state persistent.",
