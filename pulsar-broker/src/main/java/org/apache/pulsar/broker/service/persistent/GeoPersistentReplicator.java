@@ -90,13 +90,13 @@ public class GeoPersistentReplicator extends PersistentReplicator {
             // This flag is set to true when we skip at least one local message,
             // in order to skip remaining local messages.
             boolean isLocalMessageSkippedOnce = false;
-            boolean skipRemainingMessages = false;
+            boolean skipRemainingMessages = inFlightTask.isSkippedDueToRewindingCursorOrTerminated();
             for (int i = 0; i < entries.size(); i++) {
                 Entry entry = entries.get(i);
                 // Skip the messages since the replicator need to fetch the schema info to replicate the schema to the
                 // remote cluster. Rewind the cursor first and continue the message read after fetched the schema.
                 if (skipRemainingMessages) {
-                    inFlightTask.incrementSentCallbackCount();
+                    inFlightTask.incCompletedEntries();
                     entry.release();
                     continue;
                 }
@@ -109,14 +109,14 @@ public class GeoPersistentReplicator extends PersistentReplicator {
                     log.error("[{}] Failed to deserialize message at {} (buffer size: {}): {}", replicatorId,
                             entry.getPosition(), length, t.getMessage(), t);
                     cursor.asyncDelete(entry.getPosition(), this, entry.getPosition());
-                    inFlightTask.incrementSentCallbackCount();
+                    inFlightTask.incCompletedEntries();
                     entry.release();
                     continue;
                 }
 
                 if (Markers.isTxnMarker(msg.getMessageBuilder())) {
                     cursor.asyncDelete(entry.getPosition(), this, entry.getPosition());
-                    inFlightTask.incrementSentCallbackCount();
+                    inFlightTask.incCompletedEntries();
                     entry.release();
                     msg.recycle();
                     continue;
@@ -126,7 +126,7 @@ public class GeoPersistentReplicator extends PersistentReplicator {
                             msg.getMessageBuilder().getTxnidLeastBits());
                     if (topic.isTxnAborted(tx, entry.getPosition())) {
                         cursor.asyncDelete(entry.getPosition(), this, entry.getPosition());
-                        inFlightTask.incrementSentCallbackCount();
+                        inFlightTask.incCompletedEntries();
                         entry.release();
                         msg.recycle();
                         continue;
@@ -140,7 +140,7 @@ public class GeoPersistentReplicator extends PersistentReplicator {
                 if (msg.isReplicated()) {
                     // Discard messages that were already replicated into this region
                     cursor.asyncDelete(entry.getPosition(), this, entry.getPosition());
-                    inFlightTask.incrementSentCallbackCount();
+                    inFlightTask.incCompletedEntries();
                     entry.release();
                     msg.recycle();
                     continue;
@@ -152,7 +152,7 @@ public class GeoPersistentReplicator extends PersistentReplicator {
                                 entry.getPosition(), msg.getReplicateTo());
                     }
                     cursor.asyncDelete(entry.getPosition(), this, entry.getPosition());
-                    inFlightTask.incrementSentCallbackCount();
+                    inFlightTask.incCompletedEntries();
                     entry.release();
                     msg.recycle();
                     continue;
@@ -165,7 +165,7 @@ public class GeoPersistentReplicator extends PersistentReplicator {
                                 replicatorId, entry.getPosition(), msg.getReplicateTo());
                     }
                     cursor.asyncDelete(entry.getPosition(), this, entry.getPosition());
-                    inFlightTask.incrementSentCallbackCount();
+                    inFlightTask.incCompletedEntries();
                     entry.release();
                     msg.recycle();
                     continue;
@@ -179,7 +179,7 @@ public class GeoPersistentReplicator extends PersistentReplicator {
                                 replicatorId, entry.getPosition());
                     }
                     isLocalMessageSkippedOnce = true;
-                    inFlightTask.incrementSentCallbackCount();
+                    inFlightTask.incCompletedEntries();
                     entry.release();
                     msg.recycle();
                     continue;
@@ -192,13 +192,18 @@ public class GeoPersistentReplicator extends PersistentReplicator {
 
                 CompletableFuture<SchemaInfo> schemaFuture = getSchemaInfo(msg);
                 if (!schemaFuture.isDone() || schemaFuture.isCompletedExceptionally()) {
-                    inFlightTask.incrementSentCallbackCount();
+                    // Skip in flight reading tasks.
+                    beforeFetchingSchema();
+                    inFlightTask.incCompletedEntries();
                     entry.release();
                     headersAndPayload.release();
                     msg.recycle();
                     // Mark the replicator is fetching the schema for now and rewind the cursor
                     // and trigger the next read after complete the schema fetching.
-                    fetchSchemaInProgress = true;
+                    // TODO race-condition
+                    //  另一个线程: 已经 check fetchSchemaInProgress: false，
+                    //  当前线程：  set fetchSchemaInProgress = true。
+                    //  另一个线程： read entries。
                     skipRemainingMessages = true;
                     cursor.cancelPendingReadRequest();
                     log.info("[{}] Pause the data replication due to new detected schema", replicatorId);
@@ -208,9 +213,7 @@ public class GeoPersistentReplicator extends PersistentReplicator {
                                     replicatorId, e);
                         }
                         log.info("[{}] Resume the data replication after the schema fetching done", replicatorId);
-                        cursor.rewind();
-                        fetchSchemaInProgress = false;
-                        readMoreEntries();
+                        afterFetchedSchema();
                     });
                 } else {
                     msg.setSchemaInfoForReplicator(schemaFuture.get());

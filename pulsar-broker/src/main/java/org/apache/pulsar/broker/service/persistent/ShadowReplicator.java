@@ -73,7 +73,7 @@ public class ShadowReplicator extends PersistentReplicator {
                     log.error("[{}] Failed to deserialize message at {} (buffer size: {}): {}", replicatorId,
                             entry.getPosition(), length, t.getMessage(), t);
                     cursor.asyncDelete(entry.getPosition(), this, entry.getPosition());
-                    inFlightTask.incrementSentCallbackCount();
+                    inFlightTask.incCompletedEntries();
                     entry.release();
                     continue;
                 }
@@ -85,7 +85,7 @@ public class ShadowReplicator extends PersistentReplicator {
                                 replicatorId, entry.getPosition(), msg.getReplicateTo());
                     }
                     cursor.asyncDelete(entry.getPosition(), this, entry.getPosition());
-                    inFlightTask.incrementSentCallbackCount();
+                    inFlightTask.incCompletedEntries();
                     entry.release();
                     msg.recycle();
                     continue;
@@ -99,7 +99,7 @@ public class ShadowReplicator extends PersistentReplicator {
                                 replicatorId, entry.getPosition());
                     }
                     isLocalMessageSkippedOnce = true;
-                    inFlightTask.incrementSentCallbackCount();
+                    inFlightTask.incCompletedEntries();
                     entry.release();
                     msg.recycle();
                     continue;
