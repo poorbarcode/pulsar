@@ -88,6 +88,7 @@ public abstract class PersistentReplicator extends AbstractReplicator
 
     private final int producerQueueThreshold;
 
+    // TODO 这个变量没用了。
     protected static final AtomicIntegerFieldUpdater<PersistentReplicator> PENDING_MESSAGES_UPDATER =
             AtomicIntegerFieldUpdater
                     .newUpdater(PersistentReplicator.class, "pendingMessages");
@@ -95,11 +96,6 @@ public abstract class PersistentReplicator extends AbstractReplicator
 
     private static final int FALSE = 0;
     private static final int TRUE = 1;
-
-    private static final AtomicIntegerFieldUpdater<PersistentReplicator> HAVE_PENDING_READ_UPDATER =
-            AtomicIntegerFieldUpdater
-                    .newUpdater(PersistentReplicator.class, "havePendingRead");
-    private volatile int havePendingRead = FALSE;
 
     protected final Rate msgOut = new Rate();
     protected final Rate msgExpired = new Rate();
@@ -130,7 +126,6 @@ public abstract class PersistentReplicator extends AbstractReplicator
         this.cursor = Objects.requireNonNull(cursor);
         this.expiryMonitor = new PersistentMessageExpiryMonitor(localTopic,
                 Codec.decode(cursor.getName()), cursor, null);
-        HAVE_PENDING_READ_UPDATER.set(this, FALSE);
         PENDING_MESSAGES_UPDATER.set(this, 0);
 
         readBatchSize = Math.min(
@@ -147,8 +142,8 @@ public abstract class PersistentReplicator extends AbstractReplicator
     @Override
     protected void setProducerAndTriggerReadEntries(Producer<byte[]> producer) {
         // Repeat until there are no read operations in progress
-        if (STATE_UPDATER.get(this) == State.Starting && HAVE_PENDING_READ_UPDATER.get(this) == TRUE
-                && !cursor.cancelPendingReadRequest()) {
+        // TODO 这块代码干啥呢？ 这里会导致 stuck 呀。
+        if (STATE_UPDATER.get(this) == State.Starting && hasPendingRead() && !cursor.cancelPendingReadRequest()) {
             brokerService.getPulsar().getExecutor()
                     .schedule(() -> setProducerAndTriggerReadEntries(producer), 10, TimeUnit.MILLISECONDS);
             return;
@@ -169,7 +164,6 @@ public abstract class PersistentReplicator extends AbstractReplicator
                 throw new ClassCastException(producer.getClass().getName() + " can not be cast to ProducerImpl");
             }
             this.producer = (ProducerImpl) producer;
-            HAVE_PENDING_READ_UPDATER.set(this, FALSE);
             // Trigger a new read.
             log.info("[{}] Created replicator producer, Replicator state: {}", replicatorId, state);
             backOff.reset();
@@ -366,8 +360,6 @@ public abstract class PersistentReplicator extends AbstractReplicator
 
         boolean atLeastOneMessageSentForReplication = replicateEntries(entries, inFlightTask);
 
-        HAVE_PENDING_READ_UPDATER.set(this, FALSE);
-
         if (atLeastOneMessageSentForReplication && !isWritable()) {
             // Don't read any more entries until the current pending entries are persisted
             if (log.isDebugEnabled()) {
@@ -530,7 +522,6 @@ public abstract class PersistentReplicator extends AbstractReplicator
             }
         }
 
-        HAVE_PENDING_READ_UPDATER.set(this, FALSE);
         brokerService.executor().schedule(this::readMoreEntries, waitTimeMillis, TimeUnit.MILLISECONDS);
     }
 
@@ -811,6 +802,10 @@ public abstract class PersistentReplicator extends AbstractReplicator
 
     protected InFlightTask acquirePermitsIfNotFetchingSchema() {
         synchronized (inFlightTasks) {
+            if (hasPendingRead()) {
+                log.info("[{}] Skip the reading because there is a pending read task", replicatorId);
+                return null;
+            }
             if (fetchSchemaInProgress) {
                 log.info("[{}] Skip the reading due to new detected schema", replicatorId);
                 return null;
@@ -873,8 +868,7 @@ public abstract class PersistentReplicator extends AbstractReplicator
     protected boolean hasPendingRead() {
         synchronized (inFlightTasks) {
             for (InFlightTask task : inFlightTasks) {
-                boolean hasPendingCursorRead = task.readPos != null && CollectionUtils.isEmpty(task.readoutEntries);
-                if (hasPendingCursorRead) {
+                if (!task.isDone && task.readPos != null && CollectionUtils.isEmpty(task.readoutEntries)) {
                     // Skip the current reading if there is a pending cursor reading.
                     return true;
                 }
