@@ -85,7 +85,7 @@ public class GeoPersistentReplicator extends PersistentReplicator {
         boolean atLeastOneMessageSentForReplication = false;
         boolean isEnableReplicatedSubscriptions =
                 brokerService.pulsar().getConfiguration().isEnableReplicatedSubscriptions();
-
+        // TODO 这个时候应该扣减全量的 entries，而不是一个个的扣减。
         try {
             // This flag is set to true when we skip at least one local message,
             // in order to skip remaining local messages.
@@ -226,7 +226,6 @@ public class GeoPersistentReplicator extends PersistentReplicator {
                     stats.incrementMsgOutCounter();
                     stats.incrementBytesOutCounter(headersAndPayload.readableBytes());
                     // Increment pending messages for messages produced locally
-                    PENDING_MESSAGES_UPDATER.incrementAndGet(this);
                     if (log.isDebugEnabled()) {
                         log.debug("[{}] Publishing {}:{}", replicatorId, entry.getLedgerId(), entry.getEntryId());
                     }

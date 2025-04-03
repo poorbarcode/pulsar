@@ -579,7 +579,7 @@ public class ProducerImpl<T> extends ProducerBase<T> implements TimerTask, Conne
             return;
         }
 
-        if (!populateMessageSchema(msg, callback)) {
+        if (!populateMessageSchema(msg, callback)) { // TODO 这里会不会导致“乱序”。
             compressedPayload.release();
             return;
         }

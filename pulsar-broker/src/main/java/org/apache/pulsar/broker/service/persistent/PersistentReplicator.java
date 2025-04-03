@@ -88,12 +88,6 @@ public abstract class PersistentReplicator extends AbstractReplicator
 
     private final int producerQueueThreshold;
 
-    // TODO 这个变量没用了。
-    protected static final AtomicIntegerFieldUpdater<PersistentReplicator> PENDING_MESSAGES_UPDATER =
-            AtomicIntegerFieldUpdater
-                    .newUpdater(PersistentReplicator.class, "pendingMessages");
-    private volatile int pendingMessages = 0;
-
     private static final int FALSE = 0;
     private static final int TRUE = 1;
 
@@ -126,7 +120,6 @@ public abstract class PersistentReplicator extends AbstractReplicator
         this.cursor = Objects.requireNonNull(cursor);
         this.expiryMonitor = new PersistentMessageExpiryMonitor(localTopic,
                 Codec.decode(cursor.getName()), cursor, null);
-        PENDING_MESSAGES_UPDATER.set(this, 0);
 
         readBatchSize = Math.min(
                 producerQueueSize,
@@ -399,6 +392,7 @@ public abstract class PersistentReplicator extends AbstractReplicator
         public void sendComplete(Throwable exception, OpSendMsgStats opSendMsgStats) {
             // TODO 如果 send Complete 可以被执行多次，那么有可能执行第二次的时候已经被另一个任务重用了。。。
             //  那么就会丢消息。
+            // TODO close producer 会不会造成两次回调？两次失败（一次 schema 失败，一次close）， 一次成功一次失败（发送成功，close producer）
             inFlightTask.incCompletedEntries();
             if (exception != null && !(exception instanceof PulsarClientException.InvalidMessageException)) {
                 log.error("[{}] Error producing on remote broker", replicator.replicatorId, exception);
@@ -408,6 +402,7 @@ public abstract class PersistentReplicator extends AbstractReplicator
                 if (log.isDebugEnabled()) {
                     log.debug("[{}] Message persisted on remote broker", replicator.replicatorId, exception);
                 }
+                // TODO 这里有可能与 “terminate” 并发导致 delete 失败。
                 replicator.cursor.asyncDelete(entry.getPosition(), replicator, entry.getPosition());
             }
             entry.release();
