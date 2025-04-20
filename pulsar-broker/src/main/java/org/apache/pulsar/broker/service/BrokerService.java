@@ -743,6 +743,8 @@ public class BrokerService implements Closeable {
     protected void startCheckReplicationPolicies() {
         int interval = pulsar.getConfig().getReplicationPolicyCheckDurationSeconds();
         if (interval > 0) {
+            // TODO 这里会使得 等待 GC 的 topic 重新拉起来 replicator 任务
+            //   不会：因为 replicator 还在，只是 disconnected 了
             messageExpiryMonitor.scheduleAtFixedRate(this::checkReplicationPolicies, interval, interval,
                     TimeUnit.SECONDS);
         }

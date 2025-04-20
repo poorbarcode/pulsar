@@ -163,6 +163,11 @@ public class AbstractReplicatorTest {
         }
 
         @Override
+        protected void afterTerminate() {
+
+        }
+
+        @Override
         public long getNumberOfEntriesInBacklog() {
             return 0;
         }

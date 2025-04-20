@@ -87,6 +87,9 @@ public abstract class AbstractReplicator implements Replicator {
          * This enum has two mean meanings：
          *   Init: replicator is just created, has not been started now.
          *   Disconnected: the producer was closed after {@link PersistentTopic#checkGC} called {@link #disconnect}.
+         *   // TODO rename -> Initial
+         *   // TODO add new state: Pause_for_topic_gc, and the new state can be only changed to Initial, Terminating.
+         *   // TODO add new attribute named "state" into the response of topic stats.
          */
         // The internal producer is disconnected.
         Disconnected,
@@ -96,6 +99,7 @@ public abstract class AbstractReplicator implements Replicator {
         Started,
         /**
          * The producer is closing after {@link PersistentTopic#checkGC} called {@link #disconnect}.
+         * TODO rename to Closing_producer
          */
         // The internal producer is trying to disconnect.
         Disconnecting,
@@ -398,6 +402,8 @@ public abstract class AbstractReplicator implements Replicator {
         });
     }
 
+    protected abstract void afterTerminate();
+
     public CompletableFuture<Void> terminate() {
         if (!tryChangeStatusToTerminating()) {
             log.info("[{}] Skip current termination since other thread is doing termination, state : {}", replicatorId,
@@ -406,6 +412,7 @@ public abstract class AbstractReplicator implements Replicator {
         }
         return doCloseProducerAsync(producer, () -> {
             STATE_UPDATER.set(this, State.Terminated);
+            afterTerminate();
             this.producer = null;
             // set the cursor as inactive.
             disableReplicatorRead();

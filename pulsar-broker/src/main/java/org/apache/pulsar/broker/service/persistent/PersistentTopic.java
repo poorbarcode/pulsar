@@ -803,6 +803,7 @@ public class PersistentTopic extends AbstractTopic implements Topic, AddEntryCal
             messageDeduplication.producerAdded(producer.getProducerName());
 
             // Start replication producers if not already
+            // TODO 这里是为了配合 topic GC 的。
             return startReplProducers().thenApply(__ -> topicEpoch);
         });
     }
@@ -3184,7 +3185,8 @@ public class PersistentTopic extends AbstractTopic implements Topic, AddEntryCal
                  *   "replicator.producer" to a null value.
                  * Race condition: task 1 will get a NPE when it tries to send messages using the variable
                  * "replicator.producer", because task 2 will set this variable to "null".
-                 * TODO Create a seperated PR to fix it.
+                 * TODO 1 Create a seperated PR to fix it.
+                 * TODO 2 producer 会拉起来新的 replication 任务。
                  */
                 closeReplProducersIfNoBacklog().thenRun(() -> {
                     if (hasRemoteProducers()) {
