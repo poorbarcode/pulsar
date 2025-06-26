@@ -1927,7 +1927,7 @@ public class PersistentTopic extends AbstractTopic implements Topic, AddEntryCal
             return CompletableFuture.completedFuture(null);
         }
 
-        String localCluster = brokerService.pulsar().getConfiguration().getClusterName();
+        final String localCluster = brokerService.pulsar().getConfiguration().getClusterName();
 
         return checkAllowedCluster(localCluster).thenCompose(success -> {
             if (!success) {
@@ -2025,6 +2025,26 @@ public class PersistentTopic extends AbstractTopic implements Topic, AddEntryCal
                                     //  Geo-Replication with a global metadata store, a PIP is needed.
                                     // Since the system topic "__change_events" under the namespace will also be
                                     // deleted, we can skip to delete topic-level policies.
+                                    final boolean keepGlobalPoliciesAfterDeleting = topicPolicies
+                                            .getReplicationClusters().getNamespaceValue()
+                                            .contains(brokerService.pulsar().getConfiguration().getClusterName());
+                                    brokerService.getPulsar().getTopicPoliciesService()
+                                        .deleteTopicPoliciesAsync(partitionedName,
+                                                keepGlobalPoliciesAfterDeleting)
+                                            .whenComplete((__, ex) -> {
+                                            if (ex == null) {
+                                                log.info("Deleted topic policies[{}] after all partitions[{}] were"
+                                                    + " removed because the current cluster has bee removed from"
+                                                    + " topic/namespace policies. Keep global policies {}",
+                                                    partitionedName, metadataOp.get().partitions,
+                                                    keepGlobalPoliciesAfterDeleting);
+                                            } else {
+                                                log.error("Failed to delete topic policies[{}] after all partitions[{}]"
+                                                    + " were removed,  when the current cluster has bee removed from"
+                                                    + " topic/namespace policies",
+                                                    partitionedName, metadataOp.get().partitions, ex);
+                                            }
+                                    });
                                 }
                             }
                         });
