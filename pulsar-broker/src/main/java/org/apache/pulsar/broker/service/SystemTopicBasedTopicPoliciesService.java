@@ -142,6 +142,11 @@ public class SystemTopicBasedTopicPoliciesService implements TopicPoliciesServic
         return deleteTopicPoliciesAsync(topicName, false);
     }
 
+    /**
+     * @param keepGlobalPoliciesAfterDeleting only be used when a topic was deleted because users removes current
+     *    cluster from the policy "replicatedClusters".
+     *    See also https://github.com/apache/pulsar/blob/master/pip/pip-422.md
+     */
     @Override
     public CompletableFuture<Void> deleteTopicPoliciesAsync(TopicName topicName,
                                                             boolean keepGlobalPoliciesAfterDeleting) {

@@ -68,7 +68,9 @@ import org.apache.bookkeeper.mledger.AsyncCallbacks;
 import org.apache.bookkeeper.mledger.ManagedLedgerException;
 import org.apache.bookkeeper.mledger.impl.ManagedCursorImpl;
 import org.apache.bookkeeper.mledger.impl.ManagedLedgerImpl;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.pulsar.broker.BrokerTestUtil;
+import org.apache.pulsar.broker.PulsarService;
 import org.apache.pulsar.broker.resources.ClusterResources;
 import org.apache.pulsar.broker.service.persistent.GeoPersistentReplicator;
 import org.apache.pulsar.broker.service.persistent.PersistentReplicator;
@@ -87,6 +89,7 @@ import org.apache.pulsar.client.impl.ProducerBuilderImpl;
 import org.apache.pulsar.client.impl.ProducerImpl;
 import org.apache.pulsar.client.impl.PulsarClientImpl;
 import org.apache.pulsar.client.impl.conf.ProducerConfigurationData;
+import org.apache.pulsar.common.naming.SystemTopicNames;
 import org.apache.pulsar.common.naming.TopicName;
 import org.apache.pulsar.common.partition.PartitionedTopicMetadata;
 import org.apache.pulsar.common.policies.data.ClusterData;
@@ -128,16 +131,22 @@ public class OneWayReplicatorTest extends OneWayReplicatorTestBase {
     }
 
     private void waitReplicatorStopped(String topicName) {
+        waitReplicatorStopped(topicName, pulsar1, pulsar2);
+    }
+
+    private void waitReplicatorStopped(String topicName, PulsarService sourceCluster, PulsarService remoteCluster) {
         Awaitility.await().untilAsserted(() -> {
-            Optional<Topic> topicOptional2 = pulsar2.getBrokerService().getTopic(topicName, false).get();
-            assertTrue(topicOptional2.isPresent());
-            PersistentTopic persistentTopic2 = (PersistentTopic) topicOptional2.get();
-            assertTrue(persistentTopic2.getProducers().isEmpty());
-            Optional<Topic> topicOptional1 = pulsar2.getBrokerService().getTopic(topicName, false).get();
-            assertTrue(topicOptional1.isPresent());
-            PersistentTopic persistentTopic1 = (PersistentTopic) topicOptional2.get();
-            assertTrue(persistentTopic1.getReplicators().isEmpty()
-                    || !persistentTopic1.getReplicators().get(cluster2).isConnected());
+            Optional<Topic> remoteTp = remoteCluster.getBrokerService().getTopic(topicName, false).get();
+            assertTrue(remoteTp.isPresent());
+            PersistentTopic remoteTp_ = (PersistentTopic) remoteTp.get();
+            for (org.apache.pulsar.broker.service.Producer p : remoteTp_.getProducers().values()) {
+                assertFalse(p.getProducerName().startsWith(remoteCluster.getConfig().getReplicatorPrefix()));
+            }
+            Optional<Topic> sourceTp = sourceCluster.getBrokerService().getTopic(topicName, false).get();
+            assertTrue(sourceTp.isPresent());
+            PersistentTopic sourceTp_ = (PersistentTopic) sourceTp.get();
+            assertTrue(sourceTp_.getReplicators().isEmpty()
+                    || !sourceTp_.getReplicators().get(remoteCluster.getConfig().getClusterName()).isConnected());
         });
     }
 
@@ -211,6 +220,49 @@ public class OneWayReplicatorTest extends OneWayReplicatorTestBase {
             admin1.topics().delete(topicName);
             admin2.topics().delete(topicName);
         });
+    }
+
+    @Test
+    public void testGlobalTopicLevelReplicatedClusters() throws Exception {
+        final String topicName = BrokerTestUtil.newUniqueName("persistent://" + replicatedNamespace + "/tp_");
+        final String subTopic = TopicName.get(topicName).getPartition(0).toString();
+        admin1.topics().createPartitionedTopic(topicName, 1);
+        Producer<byte[]> producer1 = client1.newProducer().topic(topicName).create();
+        producer1.close();
+        waitReplicatorStarted(subTopic, pulsar2);
+
+        // Remove topic from a cluster.
+        admin1.topicPolicies(true).setReplicationClusters(topicName, Arrays.asList(cluster1));
+        Awaitility.await().untilAsserted(() -> {
+            Set<String> clusters1 = admin1.topicPolicies(true).getReplicationClusters(topicName, false);
+            assertNotNull(clusters1);
+            assertTrue(clusters1.contains(cluster1));
+            assertFalse(clusters1.contains(cluster2));
+            Set<String> clusters2 = admin2.topicPolicies(true).getReplicationClusters(topicName, false);
+            assertNotNull(clusters2);
+            assertTrue(clusters2.contains(cluster1));
+            assertFalse(clusters2.contains(cluster2));
+        });
+        waitReplicatorStopped(subTopic);
+        Awaitility.await().untilAsserted(() -> {
+            assertFalse(pulsar2.getPulsarResources().getTopicResources()
+                    .persistentTopicExists(TopicName.get(subTopic)).get());
+        });
+
+        // Remove global policy.
+        admin1.topicPolicies(true).removeReplicationClusters(topicName);
+        Producer<byte[]> producer2 = client1.newProducer().topic(topicName).create();
+        producer2.close();
+        Awaitility.await().untilAsserted(() -> {
+            Set<String> clusters1 = admin1.topicPolicies(true).getReplicationClusters(topicName, false);
+            assertTrue(CollectionUtils.isEmpty(clusters1));
+            Set<String> clusters2 = admin2.topicPolicies(true).getReplicationClusters(topicName, false);
+            assertTrue(CollectionUtils.isEmpty(clusters2));
+        });
+        waitReplicatorStarted(subTopic, pulsar2);
+
+        admin1.topics().unload(subTopic);
+        admin2.topics().unload(subTopic);
     }
 
     @Test(timeOut = 45 * 1000)

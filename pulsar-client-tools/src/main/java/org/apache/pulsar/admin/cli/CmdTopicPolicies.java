@@ -1996,7 +1996,8 @@ public class CmdTopicPolicies extends CmdBase {
         }
     }
 
-    @Command(description = "Set the replication clusters for a topic")
+    @Command(description = "Set the replication clusters for a topic, global policy will be copied to the remote"
+            + " cluster if you enabled namespace level replication.")
     private class SetReplicationClusters extends CliCommand {
         @Parameters(description = "persistent://tenant/namespace/topic", arity = "1")
         private String topicName;
@@ -2022,11 +2023,13 @@ public class CmdTopicPolicies extends CmdBase {
         @Parameters(description = "persistent://tenant/namespace/topic", arity = "1")
         private String topicName;
 
-        @Option(names = { "-ap", "--applied" }, description = "Get the applied policy of the topic")
+        @Option(names = { "-ap", "--applied" }, description = "Get the applied policy of the topic. If set to true,"
+                + " the param \"--global\" will be ignored. ")
         private boolean applied = false;
 
         @Option(names = { "--global", "-g" }, description = "Whether to get this policy globally. "
-                + "If set to true, the policy will be replicate to other clusters asynchronously")
+                + "If set to true, the policy will be replicate to other clusters asynchronously. "
+                + "If set \"--applied\" to true, the current param will be ignored. ")
         private boolean isGlobal = false;
 
 
@@ -2037,7 +2040,8 @@ public class CmdTopicPolicies extends CmdBase {
         }
     }
 
-    @Command(description = "Remove the replication clusters for a topic")
+    @Command(description = "Remove the replication clusters for a topic, it will not remove the policy from the remote"
+            + "cluster")
     private class RemoveReplicationClusters extends CliCommand {
         @Parameters(description = "persistent://tenant/namespace/topic", arity = "1")
         private String topicName;

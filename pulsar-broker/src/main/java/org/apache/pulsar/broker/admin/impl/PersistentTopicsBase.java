@@ -3404,7 +3404,7 @@ public class PersistentTopicsBase extends AdminResource {
                                     topicMetaOp.get().partitions).values());
                         });
                 }).thenCompose(__ ->
-                    getTopicPoliciesAsyncWithRetry(topicName).thenCompose(op -> {
+                    getTopicPoliciesAsyncWithRetry(topicName, isGlobal).thenCompose(op -> {
                             TopicPolicies topicPolicies = op.orElseGet(TopicPolicies::new);
                             topicPolicies.setReplicationClusters(clusterIds);
                             topicPolicies.setIsGlobal(isGlobal);
@@ -3421,12 +3421,13 @@ public class PersistentTopicsBase extends AdminResource {
                 ));
     }
 
-    protected CompletableFuture<Void> internalRemoveReplicationClusters() {
+    protected CompletableFuture<Void> internalRemoveReplicationClusters(boolean isGlobal) {
         return validatePoliciesReadOnlyAccessAsync()
-                .thenCompose(__ -> getTopicPoliciesAsyncWithRetry(topicName))
+                .thenCompose(__ -> getTopicPoliciesAsyncWithRetry(topicName, isGlobal))
                 .thenCompose(op -> {
                     TopicPolicies topicPolicies = op.orElseGet(TopicPolicies::new);
                     topicPolicies.setReplicationClusters(null);
+                    topicPolicies.setIsGlobal(true);
                     return pulsar().getTopicPoliciesService().updateTopicPoliciesAsync(topicName, topicPolicies)
                             .thenRun(() -> {
                                 log.info("[{}] Successfully set replication clusters for namespace={}, "

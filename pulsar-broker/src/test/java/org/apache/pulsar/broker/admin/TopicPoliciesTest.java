@@ -99,6 +99,7 @@ import org.apache.pulsar.common.policies.data.TopicPolicies;
 import org.apache.pulsar.common.policies.data.TopicStats;
 import org.apache.pulsar.common.policies.data.TopicType;
 import org.apache.pulsar.common.policies.data.impl.DispatchRateImpl;
+import org.apache.pulsar.common.util.FutureUtil;
 import org.assertj.core.api.Assertions;
 import org.awaitility.Awaitility;
 import org.glassfish.jersey.client.JerseyClient;
@@ -3873,9 +3874,18 @@ public class TopicPoliciesTest extends MockedPulsarServiceBaseTest {
             admin.topics().setReplicationClusters(topic, Arrays.asList("not-local-cluster"));
             fail("Can not remove local cluster from the topic-level replication clusters policy");
         } catch (PulsarAdminException.PreconditionFailedException e) {
-            assertTrue(e.getMessage().contains("Can not remove local cluster from the topic-level replication clusters"
-                + " policy"));
+            assertTrue(e.getMessage().contains("Can not remove local cluster from the local topic-level replication"
+                + " clusters policy"));
         }
+        try {
+            admin.topicPolicies(false).setReplicationClusters(topic, Arrays.asList("not-local-cluster")).get();
+            fail("Can not remove local cluster from the topic-level replication clusters policy");
+        } catch (Exception e) {
+            Throwable actEx = FutureUtil.unwrapCompletionException(e);
+            assertTrue(actEx.getMessage().contains("Can not remove local cluster from the local topic-level replication"
+                    + " clusters policy"));
+        }
+
         // cleanup.
         if (TopicType.PARTITIONED.equals(topicType)) {
             admin.topics().delete(topic, false);
