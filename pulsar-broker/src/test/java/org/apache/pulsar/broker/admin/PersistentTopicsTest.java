@@ -73,6 +73,7 @@ import org.apache.pulsar.broker.service.persistent.PersistentSubscription;
 import org.apache.pulsar.broker.service.persistent.PersistentTopic;
 import org.apache.pulsar.broker.web.PulsarWebResource;
 import org.apache.pulsar.broker.web.RestException;
+import org.apache.pulsar.client.admin.GetStatsOptions;
 import org.apache.pulsar.client.admin.LongRunningProcessStatus;
 import org.apache.pulsar.client.admin.PulsarAdmin;
 import org.apache.pulsar.client.admin.PulsarAdminException;
@@ -2017,5 +2018,35 @@ public class PersistentTopicsTest extends MockedPulsarServiceBaseTest {
             assertEquals(batchMessage.getProperties().get("BATCH-KEY2"), "BATCH-VALUE2");
             assertEquals(batchMessage.getProperties().get("BaTcH-kEy3"), "BaTcH-vAlUe3");
         }
+    }
+
+    @Test
+    public void testTopicStats() throws Exception {
+        String topicName = "persistent://" + testTenant + "/" + testNamespaceLocal + "/testTopicStats";
+        admin.topics().createNonPartitionedTopic(topicName);
+
+        @Cleanup
+        Producer<String> producer = pulsarClient.newProducer(Schema.STRING)
+                .topic(topicName)
+                .create();
+
+        @Cleanup
+        Consumer<String> subscribe = pulsarClient.newConsumer(Schema.STRING)
+                .topic(topicName)
+                .subscriptionName("sub-stats")
+                .subscribe();
+
+        for (int i = 0; i < 5; i++) {
+            producer.newMessage()
+                    .value("message-" + i)
+                    .send();
+        }
+
+        final TopicStats stats = admin.topics().getStats(topicName, GetStatsOptions.builder().getEarliestTimeInBacklog(true).build());
+        final long earliestMsgPublishTimeInBacklogs = stats.getEarliestMsgPublishTimeInBacklogs();
+        Awaitility.await().until(() -> {
+            log.info("EarliestMsgPublishTimeInBacklogs: {}", earliestMsgPublishTimeInBacklogs);
+            return stats.getEarliestMsgPublishTimeInBacklogs() > 0;
+        });
     }
 }
