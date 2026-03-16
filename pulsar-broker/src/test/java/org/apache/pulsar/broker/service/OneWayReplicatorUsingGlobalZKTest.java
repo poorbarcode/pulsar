@@ -799,7 +799,7 @@ public class OneWayReplicatorUsingGlobalZKTest extends OneWayReplicatorTest {
         Awaitility.await().untilAsserted(() -> {
             PersistentTopic persistentTopic1 = (PersistentTopic) broker1.getTopic(tp, false).join().get();
             assertTrue(persistentTopic1.getReplicators().isEmpty());
-            PersistentTopic persistentTopic2 = (PersistentTopic) broker1.getTopic(tp, false).join().get();
+            PersistentTopic persistentTopic2 = (PersistentTopic) broker2.getTopic(tp, false).join().get();
             assertTrue(persistentTopic2.getReplicators().isEmpty());
         });
         admin1.topics().delete(tp, false);
