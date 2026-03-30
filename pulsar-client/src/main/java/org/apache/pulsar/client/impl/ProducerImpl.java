@@ -2026,7 +2026,7 @@ public class ProducerImpl<T> extends ProducerBase<T> implements TimerTask, Conne
                     && schema instanceof AutoProduceBytesSchema autoProduceBytesSchema
                     && !autoProduceBytesSchema.hasUserProvidedSchema()) {
                 client.reloadSchemaForAutoProduceProducer(topic, autoProduceBytesSchema)
-                    .thenAccept(__ -> {
+                    .whenComplete((__, throwable) -> {
                         future.completeExceptionally(cause);
                     });
                 return null;

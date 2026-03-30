@@ -99,8 +99,8 @@ public class OneWayReplicatorSchemaValidationEnforcedTest extends OneWayReplicat
         });
     }
 
-    @Test(timeOut = 30000, invocationCount = 1)
-    public void testReplicationReconnectWithSchemaValidationEnforced2() throws Exception {
+    @Test(timeOut = 30000)
+    public void testReplicationReconnectWithSchemaValidationEnforced() throws Exception {
         Schema<MyClass> myClassSchema = Schema.AVRO(MyClass.class);
         final String topicName =
                 BrokerTestUtil.newUniqueName("persistent://" + sourceClusterAlwaysSchemaCompatibleNamespace + "/tp_");
