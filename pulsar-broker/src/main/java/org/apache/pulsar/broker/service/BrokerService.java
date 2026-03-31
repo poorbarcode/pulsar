@@ -93,11 +93,14 @@ import org.apache.bookkeeper.mledger.ManagedLedgerException.ManagedLedgerNotFoun
 import org.apache.bookkeeper.mledger.ManagedLedgerFactory;
 import org.apache.bookkeeper.mledger.impl.NonAppendableLedgerOffloader;
 import org.apache.bookkeeper.mledger.util.Futures;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 import org.apache.pulsar.bookie.rackawareness.IsolatedBookieEnsemblePlacementPolicy;
 import org.apache.pulsar.broker.PulsarServerException;
 import org.apache.pulsar.broker.PulsarService;
@@ -2010,6 +2013,69 @@ public class BrokerService implements Closeable {
         return result;
     }
 
+    /**
+     * @return Triple [namespace policies, global topic policies, topic policies].
+     */
+    public CompletableFuture<Boolean> isAllowedCurrentClusterAccess(@NonNull TopicName topicName) {
+        final String cluster = getPulsar().getConfig().getClusterName();
+        return getCombinedTopicPolicies(topicName).thenApply(triple -> {
+            Optional<TopicPolicies> topicP = triple.getRight();
+            Optional<TopicPolicies> globalTopicP = triple.getMiddle();
+            Optional<Policies> nsPolicies = triple.getLeft();
+            // Disabled a cluster for a namespace manually.
+            if (nsPolicies.isPresent() && !nsPolicies.get().allowed_clusters.isEmpty()
+                    && !nsPolicies.get().allowed_clusters.contains(cluster)) {
+                return false;
+            }
+            // Manually enabled topic-level replication, which can skip to set a namespace-level replication.
+            if (topicP.isPresent() && CollectionUtils.isNotEmpty(topicP.get().getReplicationClusters())) {
+                if (topicP.get().getReplicationClusters().contains(cluster)) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+            if (globalTopicP.isPresent() && CollectionUtils.isNotEmpty(globalTopicP.get().getReplicationClusters())) {
+                if (globalTopicP.get().getReplicationClusters().contains(cluster)) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+            // No settings for replication/allowed_clusters.
+            if (nsPolicies.isEmpty()) {
+                return true;
+            }
+            // Namespace level settings.
+            return nsPolicies.get().replication_clusters.isEmpty()
+                    || nsPolicies.get().replication_clusters.contains(cluster);
+        });
+    }
+
+    /**
+     * @return Triple [namespace policies, global topic policies, topic policies].
+     */
+    public CompletableFuture<Triple<Optional<Policies>, Optional<TopicPolicies>, Optional<TopicPolicies>>>
+    getCombinedTopicPolicies(@NonNull TopicName topicName) {
+        if (topicName == null) {
+            return FutureUtil.failedFuture(new NullPointerException("topicName"));
+        }
+        NamespaceName namespace = topicName.getNamespaceObject();
+        NamespaceResources nsr = pulsar.getPulsarResources().getNamespaceResources();
+        final CompletableFuture<Optional<TopicPolicies>> topicPoliciesFuture =
+                getTopicPoliciesBypassSystemTopic(topicName, TopicPoliciesService.GetType.LOCAL_ONLY);
+        final CompletableFuture<Optional<TopicPolicies>> globalTopicPoliciesFuture =
+                getTopicPoliciesBypassSystemTopic(topicName, TopicPoliciesService.GetType.GLOBAL_ONLY);
+        final CompletableFuture<Optional<Policies>> nsPolicies = nsr.getPoliciesAsync(namespace);
+        return topicPoliciesFuture.thenCombine(globalTopicPoliciesFuture, (topicP, globalTopicP) -> {
+            return new ImmutablePair<>(topicP, globalTopicP);
+        }).thenCombine(nsPolicies, (topicPoliciesPair, np) -> {
+            Optional<TopicPolicies> topicP = topicPoliciesPair.getLeft();
+            Optional<TopicPolicies> globalTopicP = topicPoliciesPair.getRight();
+            return new ImmutableTriple<>(np, globalTopicP, topicP);
+        });
+    }
+
     public CompletableFuture<ManagedLedgerConfig> getManagedLedgerConfig(@NonNull TopicName topicName) {
         if (topicName == null) {
             return FutureUtil.failedFuture(new NullPointerException("topicName"));
@@ -2017,22 +2083,12 @@ public class BrokerService implements Closeable {
         NamespaceName namespace = topicName.getNamespaceObject();
         ServiceConfiguration serviceConfig = pulsar.getConfiguration();
 
-        NamespaceResources nsr = pulsar.getPulsarResources().getNamespaceResources();
         LocalPoliciesResources lpr = pulsar.getPulsarResources().getLocalPolicies();
-        final CompletableFuture<Optional<TopicPolicies>> topicPoliciesFuture =
-                getTopicPoliciesBypassSystemTopic(topicName, TopicPoliciesService.GetType.LOCAL_ONLY);
-        final CompletableFuture<Optional<TopicPolicies>> globalTopicPoliciesFuture =
-                getTopicPoliciesBypassSystemTopic(topicName, TopicPoliciesService.GetType.GLOBAL_ONLY);
-        final CompletableFuture<Optional<Policies>> nsPolicies = nsr.getPoliciesAsync(namespace);
         final CompletableFuture<Optional<LocalPolicies>> lcPolicies = lpr.getLocalPoliciesAsync(namespace);
-        return topicPoliciesFuture.thenCombine(globalTopicPoliciesFuture, (topicP, globalTopicP) -> {
-            return new ImmutablePair<>(topicP, globalTopicP);
-        }).thenCombine(nsPolicies, (topicPoliciesPair, np) -> {
-            return new ImmutablePair<>(topicPoliciesPair, np);
-        }).thenCombine(lcPolicies, (combined, localPolicies) -> {
-            Optional<TopicPolicies> topicP = combined.getLeft().getLeft();
-            Optional<TopicPolicies> globalTopicP = combined.getLeft().getRight();
-            Optional<Policies> policies = combined.getRight();
+        return getCombinedTopicPolicies(topicName).thenCombine(lcPolicies, (combined, localPolicies) -> {
+            Optional<Policies> policies = combined.getLeft();
+            Optional<TopicPolicies> globalTopicP = combined.getMiddle();
+            Optional<TopicPolicies> topicP = combined.getRight();
 
             PersistencePolicies persistencePolicies = null;
             RetentionPolicies retentionPolicies = null;
