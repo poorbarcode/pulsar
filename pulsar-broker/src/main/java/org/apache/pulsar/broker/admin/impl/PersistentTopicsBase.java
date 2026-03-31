@@ -550,31 +550,39 @@ public class PersistentTopicsBase extends AdminResource {
     }
 
     protected void internalCreateMissedPartitions(AsyncResponse asyncResponse) {
-        getPartitionedTopicMetadataAsync(topicName, false, false).thenAccept(metadata -> {
-            if (metadata != null && metadata.partitions > 0) {
-                validateNamespaceOperationAsync(topicName.getNamespaceObject(),
-                        NamespaceOperation.CREATE_TOPIC)
-                .thenCompose(__ -> tryCreatePartitionsAsync(metadata.partitions)).thenAccept(v -> {
-                    asyncResponse.resume(Response.noContent().build());
-                }).exceptionally(e -> {
-                    log.error()
-                            .attr("topic", topicName)
-                            .log("Failed to create partitions for topic");
-                    resumeAsyncResponseExceptionally(asyncResponse, e);
-                    return null;
-                });
-            } else {
-                throw new RestException(Status.NOT_FOUND, String.format("Topic %s does not exist", topicName));
+        pulsar().getBrokerService().isAllowedCurrentClusterAccess(topicName).thenAccept(allowed -> {
+            if (!allowed) {
+                resumeAsyncResponseExceptionally(asyncResponse,
+                    new RestException(Status.BAD_REQUEST, String.format("Topic [%s] is not allowed to be loaded"
+                        + " up on the current cluster, please recheck replication polices.", topicName)));
             }
-        }).exceptionally(ex -> {
-            // If the exception is not redirect exception we need to log it.
-            if (!isRedirectException(ex)) {
-                log.error()
+            getPartitionedTopicMetadataAsync(topicName, false, false).thenAccept(metadata -> {
+                if (metadata != null && metadata.partitions > 0) {
+                    validateNamespaceOperationAsync(topicName.getNamespaceObject(),
+                        NamespaceOperation.CREATE_TOPIC)
+                        .thenCompose(__ -> tryCreatePartitionsAsync(metadata.partitions)).thenAccept(v -> {
+                            asyncResponse.resume(Response.noContent().build());
+                        }).exceptionally(e -> {
+                            log.error()
+                                    .attr("topic", topicName)
+                                    .log("Failed to create partitions for topic");
+                            resumeAsyncResponseExceptionally(asyncResponse, e);
+                            return null;
+                        });
+                } else {
+                    resumeAsyncResponseExceptionally(asyncResponse,
+                            new RestException(Status.NOT_FOUND, String.format("Topic %s does not exist", topicName)));
+                }
+            }).exceptionally(ex -> {
+                // If the exception is not redirect exception we need to log it.
+                if (!isRedirectException(ex)) {
+                    log.error()
                         .attr("topic", topicName)
                         .log("Failed to create partitions for topic");
-            }
-            resumeAsyncResponseExceptionally(asyncResponse, ex);
-            return null;
+                }
+                resumeAsyncResponseExceptionally(asyncResponse, ex);
+                return null;
+            });
         });
     }
 

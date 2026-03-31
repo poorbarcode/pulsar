@@ -149,6 +149,13 @@ public class OneWayReplicatorUsingGlobalZKTest extends OneWayReplicatorTest {
         });
         waitReplicatorStopped(subTopic, pulsar1, pulsar2, true);
 
+        try {
+            admin2.topics().createMissedPartitions(topicName);
+            fail("The action that creates mission partitions should have thrown exception");
+        } catch (Exception e) {
+            assertTrue(e.getMessage().contains("is not allowed to be loaded up"));
+        }
+
         // Remove global policy.
         admin1.topicPolicies(true).removeReplicationClusters(topicName);
         Producer<byte[]> producer2 = client1.newProducer().topic(topicName).create();
