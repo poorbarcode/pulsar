@@ -527,7 +527,7 @@ public class PersistentTopicsBase extends AdminResource {
     }
 
     protected void internalCreateMissedPartitions(AsyncResponse asyncResponse) {
-        pulsar().getBrokerService().isAllowedCurrentClusterAccess(topicName).thenAccept(allowed -> {
+        pulsar().getBrokerService().isCurrentClusterAllowed(topicName).thenAccept(allowed -> {
             if (!allowed) {
                 resumeAsyncResponseExceptionally(asyncResponse,
                     new RestException(Status.BAD_REQUEST, String.format("Topic [%s] is not allowed to be loaded"

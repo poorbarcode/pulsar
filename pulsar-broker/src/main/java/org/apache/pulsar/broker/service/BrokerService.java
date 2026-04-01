@@ -4049,7 +4049,7 @@ public class BrokerService implements Closeable {
     /**
      * @return Triple [namespace policies, global topic policies, topic policies].
      */
-    public CompletableFuture<Boolean> isAllowedCurrentClusterAccess(@NonNull TopicName topicName) {
+    public CompletableFuture<Boolean> isCurrentClusterAllowed(@NonNull TopicName topicName) {
         final String cluster = getPulsar().getConfig().getClusterName();
         return getCombinedTopicPolicies(topicName).thenApply(triple -> {
             Optional<TopicPolicies> topicP = triple.getRight();
