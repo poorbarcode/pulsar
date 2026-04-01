@@ -2016,45 +2016,6 @@ public class BrokerService implements Closeable {
     /**
      * @return Triple [namespace policies, global topic policies, topic policies].
      */
-    public CompletableFuture<Boolean> isAllowedCurrentClusterAccess(@NonNull TopicName topicName) {
-        final String cluster = getPulsar().getConfig().getClusterName();
-        return getCombinedTopicPolicies(topicName).thenApply(triple -> {
-            Optional<TopicPolicies> topicP = triple.getRight();
-            Optional<TopicPolicies> globalTopicP = triple.getMiddle();
-            Optional<Policies> nsPolicies = triple.getLeft();
-            // Disabled a cluster for a namespace manually.
-            if (nsPolicies.isPresent() && !nsPolicies.get().allowed_clusters.isEmpty()
-                    && !nsPolicies.get().allowed_clusters.contains(cluster)) {
-                return false;
-            }
-            // Manually enabled topic-level replication, which can skip to set a namespace-level replication.
-            if (topicP.isPresent() && CollectionUtils.isNotEmpty(topicP.get().getReplicationClusters())) {
-                if (topicP.get().getReplicationClusters().contains(cluster)) {
-                    return true;
-                } else {
-                    return false;
-                }
-            }
-            if (globalTopicP.isPresent() && CollectionUtils.isNotEmpty(globalTopicP.get().getReplicationClusters())) {
-                if (globalTopicP.get().getReplicationClusters().contains(cluster)) {
-                    return true;
-                } else {
-                    return false;
-                }
-            }
-            // No settings for replication/allowed_clusters.
-            if (nsPolicies.isEmpty()) {
-                return true;
-            }
-            // Namespace level settings.
-            return nsPolicies.get().replication_clusters.isEmpty()
-                    || nsPolicies.get().replication_clusters.contains(cluster);
-        });
-    }
-
-    /**
-     * @return Triple [namespace policies, global topic policies, topic policies].
-     */
     public CompletableFuture<Triple<Optional<Policies>, Optional<TopicPolicies>, Optional<TopicPolicies>>>
     getCombinedTopicPolicies(@NonNull TopicName topicName) {
         if (topicName == null) {
@@ -4083,6 +4044,39 @@ public class BrokerService implements Closeable {
         }
         // Otherwise, replication clusters means allowed clusters.
         return nsPolicies.replication_clusters.contains(pulsar.getConfig().getClusterName());
+    }
+
+    /**
+     * @return Triple [namespace policies, global topic policies, topic policies].
+     */
+    public CompletableFuture<Boolean> isAllowedCurrentClusterAccess(@NonNull TopicName topicName) {
+        final String cluster = getPulsar().getConfig().getClusterName();
+        return getCombinedTopicPolicies(topicName).thenApply(triple -> {
+            Optional<TopicPolicies> topicP = triple.getRight();
+            Optional<TopicPolicies> globalTopicP = triple.getMiddle();
+            Optional<Policies> nsPolicies = triple.getLeft();
+            // Disabled a cluster for a namespace manually.
+            if (nsPolicies.isPresent() && !isCurrentClusterAllowed(topicName.getNamespaceObject(), nsPolicies.get())) {
+                return false;
+            }
+            // Manually enabled topic-level replication, which can skip to set a namespace-level replication.
+            if (topicP.isPresent() && CollectionUtils.isNotEmpty(topicP.get().getReplicationClusters())) {
+                if (topicP.get().getReplicationClusters().contains(cluster)) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+            if (globalTopicP.isPresent() && CollectionUtils.isNotEmpty(globalTopicP.get().getReplicationClusters())) {
+                if (globalTopicP.get().getReplicationClusters().contains(cluster)) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+            // No settings for replication/allowed_clusters.
+            return nsPolicies.isEmpty();
+        });
     }
 
     public void setCurrentClusterAllowedIfNoClusterIsAllowed(NamespaceName nsName, Policies nsPolicies) {
