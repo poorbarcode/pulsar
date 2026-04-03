@@ -1721,8 +1721,10 @@ public class ServerCnx extends PulsarHandler implements TransportCnx {
                     }
 
                     disableTcpNoDelayIfNeeded(topicName.toString(), producerName);
-
-                    CompletableFuture<SchemaVersion> schemaVersionFuture = tryAddSchema(topic, schema);
+                    boolean isReplicatorProducer = Producer.isRemoteOrShadow(producerName,
+                            getBrokerService().getPulsar().getConfig().getReplicatorPrefix());
+                    CompletableFuture<SchemaVersion> schemaVersionFuture = tryAddSchema(topic, schema,
+                            isReplicatorProducer);
 
                     schemaVersionFuture.exceptionallyAsync(exception -> {
                         if (producerFuture.completeExceptionally(exception)) {
@@ -2748,7 +2750,13 @@ public class ServerCnx extends PulsarHandler implements TransportCnx {
         service.getTopicIfExists(topicName).thenAccept(topicOpt -> {
             if (topicOpt.isPresent()) {
                 Topic topic = topicOpt.get();
-                CompletableFuture<SchemaVersion> schemaVersionFuture = tryAddSchema(topic, schema);
+                boolean isReplicatorProducer = false;
+                if (commandGetOrCreateSchema.hasProducerName()) {
+                    isReplicatorProducer = Producer.isRemoteOrShadow(commandGetOrCreateSchema.getProducerName(),
+                            getBrokerService().getPulsar().getConfig().getReplicatorPrefix());
+                }
+                CompletableFuture<SchemaVersion> schemaVersionFuture =
+                        tryAddSchema(topic, schema, isReplicatorProducer);
                 schemaVersionFuture.exceptionally(ex -> {
                     ServerError errorCode = BrokerServiceException.getClientErrorCode(ex);
                     String message = ex.getMessage();
@@ -3196,9 +3204,10 @@ public class ServerCnx extends PulsarHandler implements TransportCnx {
         });
     }
 
-    private CompletableFuture<SchemaVersion> tryAddSchema(Topic topic, SchemaData schema) {
+    private CompletableFuture<SchemaVersion> tryAddSchema(Topic topic, SchemaData schema,
+                                                          boolean isReplicatorProducer) {
         if (schema != null) {
-            return topic.addSchema(schema);
+            return topic.addSchema(schema, isReplicatorProducer);
         } else {
             return topic.hasSchema().thenCompose((hasSchema) -> {
                 if (log.isDebugEnabled()) {

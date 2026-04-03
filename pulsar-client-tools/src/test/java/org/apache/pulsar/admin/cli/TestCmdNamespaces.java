@@ -50,4 +50,30 @@ public class TestCmdNamespaces {
         verify(namespaces, times(1)).setRetention("public/default",
                 new RetentionPolicies(200 * 24 * 60, 2 * 1024 * 1024));
    }
+
+    @Test
+    @SuppressWarnings("deprecation")
+    public void testSetIsAllowAutoUpdateSchemaCmd() throws Exception {
+        Namespaces namespaces = mock(Namespaces.class);
+        PulsarAdmin admin = mock(PulsarAdmin.class);
+        when(admin.namespaces()).thenReturn(namespaces);
+
+        CmdNamespaces cmd = new CmdNamespaces(() -> admin);
+
+        cmd.run("set-is-allow-auto-update-schema public/default --disable"
+                .split("\\s+"));
+        verify(namespaces, times(1)).setIsAllowAutoUpdateSchema("public/default", false, true);
+
+        cmd.run("set-is-allow-auto-update-schema public/default --enable"
+                .split("\\s+"));
+        verify(namespaces, times(1)).setIsAllowAutoUpdateSchema("public/default", true, true);
+
+        cmd.run("set-is-allow-auto-update-schema public/default --disable --disable-for-replicator"
+                .split("\\s+"));
+        verify(namespaces, times(1)).setIsAllowAutoUpdateSchema("public/default", false, false);
+
+        cmd.run("set-is-allow-auto-update-schema public/default --enable --disable-for-replicator"
+                .split("\\s+"));
+        verify(namespaces, times(1)).setIsAllowAutoUpdateSchema("public/default", true, false);
+    }
 }
