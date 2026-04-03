@@ -1783,15 +1783,19 @@ public class NamespacesImpl extends BaseResource implements Namespaces {
     }
 
     @Override
-    public void setIsAllowAutoUpdateSchema(String namespace, boolean isAllowAutoUpdateSchema)
+    public void setIsAllowAutoUpdateSchema(String namespace, boolean isAllowAutoUpdateSchema,
+                                           boolean allowAutoUpdateSchemaWithReplicator)
             throws PulsarAdminException {
-        sync(() -> setIsAllowAutoUpdateSchemaAsync(namespace, isAllowAutoUpdateSchema));
+        sync(() -> setIsAllowAutoUpdateSchemaAsync(namespace, isAllowAutoUpdateSchema,
+                allowAutoUpdateSchemaWithReplicator));
     }
 
     @Override
-    public CompletableFuture<Void> setIsAllowAutoUpdateSchemaAsync(String namespace, boolean isAllowAutoUpdateSchema) {
+    public CompletableFuture<Void> setIsAllowAutoUpdateSchemaAsync(
+            String namespace, boolean isAllowAutoUpdateSchema, boolean allowAutoUpdateSchemaWithReplicator) {
         NamespaceName ns = NamespaceName.get(namespace);
-        WebTarget path = namespacePath(ns, "isAllowAutoUpdateSchema");
+        WebTarget path = namespacePath(ns, "isAllowAutoUpdateSchema")
+                .queryParam("allowAutoUpdateSchemaWithReplicator", allowAutoUpdateSchemaWithReplicator);
         return asyncPostRequest(path, Entity.entity(isAllowAutoUpdateSchema, MediaType.APPLICATION_JSON));
     }
 
