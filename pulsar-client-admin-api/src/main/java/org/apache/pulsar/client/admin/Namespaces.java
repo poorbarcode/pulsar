@@ -4114,7 +4114,7 @@ public interface Namespaces {
      *             Unexpected error
      */
     void setIsAllowAutoUpdateSchema(String namespace, boolean isAllowAutoUpdateSchema,
-                                    boolean allowAutoUpdateSchemaWithReplicator)
+                                    Boolean allowAutoUpdateSchemaWithReplicator)
             throws PulsarAdminException;
 
 
@@ -4126,7 +4126,7 @@ public interface Namespaces {
      * @param allowAutoUpdateSchemaWithReplicator whether replicator can auto update schema
      */
     CompletableFuture<Void> setIsAllowAutoUpdateSchemaAsync(String namespace, boolean isAllowAutoUpdateSchema,
-                                                            boolean allowAutoUpdateSchemaWithReplicator);
+                                                            Boolean allowAutoUpdateSchemaWithReplicator);
 
     /**
      * Set the offload configuration for all the topics in a namespace.
