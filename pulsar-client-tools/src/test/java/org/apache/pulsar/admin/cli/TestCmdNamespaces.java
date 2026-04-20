@@ -62,18 +62,18 @@ public class TestCmdNamespaces {
 
         cmd.run("set-is-allow-auto-update-schema public/default --disable"
                 .split("\\s+"));
-        verify(namespaces, times(1)).setIsAllowAutoUpdateSchema("public/default", false, true);
+        verify(namespaces, times(1)).setIsAllowAutoUpdateSchema("public/default", false, null);
 
         cmd.run("set-is-allow-auto-update-schema public/default --enable"
                 .split("\\s+"));
-        verify(namespaces, times(1)).setIsAllowAutoUpdateSchema("public/default", true, true);
+        verify(namespaces, times(1)).setIsAllowAutoUpdateSchema("public/default", true, null);
 
-        cmd.run("set-is-allow-auto-update-schema public/default --disable --disable-for-replicator"
+        cmd.run("set-is-allow-auto-update-schema public/default --disable --enable-for-replicator"
                 .split("\\s+"));
-        verify(namespaces, times(1)).setIsAllowAutoUpdateSchema("public/default", false, false);
+        verify(namespaces, times(1)).setIsAllowAutoUpdateSchema("public/default", false, Boolean.TRUE);
 
-        cmd.run("set-is-allow-auto-update-schema public/default --enable --disable-for-replicator"
+        cmd.run("set-is-allow-auto-update-schema public/default --enable --enable-for-replicator"
                 .split("\\s+"));
-        verify(namespaces, times(1)).setIsAllowAutoUpdateSchema("public/default", true, false);
+        verify(namespaces, times(1)).setIsAllowAutoUpdateSchema("public/default", true, Boolean.TRUE);
     }
 }

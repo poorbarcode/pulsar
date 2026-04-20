@@ -2163,11 +2163,11 @@ public class CmdNamespaces extends CmdBase {
         @Option(names = { "--disable", "-d" }, description = "Disable schema validation enforced")
         private boolean disable = false;
 
-        @Option(names = { "--disable-for-replicator" },
+        @Option(names = { "--enable-for-replicator" },
                 description = "By default, brokers always allow replicator to register new compatible schemas even"
                 + " when auto updates are disabled, if you want to disable replicators to register compatible schemas,"
-                + " please set it to true")
-        private boolean disableForReplicator;
+                + " please set it to false")
+        private Boolean enableForReplicator;
 
         @Override
         void run() throws PulsarAdminException {
@@ -2176,7 +2176,7 @@ public class CmdNamespaces extends CmdBase {
             if (enable == disable) {
                 throw new ParameterException("Need to specify either --enable or --disable");
             }
-            getAdmin().namespaces().setIsAllowAutoUpdateSchema(namespace, enable, !disableForReplicator);
+            getAdmin().namespaces().setIsAllowAutoUpdateSchema(namespace, enable, enableForReplicator);
         }
     }
 

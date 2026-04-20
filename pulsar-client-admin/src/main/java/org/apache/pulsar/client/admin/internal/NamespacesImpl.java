@@ -1784,7 +1784,7 @@ public class NamespacesImpl extends BaseResource implements Namespaces {
 
     @Override
     public void setIsAllowAutoUpdateSchema(String namespace, boolean isAllowAutoUpdateSchema,
-                                           boolean allowAutoUpdateSchemaWithReplicator)
+                                           Boolean allowAutoUpdateSchemaWithReplicator)
             throws PulsarAdminException {
         sync(() -> setIsAllowAutoUpdateSchemaAsync(namespace, isAllowAutoUpdateSchema,
                 allowAutoUpdateSchemaWithReplicator));
@@ -1792,10 +1792,12 @@ public class NamespacesImpl extends BaseResource implements Namespaces {
 
     @Override
     public CompletableFuture<Void> setIsAllowAutoUpdateSchemaAsync(
-            String namespace, boolean isAllowAutoUpdateSchema, boolean allowAutoUpdateSchemaWithReplicator) {
+            String namespace, boolean isAllowAutoUpdateSchema, Boolean allowAutoUpdateSchemaWithReplicator) {
         NamespaceName ns = NamespaceName.get(namespace);
-        WebTarget path = namespacePath(ns, "isAllowAutoUpdateSchema")
-                .queryParam("allowAutoUpdateSchemaWithReplicator", allowAutoUpdateSchemaWithReplicator);
+        WebTarget path = namespacePath(ns, "isAllowAutoUpdateSchema");
+        if (allowAutoUpdateSchemaWithReplicator != null) {
+            path = path.queryParam("allowAutoUpdateSchemaWithReplicator", allowAutoUpdateSchemaWithReplicator);
+        }
         return asyncPostRequest(path, Entity.entity(isAllowAutoUpdateSchema, MediaType.APPLICATION_JSON));
     }
 
