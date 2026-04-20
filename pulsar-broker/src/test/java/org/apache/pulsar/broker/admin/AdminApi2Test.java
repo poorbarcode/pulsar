@@ -1750,9 +1750,9 @@ public class AdminApi2Test extends MockedPulsarServiceBaseTest {
         String namespacePart = newUniqueName("ns");
         String namespace = defaultTenant + "/" + namespacePart;
 
+        // Create namespace with "allowed_cluster", and the param "replication_clusters" is empty.
         HttpClient httpClient = HttpClient.newHttpClient();
         URI adminV2Uri = URI.create(brokerUrl.toString()).resolve("/admin/v2/");
-
         String namespaceRequestBody = "{\"allowed_clusters\": [\"" + localCluster + "\"]}";
         HttpRequest createNamespaceRequest =
                 HttpRequest.newBuilder(adminV2Uri.resolve("namespaces/" + namespace))
@@ -1764,6 +1764,7 @@ public class AdminApi2Test extends MockedPulsarServiceBaseTest {
         assertEquals(createNamespaceResponse.statusCode(), Status.NO_CONTENT.getStatusCode(),
                 "Failed to create namespace by HTTP: " + createNamespaceResponse.body());
 
+        // Verify: replication_clusters is not empty.
         Awaitility.await().untilAsserted(() -> {
             Policies policies = admin.namespaces().getPolicies(namespace);
             assertEquals(policies.replication_clusters.size(), 1);

@@ -4154,13 +4154,13 @@ public class BrokerService implements Closeable {
     }
 
     public void setCurrentClusterAllowedWhenCreating(NamespaceName nsName, Policies nsPolicies) {
-        if (nsPolicies.replication_clusters.isEmpty()) {
-            nsPolicies.replication_clusters.add(pulsar.getConfig().getClusterName());
-        }
-        if (nsPolicies.allowed_clusters.isEmpty()) {
+        if (nsPolicies.replication_clusters.contains(pulsar.getConfig().getClusterName())
+                || nsPolicies.allowed_clusters.contains(pulsar.getConfig().getClusterName())) {
             return;
         }
-        if (!nsPolicies.allowed_clusters.contains(pulsar.getConfig().getClusterName())) {
+        if (nsPolicies.replication_clusters.isEmpty()) {
+            nsPolicies.replication_clusters.add(pulsar.getConfig().getClusterName());
+        } else {
             nsPolicies.allowed_clusters.add(pulsar.getConfig().getClusterName());
         }
     }
