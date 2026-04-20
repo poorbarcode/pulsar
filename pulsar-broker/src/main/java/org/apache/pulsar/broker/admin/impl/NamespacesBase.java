@@ -491,7 +491,7 @@ public abstract class NamespacesBase extends AdminResource {
                                 // There are still more than one clusters configured for the global namespace
                                 throw new RestException(Status.PRECONDITION_FAILED,
                                     "Cannot delete the global namespace " + nsName + ". There are still more than "
-                                    + "one replication clusters configured.");
+                                    + "one replication clusters configured or replication clusters is empty.");
                             }
                             if (!cluster.equals(config().getClusterName())) {
                                 // the only replication cluster is other cluster, redirect
