@@ -2392,7 +2392,7 @@ public abstract class NamespacesBase extends AdminResource {
             log.info(msg);
             return FutureUtil.failedFuture(new RestException(Status.BAD_REQUEST, msg));
         }
-        pulsar().getBrokerService().setCurrentClusterAllowedIfNoClusterIsAllowed(ns, policies);
+        pulsar().getBrokerService().setCurrentClusterAllowedWhenCreating(ns, policies);
 
         // Validate cluster names and permissions
         return Stream.concat(policies.replication_clusters.stream(), policies.allowed_clusters.stream())
