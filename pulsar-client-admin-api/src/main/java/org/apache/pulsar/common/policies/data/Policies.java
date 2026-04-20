@@ -222,8 +222,8 @@ public class Policies {
                     && schema_validation_enforced == other.schema_validation_enforced
                     && schema_compatibility_strategy == other.schema_compatibility_strategy
                     && is_allow_auto_update_schema == other.is_allow_auto_update_schema
-                    && is_allow_auto_update_schema_with_replicator
-                        == other.is_allow_auto_update_schema_with_replicator
+                    && Objects.equals(is_allow_auto_update_schema_with_replicator,
+                        other.is_allow_auto_update_schema_with_replicator)
                     && Objects.equals(offload_policies, other.offload_policies)
                     && Objects.equals(subscription_types_enabled, other.subscription_types_enabled)
                     && Objects.equals(allowed_topic_property_keys_for_metrics,
