@@ -4181,8 +4181,7 @@ public class BrokerService implements Closeable {
                     return false;
                 }
             }
-            // No settings for replication/allowed_clusters.
-            return nsPolicies.isEmpty();
+            return true;
         });
     }
 
