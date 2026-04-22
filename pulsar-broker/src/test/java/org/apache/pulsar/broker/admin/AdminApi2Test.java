@@ -26,6 +26,7 @@ import static org.apache.pulsar.common.policies.data.NamespaceIsolationPolicyUnl
 import static org.apache.pulsar.common.policies.data.NamespaceIsolationPolicyUnloadScope.changed;
 import static org.apache.pulsar.common.policies.data.NamespaceIsolationPolicyUnloadScope.none;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -3317,6 +3318,13 @@ public class AdminApi2Test extends MockedPulsarServiceBaseTest {
                 return invocation.callRealMethod();
             }
         }).when(spyTopic).addSchema(any(SchemaData.class));
+        doAnswer(new Answer<Object>() {
+            @Override
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                counter.incrementAndGet();
+                return invocation.callRealMethod();
+            }
+        }).when(spyTopic).addSchema(any(SchemaData.class), anyBoolean());
         doAnswer(new Answer<Object>() {
             @Override
             public Object answer(InvocationOnMock invocation) throws Throwable {
