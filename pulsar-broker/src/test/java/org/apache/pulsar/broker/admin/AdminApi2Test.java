@@ -41,6 +41,7 @@ import static org.testng.Assert.expectThrows;
 import static org.testng.Assert.fail;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import io.grpc.netty.shaded.io.netty.util.concurrent.FastThreadLocal;
 import java.lang.reflect.Field;
 import java.net.URI;
 import java.net.URL;
@@ -3306,7 +3307,12 @@ public class AdminApi2Test extends MockedPulsarServiceBaseTest {
         }
     }
 
-    static final ThreadLocal<Boolean> COUNTER_AVOID_COUNTING_ADD_SCHEMA_REPEATEDLY = new ThreadLocal<>();
+    static final FastThreadLocal<Boolean> COUNTER_AVOID_COUNTING_ADD_SCHEMA_REPEATEDLY = new FastThreadLocal<>() {
+        @Override
+        protected Boolean initialValue() throws Exception {
+            return false;
+        }
+    };
 
     private AtomicInteger injectSchemaCheckCounterForTopic(String topicName) {
         final var topics = pulsar.getBrokerService().getTopics();
