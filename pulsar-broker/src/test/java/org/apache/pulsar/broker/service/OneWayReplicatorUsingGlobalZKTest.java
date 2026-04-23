@@ -155,6 +155,8 @@ public class OneWayReplicatorUsingGlobalZKTest extends OneWayReplicatorTest {
         } catch (Exception e) {
             assertTrue(e.getMessage().contains("is not allowed to be loaded up"));
         }
+        assertFalse(admin2.topics().getList(replicatedNamespace)
+            .contains(TopicName.get(topicName).getPartition(0).toString()));
 
         // Remove global policy.
         admin1.topicPolicies(true).removeReplicationClusters(topicName);
