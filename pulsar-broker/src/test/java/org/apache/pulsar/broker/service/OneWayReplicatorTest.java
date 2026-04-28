@@ -249,7 +249,7 @@ public class OneWayReplicatorTest extends OneWayReplicatorTestBase {
                 {true, true},
                 {true, null},
                 {false, true},
-                {false, true},
+                {false, false},
                 {false, null},
         };
     }
@@ -277,8 +277,7 @@ public class OneWayReplicatorTest extends OneWayReplicatorTestBase {
         admin1.namespaces().setSchemaCompatibilityStrategy(ns, SchemaCompatibilityStrategy.BACKWARD_TRANSITIVE);
         admin2.namespaces().setSchemaCompatibilityStrategy(ns, SchemaCompatibilityStrategy.BACKWARD_TRANSITIVE);
         admin1.namespaces().setIsAllowAutoUpdateSchemaAsync(ns, true, null);
-        admin2.namespaces().setIsAllowAutoUpdateSchemaAsync(ns, isAllowAutoUpdateSchema,
-                allowAutoUpdateSchemaWithReplicator);
+        admin2.namespaces().setIsAllowAutoUpdateSchemaAsync(ns, isAllowAutoUpdateSchema, null);
         RetentionPolicies retentionPolicies = new RetentionPolicies(10, 1);
         admin1.namespaces().setRetention(ns, retentionPolicies);
         admin2.namespaces().setRetention(ns, retentionPolicies);
@@ -294,11 +293,7 @@ public class OneWayReplicatorTest extends OneWayReplicatorTestBase {
             assertTrue(topic1.isAllowAutoUpdateSchema);
             assertTrue(topic1.isAllowAutoUpdateSchemaWithReplicator);
             assertEquals(topic2.isAllowAutoUpdateSchema, isAllowAutoUpdateSchema);
-            if (allowAutoUpdateSchemaWithReplicator != null && !allowAutoUpdateSchemaWithReplicator) {
-                assertFalse(topic2.isAllowAutoUpdateSchemaWithReplicator);
-            } else {
-                assertTrue(topic2.isAllowAutoUpdateSchemaWithReplicator);
-            }
+            assertTrue(topic2.isAllowAutoUpdateSchemaWithReplicator);
             assertEquals(policies1.getRetentionPolicies().get().getRetentionTimeInMinutes(), 10);
             assertEquals(policies2.getRetentionPolicies().get().getRetentionTimeInMinutes(), 10);
         });
@@ -354,12 +349,36 @@ public class OneWayReplicatorTest extends OneWayReplicatorTestBase {
             TopicStats topicStats = admin1.topics().getStats(topicName);
             assertEquals(topicStats.getReplication().get(cluster2).getReplicationBacklog(), 0);
         });
+
+        // Change policies.
+        admin1.namespaces().setIsAllowAutoUpdateSchemaAsync(ns, true, null);
+        admin2.namespaces().setIsAllowAutoUpdateSchemaAsync(ns, isAllowAutoUpdateSchema,
+                allowAutoUpdateSchemaWithReplicator);
+        Awaitility.await().untilAsserted(() -> {
+            assertTrue(topic1.isAllowAutoUpdateSchema);
+            assertTrue(topic1.isAllowAutoUpdateSchemaWithReplicator);
+            assertEquals(topic2.isAllowAutoUpdateSchema, isAllowAutoUpdateSchema);
+            if (allowAutoUpdateSchemaWithReplicator != null && !allowAutoUpdateSchemaWithReplicator) {
+                assertFalse(topic2.isAllowAutoUpdateSchemaWithReplicator);
+            } else {
+                assertTrue(topic2.isAllowAutoUpdateSchemaWithReplicator);
+            }
+        });
+
         TypedMessageBuilderImpl typedMessageBuilder2 = (TypedMessageBuilderImpl) producer1
                 .newMessage(Schema.AVRO(Customer.class)).value(new Customer("Apache", 26));
         MessageImpl message2 = (MessageImpl) typedMessageBuilder2.getMessage();
         message2.getMessageBuilder().setSchemaVersion(schemaVersion2.bytes());
         ClientImplInternalSetter.setMessageSchemaState(message2, "Ready");
         producer1.send(message2);
+        if (allowAutoUpdateSchemaWithReplicator != null && !allowAutoUpdateSchemaWithReplicator) {
+            Thread.sleep(3000);
+            // The message can not be replicated to the remote side.
+            TopicStats topicStats = admin1.topics().getStats(topicName);
+            assertEquals(topicStats.getReplication().get(cluster2).getReplicationBacklog(), 1);
+            producer1.close();
+            return;
+        }
         Awaitility.await().untilAsserted(() -> {
             TopicStats topicStats = admin1.topics().getStats(topicName);
             assertEquals(topicStats.getReplication().get(cluster2).getReplicationBacklog(), 0);
