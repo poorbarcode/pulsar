@@ -25,6 +25,7 @@ import org.apache.avro.reflect.AvroDefault;
 import org.apache.pulsar.broker.BrokerTestUtil;
 import org.apache.pulsar.broker.auth.MockedPulsarServiceBaseTest;
 import org.apache.pulsar.broker.service.persistent.PersistentTopic;
+import org.apache.pulsar.client.admin.PulsarAdminException;
 import org.apache.pulsar.client.api.Producer;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.apache.pulsar.client.api.Schema;
@@ -300,16 +301,14 @@ public class AdminApiSchemaAutoUpdateTest extends MockedPulsarServiceBaseTest {
             Assert.assertTrue(persistentTopic.getIsAllowAutoUpdateSchemaWithReplicator());
         });
 
-        admin.namespaces().setIsAllowAutoUpdateSchema(
-                namespace, true, false);
-        Awaitility.await().untilAsserted(() -> {
-            // namespace level.
-            Policies policies = admin.namespaces().getPolicies(namespace);
-            Assert.assertTrue(policies.is_allow_auto_update_schema);
-            Assert.assertFalse(policies.is_allow_auto_update_schema_with_replicator);
-            // topic level.
-            Assert.assertFalse(persistentTopic.getIsAllowAutoUpdateSchemaWithReplicator());
-        });
+        try {
+            admin.namespaces().setIsAllowAutoUpdateSchema(
+                    namespace, true, false);
+            Assert.fail("Should have thrown exception");
+        } catch (PulsarAdminException e) {
+            Assert.assertTrue(e.getMessage().contains("Can not enable for all producers but denies for replicators,"
+                    + " which is meaningless"));
+        }
 
         admin.namespaces().setIsAllowAutoUpdateSchema(
                 namespace, false, false);

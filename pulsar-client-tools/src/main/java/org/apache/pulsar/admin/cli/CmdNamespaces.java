@@ -2176,6 +2176,9 @@ public class CmdNamespaces extends CmdBase {
             if (enable == disable) {
                 throw new ParameterException("Need to specify either --enable or --disable");
             }
+            if (enable && enableForReplicator != null && !enableForReplicator) {
+                throw new ParameterException("Can not enable for all producers but denies for replicators");
+            }
             getAdmin().namespaces().setIsAllowAutoUpdateSchema(namespace, enable, enableForReplicator);
         }
     }
