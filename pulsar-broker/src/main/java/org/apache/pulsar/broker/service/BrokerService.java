@@ -4154,7 +4154,7 @@ public class BrokerService implements Closeable {
     }
 
     /**
-     * @return Triple [namespace policies, global topic policies, topic policies].
+     * @return CompletableFuture<Triple<Optional<Policies>, whether the current cluster is allowed to access the topic.
      */
     public CompletableFuture<Boolean> isCurrentClusterAllowed(@NonNull TopicName topicName) {
         final String cluster = getPulsar().getConfig().getClusterName();
