@@ -408,7 +408,10 @@ public class MultiTopicsConsumerImpl<T> extends ConsumerBase<T> {
             }
             message = incomingMessages.poll(timeout, unit);
             if (message != null) {
-                decreaseIncomingMessageSize(message);
+                final Message<T> finalMessage = message;
+                internalPinnedExecutor.execute(() -> {
+                    decreaseIncomingMessageSize(finalMessage);
+                });
                 checkArgument(message instanceof TopicMessageImpl);
                 trackUnAckedMsgIfNoListener(message.getMessageId(), message.getRedeliveryCount());
                 message = listener == null ? beforeConsume(message) : message;
