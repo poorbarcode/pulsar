@@ -33,13 +33,13 @@ public class TopicMessageImpl<T> implements TraceableMessage, Message<T> {
     /** This topicPartitionName is get from ConsumerImpl, it contains partition part. */
     private final String topicPartitionName;
 
-    private final MessageImpl<T> msg;
+    private final Message<T> msg;
     private final TopicMessageIdImpl messageId;
     // consumer if this message is received by that consumer
     final ConsumerImpl<T> receivedByconsumer;
 
     TopicMessageImpl(String topicPartitionName,
-                     MessageImpl<T> msg,
+                     Message<T> msg,
                      ConsumerImpl<T> receivedByConsumer) {
         this.topicPartitionName = topicPartitionName;
         this.receivedByconsumer = receivedByConsumer;
@@ -192,7 +192,10 @@ public class TopicMessageImpl<T> implements TraceableMessage, Message<T> {
     }
 
     public Schema<T> getSchemaInternal() {
-        return msg.getSchemaInternal();
+        if (this.msg instanceof MessageImpl<T> message) {
+            return message.getSchemaInternal();
+        }
+        return null;
     }
 
     @Override
@@ -241,10 +244,6 @@ public class TopicMessageImpl<T> implements TraceableMessage, Message<T> {
             return ((TraceableMessage) msg).getTracingSpan();
         }
         return null;
-    }
-
-    public long getConsumerEpoch() {
-        return msg.getConsumerEpoch();
     }
 
 }

@@ -1374,22 +1374,17 @@ public class ConsumerImpl<T> extends ConsumerBase<T> implements ConnectionHandle
         // if the conf.getReceiverQueueSize() is 0 then discard message if no one is waiting for it.
         // if asyncReceive is waiting then notify callback without adding to incomingMessages queue
         internalPinnedExecutor.execute(() -> {
-            notifyPendingReceiveOrEnqueue(message);
+            if (!isValidConsumerEpoch(message)) {
+                increaseAvailablePermits(cnx());
+                return;
+            }
+            Message<T> interceptMsg = onArrival(message);
+            if (hasNextPendingReceive()) {
+                notifyPendingReceivedCallback(interceptMsg, null);
+            } else if (enqueueMessageAndCheckBatchReceive(interceptMsg) && hasPendingBatchReceive()) {
+                notifyPendingBatchReceivedCallBack();
+            }
         });
-    }
-
-    @Override
-    protected void notifyPendingReceiveOrEnqueue(final Message<T> message) {
-        if (!isValidConsumerEpoch((MessageImpl<T>) message)) {
-            increaseAvailablePermits(cnx());
-            return;
-        }
-        Message<T> interceptMsg = onArrival(message);
-        if (hasNextPendingReceive()) {
-            notifyPendingReceivedCallback(interceptMsg, null);
-        } else if (enqueueMessageAndCheckBatchReceive(interceptMsg) && hasPendingBatchReceive()) {
-            notifyPendingBatchReceivedCallBack();
-        }
     }
 
     protected void processPayloadByProcessor(final BrokerEntryMetadata brokerEntryMetadata,
@@ -1725,20 +1720,25 @@ public class ConsumerImpl<T> extends ConsumerBase<T> implements ConnectionHandle
      */
     void notifyPendingReceivedCallback(final Message<T> message, Exception exception) {
         if (pendingReceives.isEmpty()) {
-            if (exception != null) {
-                return;
-            } else {
-                notifyPendingReceiveOrEnqueue(message);
+            if (getState() != State.Closing && getState() != State.Closed) {
+                log.error().attr("message", message)
+                    .attr("pendingReceives-size", pendingReceives.size())
+                    .log(" If you received this log, it means that you encountered a bug: a message was"
+                        + " dropped internally, the client-side will encounter a crucial issue: this message will"
+                        + " never be consumed until the consumer is restarted or the topic is unloaded.");
             }
+            return;
         }
 
         // fetch receivedCallback from queue
         final CompletableFuture<Message<T>> receivedFuture = nextPendingReceive();
         if (receivedFuture == null) {
-            if (exception != null) {
-                return;
-            } else {
-                notifyPendingReceiveOrEnqueue(message);
+            if (getState() != State.Closing && getState() != State.Closed) {
+                log.error().attr("message", message)
+                    .attr("receivedFuture-polled-out", null)
+                    .log(" If you received this log, it means that you encountered a bug: a message was"
+                        + " dropped internally, the client-side will encounter a crucial issue: this message will never"
+                        + " be consumed until the consumer is restarted or the topic is unloaded.");
             }
             return;
         }
@@ -1897,7 +1897,9 @@ public class ConsumerImpl<T> extends ConsumerBase<T> implements ConnectionHandle
 
             trackMessage(msg);
         }
-        decreaseIncomingMessageSize(msg);
+        internalPinnedExecutor.execute(() -> {
+            decreaseIncomingMessageSize(msg);
+        });
     }
 
     protected void trackMessage(Message<?> msg) {

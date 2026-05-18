@@ -328,26 +328,21 @@ public class MultiTopicsConsumerImpl<T> extends ConsumerBase<T> {
     // Must be called from the internalPinnedExecutor thread
     private void messageReceived(ConsumerImpl<T> consumer, Message<T> message) {
         checkArgument(message instanceof MessageImpl);
-        TopicMessageImpl<T> topicMessage = new TopicMessageImpl<>(consumer.getTopic(),
-                (MessageImpl<T>) message, consumer);
+        TopicMessageImpl<T> topicMessage = new TopicMessageImpl<>(consumer.getTopic(), message, consumer);
             log.debug().attr("messageId", message.getMessageId())
                     .log("Received message from topics-consumer");
 
-        notifyPendingReceiveOrEnqueue(topicMessage);
-        tryTriggerListener();
-    }
-
-    @Override
-    protected void notifyPendingReceiveOrEnqueue(final Message<T> message) {
         // if asyncReceive is waiting : return message to callback without adding to incomingMessages queue
         CompletableFuture<Message<T>> receivedFuture = nextPendingReceive();
         if (receivedFuture != null) {
-            unAckedMessageTracker.add(message.getMessageId(), message.getRedeliveryCount());
-            final Message<T> interceptMessage = beforeConsume(message);
+            unAckedMessageTracker.add(topicMessage.getMessageId(), topicMessage.getRedeliveryCount());
+            final Message<T> interceptMessage = beforeConsume(topicMessage);
             completePendingReceive(receivedFuture, interceptMessage);
-        } else if (enqueueMessageAndCheckBatchReceive(message) && hasPendingBatchReceive()) {
+        } else if (enqueueMessageAndCheckBatchReceive(topicMessage) && hasPendingBatchReceive()) {
             notifyPendingBatchReceivedCallBack();
         }
+
+        tryTriggerListener();
     }
 
     @Override
