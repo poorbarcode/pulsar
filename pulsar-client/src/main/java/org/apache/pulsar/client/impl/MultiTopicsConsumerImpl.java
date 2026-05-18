@@ -386,7 +386,9 @@ public class MultiTopicsConsumerImpl<T> extends ConsumerBase<T> {
                 expectMoreIncomingMessages();
             }
             message = incomingMessages.take();
-            decreaseIncomingMessageSize(message);
+            internalPinnedExecutor.execute(() -> {
+                decreaseIncomingMessageSize(message);
+            });
             checkState(message instanceof TopicMessageImpl);
             unAckedMessageTracker.add(message.getMessageId(), message.getRedeliveryCount());
             resumeReceivingFromPausedConsumersIfNeeded();
