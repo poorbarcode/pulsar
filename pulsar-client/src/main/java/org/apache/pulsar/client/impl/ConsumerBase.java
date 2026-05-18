@@ -36,6 +36,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import java.util.concurrent.atomic.AtomicLongFieldUpdater;
@@ -296,7 +297,14 @@ public abstract class ConsumerBase<T> extends HandlerState implements Consumer<T
         return internalReceiveAsync();
     }
 
-    protected abstract Message<T> internalReceive() throws PulsarClientException;
+    protected Message<T> internalReceive() throws PulsarClientException {
+        CompletableFuture<Message<T>> msgFuture = receiveAsync();
+        try {
+            return msgFuture.get();
+        } catch (Exception e) {
+            throw new PulsarClientException(e);
+        }
+    }
 
     protected abstract CompletableFuture<Message<T>> internalReceiveAsync();
 
@@ -315,7 +323,24 @@ public abstract class ConsumerBase<T> extends HandlerState implements Consumer<T
         return internalReceive(timeout, unit);
     }
 
-    protected abstract Message<T> internalReceive(long timeout, TimeUnit unit) throws PulsarClientException;
+    protected Message<T> internalReceive(long timeout, TimeUnit unit) throws PulsarClientException {
+        CompletableFuture<Message<T>> msgFuture = receiveAsync();
+        try {
+            return msgFuture.get(timeout, unit);
+        } catch (TimeoutException e) {
+            if (msgFuture.completeExceptionally(e)) {
+                throw new PulsarClientException(e);
+            } else {
+                try {
+                    return msgFuture.get();
+                } catch (Exception e1) {
+                    throw new PulsarClientException(e1);
+                }
+            }
+        } catch (Exception e) {
+            throw new PulsarClientException(e);
+        }
+    }
 
     @Override
     public Messages<T> batchReceive() throws PulsarClientException {
@@ -348,9 +373,15 @@ public abstract class ConsumerBase<T> extends HandlerState implements Consumer<T
         return receivedFuture;
     }
 
+    protected abstract void notifyPendingReceiveOrEnqueue(Message<T> message);
+
     protected void completePendingReceive(CompletableFuture<Message<T>> receivedFuture, Message<T> message) {
         getInternalExecutor(message).execute(() -> {
             if (!receivedFuture.complete(message)) {
+                // Avoids messages lost.
+                // Instead of dropping the message, ask the next pending receiver to handle it or add the message into
+                // the queue.
+                ConsumerBase.this.notifyPendingReceiveOrEnqueue(message);
                 log.warn().attr("cancelled", receivedFuture.isCancelled())
                         .attr("message", message)
                         .log("Race condition detected, receive future was already completed and message was dropped");
@@ -1386,13 +1417,20 @@ public abstract class ConsumerBase<T> extends HandlerState implements Consumer<T
     // If message consumer epoch is smaller than consumer epoch present that
     // it has been sent to the client before the user calls redeliverUnacknowledgedMessages, this message is invalid.
     // so we should release this message and receive again
-    protected boolean isValidConsumerEpoch(MessageImpl<T> message) {
+    protected boolean isValidConsumerEpoch(Message<T> message) {
+        long consumerEpoch;
+        if (message instanceof TopicMessageImpl<T>) {
+            consumerEpoch = ((TopicMessageImpl<T>) message).getConsumerEpoch();
+        } else {
+            consumerEpoch = ((MessageImpl<T>) message).getConsumerEpoch();
+        }
+
         if ((getSubType() == CommandSubscribe.SubType.Failover
                 || getSubType() == CommandSubscribe.SubType.Exclusive)
-                && message.getConsumerEpoch() != DEFAULT_CONSUMER_EPOCH
-                && message.getConsumerEpoch() < CONSUMER_EPOCH.get(this)) {
+                && consumerEpoch != DEFAULT_CONSUMER_EPOCH
+                && consumerEpoch < CONSUMER_EPOCH.get(this)) {
             log.info().attr("messageId", message.getMessageId())
-                    .attr("messageConsumerEpoch", message.getConsumerEpoch())
+                    .attr("messageConsumerEpoch", consumerEpoch)
                     .attr("consumerEpoch", consumerEpoch)
                     .log("Consumer filter old epoch message");
             message.release();
