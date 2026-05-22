@@ -1897,9 +1897,7 @@ public class ConsumerImpl<T> extends ConsumerBase<T> implements ConnectionHandle
 
             trackMessage(msg);
         }
-        internalPinnedExecutor.execute(() -> {
-            decreaseIncomingMessageSize(msg);
-        });
+        decreaseIncomingMessageSize(msg);
     }
 
     protected void trackMessage(Message<?> msg) {
