@@ -1723,7 +1723,7 @@ public class ConsumerImpl<T> extends ConsumerBase<T> implements ConnectionHandle
             if (getState() != State.Closing && getState() != State.Closed) {
                 log.error().attr("message", message)
                     .attr("pendingReceives-size", pendingReceives.size())
-                    .log(" If you received this log, it means that you encountered a bug: a message was"
+                    .log("If you received this log, it means that you encountered a bug: a message was"
                         + " dropped internally, the client-side will encounter a crucial issue: this message will"
                         + " never be consumed until the consumer is restarted or the topic is unloaded.");
             }
@@ -1735,7 +1735,7 @@ public class ConsumerImpl<T> extends ConsumerBase<T> implements ConnectionHandle
         if (receivedFuture == null) {
             if (getState() != State.Closing && getState() != State.Closed) {
                 log.error().attr("message", message)
-                    .log("pendingReceives pulled out a null conpletableFuture object. If you received this log,"
+                    .log("The pendingReceives pulled out a null conpletableFuture object. If you received this log,"
                         + " it means that you encountered a bug: a message was"
                         + " dropped internally, the client-side will encounter a crucial issue: this message will never"
                         + " be consumed until the consumer is restarted or the topic is unloaded.");
