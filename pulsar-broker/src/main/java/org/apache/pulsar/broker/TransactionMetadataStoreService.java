@@ -71,9 +71,9 @@ import org.apache.pulsar.transaction.coordinator.exceptions.CoordinatorException
 import org.apache.pulsar.transaction.coordinator.exceptions.CoordinatorException.InvalidTxnStatusException;
 import org.apache.pulsar.transaction.coordinator.exceptions.CoordinatorException.TransactionAlreadyAbortedException;
 import org.apache.pulsar.transaction.coordinator.exceptions.CoordinatorException.TransactionAlreadyCommittedException;
+import org.apache.pulsar.transaction.coordinator.exceptions.CoordinatorException.TransactionAlreadyTimedOutException;
 import org.apache.pulsar.transaction.coordinator.exceptions.CoordinatorException.TransactionMetadataStoreStateException;
 import org.apache.pulsar.transaction.coordinator.exceptions.CoordinatorException.TransactionNotFoundException;
-import org.apache.pulsar.transaction.coordinator.exceptions.CoordinatorException.TransactionAlreadyTimedOutException;
 import org.apache.pulsar.transaction.coordinator.impl.TxnLogBufferedWriterConfig;
 import org.apache.pulsar.transaction.coordinator.proto.TxnStatus;
 
@@ -485,6 +485,7 @@ public class TransactionMetadataStoreService {
         }
     }
 
+    // TODO review tests, and to add more tests.
     public TransactionNotFoundException getEndedTxnException(TxnID txnID) {
         TransactionMetadataStore store = stores.get(getTcIdFromTxnId(txnID));
         if (store == null) {
