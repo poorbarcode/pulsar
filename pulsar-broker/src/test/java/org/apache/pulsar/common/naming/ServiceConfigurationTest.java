@@ -21,6 +21,7 @@ package org.apache.pulsar.common.naming;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertThrows;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 import java.beans.Introspector;
@@ -38,6 +39,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 import lombok.Cleanup;
 import org.apache.pulsar.broker.ServiceConfiguration;
 import org.apache.pulsar.common.configuration.PulsarConfigurationLoader;
@@ -45,6 +47,7 @@ import org.apache.pulsar.common.policies.data.InactiveTopicDeleteMode;
 import org.apache.pulsar.common.policies.data.OffloadPoliciesImpl;
 import org.apache.pulsar.common.policies.data.TopicType;
 import org.apache.pulsar.common.topics.TopicsPattern;
+import org.apache.pulsar.transaction.coordinator.TransactionMetadataStoreConfig;
 import org.testng.annotations.Test;
 
 @Test(groups = "broker-naming")
@@ -275,6 +278,65 @@ public class ServiceConfigurationTest {
             assertEquals(conf.getBookkeeperClientNumIoThreads(), 1);
         }
     }
+
+    @Test
+    public void testTransactionEndedStatusConfigurations() throws Exception {
+        ServiceConfiguration defaultConfig = new ServiceConfiguration();
+        assertEquals(defaultConfig.getTransactionEndedStatusRetentionTimeMs(), TimeUnit.HOURS.toMillis(1));
+        assertEquals(defaultConfig.getTransactionEndedStatusMaxRecordCount(), 100_000L);
+
+        assertTransactionEndedStatusConfigFile("../conf/broker.conf");
+        assertTransactionEndedStatusConfigFile("../conf/standalone.conf");
+
+        Properties properties = new Properties();
+        properties.setProperty("transactionEndedStatusRetentionTimeMs", "12345");
+        properties.setProperty("transactionEndedStatusMaxRecordCount", "678");
+        ServiceConfiguration configured = PulsarConfigurationLoader.create(properties, ServiceConfiguration.class);
+        assertEquals(configured.getTransactionEndedStatusRetentionTimeMs(), 12345L);
+        assertEquals(configured.getTransactionEndedStatusMaxRecordCount(), 678L);
+        TransactionMetadataStoreConfig.validateEndedStatusConfig(configured.getTransactionEndedStatusRetentionTimeMs(),
+                configured.getTransactionEndedStatusMaxRecordCount());
+
+        properties.setProperty("transactionEndedStatusRetentionTimeMs", "-1");
+        properties.setProperty("transactionEndedStatusMaxRecordCount", "678");
+        configured = PulsarConfigurationLoader.create(properties, ServiceConfiguration.class);
+        assertEquals(configured.getTransactionEndedStatusRetentionTimeMs(), -1L);
+        assertEquals(configured.getTransactionEndedStatusMaxRecordCount(), 678L);
+        TransactionMetadataStoreConfig.validateEndedStatusConfig(configured.getTransactionEndedStatusRetentionTimeMs(),
+                configured.getTransactionEndedStatusMaxRecordCount());
+
+        properties.setProperty("transactionEndedStatusRetentionTimeMs", "12345");
+        properties.setProperty("transactionEndedStatusMaxRecordCount", "-1");
+        configured = PulsarConfigurationLoader.create(properties, ServiceConfiguration.class);
+        assertEquals(configured.getTransactionEndedStatusRetentionTimeMs(), 12345L);
+        assertEquals(configured.getTransactionEndedStatusMaxRecordCount(), -1L);
+        TransactionMetadataStoreConfig.validateEndedStatusConfig(configured.getTransactionEndedStatusRetentionTimeMs(),
+                configured.getTransactionEndedStatusMaxRecordCount());
+
+        properties.setProperty("transactionEndedStatusRetentionTimeMs", "-1");
+        properties.setProperty("transactionEndedStatusMaxRecordCount", "-1");
+        configured = PulsarConfigurationLoader.create(properties, ServiceConfiguration.class);
+        ServiceConfiguration invalidConfig = configured;
+        assertThrows(IllegalArgumentException.class, () -> TransactionMetadataStoreConfig.validateEndedStatusConfig(
+                invalidConfig.getTransactionEndedStatusRetentionTimeMs(),
+                invalidConfig.getTransactionEndedStatusMaxRecordCount()));
+    }
+
+    private static void assertTransactionEndedStatusConfigFile(String configFilePath) throws Exception {
+        Properties fileProperties = new Properties();
+        try (FileInputStream stream = new FileInputStream(configFilePath)) {
+            fileProperties.load(stream);
+        }
+        assertEquals(fileProperties.getProperty("transactionEndedStatusRetentionTimeMs"), "3600000");
+        assertEquals(fileProperties.getProperty("transactionEndedStatusMaxRecordCount"), "100000");
+
+        try (FileInputStream stream = new FileInputStream(configFilePath)) {
+            ServiceConfiguration fileConfig = PulsarConfigurationLoader.create(stream, ServiceConfiguration.class);
+            assertEquals(fileConfig.getTransactionEndedStatusRetentionTimeMs(), TimeUnit.HOURS.toMillis(1));
+            assertEquals(fileConfig.getTransactionEndedStatusMaxRecordCount(), 100_000L);
+        }
+    }
+
     @SuppressWarnings("deprecation")
 
     @Test

@@ -241,6 +241,10 @@ enum ServerError {
                          // use this error to indicate that this producer is now permanently
                          // fenced. Applications are now supposed to close it and create a
                          // new producer
+
+    TransactionAlreadyCommitted = 26; // Transaction has already been committed
+    TransactionAlreadyAborted = 27; // Transaction has already been aborted
+    TransactionTimedOut = 28; // Transaction has already timed out
 }
 
 enum AuthMethod {
@@ -317,6 +321,7 @@ message FeatureFlags {
   optional bool supports_repl_dedup_by_lid_and_eid = 6 [default = false];
   optional bool supports_topic_watcher_reconcile = 7 [default = false];
   optional bool supports_scalable_topics = 8 [default = false];
+  optional bool supports_transaction_end_status_errors = 9 [default = false];
 }
 
 message CommandConnected {

@@ -16,30 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.pulsar.transaction.coordinator;
 
-plugins {
-    id("pulsar.public-java-library-conventions")
-    alias(libs.plugins.lightproto)
-}
-
-dependencies {
-    implementation(libs.slog)
-    api(project(":pulsar-common"))
-    implementation(project(":pulsar-opentelemetry"))
-    implementation(project(":managed-ledger"))
-    implementation(libs.commons.lang3)
-    implementation(libs.commons.collections4)
-    implementation(libs.caffeine)
-    implementation(libs.netty.buffer)
-    implementation(libs.netty.common)
-    implementation(libs.jctools.core.jdk11)
-    implementation(libs.simpleclient)
-    implementation(libs.guava)
-    implementation(libs.bookkeeper.server)
-
-    testImplementation(project(":testmocks"))
-}
-
-lightproto {
-    extraProtoPaths.from(rootProject.projectDir)
+/**
+ * Final status retained briefly after an active transaction is removed from memory.
+ */
+public enum EndedTxnStatus {
+    COMMITTED,
+    ABORTED,
+    TIMEOUT
 }

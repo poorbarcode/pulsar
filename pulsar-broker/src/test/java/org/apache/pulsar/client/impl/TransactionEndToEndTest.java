@@ -66,7 +66,9 @@ import org.apache.pulsar.client.api.SubscriptionType;
 import org.apache.pulsar.client.api.transaction.Transaction;
 import org.apache.pulsar.client.api.transaction.TransactionCoordinatorClient;
 import org.apache.pulsar.client.api.transaction.TransactionCoordinatorClientException;
-import org.apache.pulsar.client.api.transaction.TransactionCoordinatorClientException.TransactionNotFoundException;
+import org.apache.pulsar.client.api.transaction.TransactionCoordinatorClientException.TransactionAlreadyAbortedException;
+import org.apache.pulsar.client.api.transaction.TransactionCoordinatorClientException.TransactionAlreadyCommittedException;
+import org.apache.pulsar.client.api.transaction.TransactionCoordinatorClientException.TransactionTimedOutException;
 import org.apache.pulsar.client.api.transaction.TxnID;
 import org.apache.pulsar.client.impl.transaction.TransactionImpl;
 import org.apache.pulsar.client.internal.DefaultImplementation;
@@ -644,6 +646,17 @@ public class TransactionEndToEndTest extends TransactionTestBase {
 
             // 1) txn abort
             txn.abort().get();
+            Field field = TransactionImpl.class.getDeclaredField("state");
+            field.setAccessible(true);
+            field.set(txn, TransactionImpl.State.OPEN);
+            try {
+                txn.abort().get();
+                fail("reabort one transaction should be failed.");
+            } catch (Exception reAbortError) {
+                log.info("expected exception for reabort one transaction.");
+                Assert.assertNotNull(reAbortError);
+                Assert.assertTrue(reAbortError.getCause() instanceof TransactionAlreadyAbortedException);
+            }
 
             // after transaction abort, the messages could be received
             Transaction commitTxn = getTxn();
@@ -661,8 +674,6 @@ public class TransactionEndToEndTest extends TransactionTestBase {
             message = consumer.receive(waitTimeForCannotReceiveMsgInSec, TimeUnit.SECONDS);
             Assert.assertNull(message);
 
-            Field field = TransactionImpl.class.getDeclaredField("state");
-            field.setAccessible(true);
             field.set(commitTxn, TransactionImpl.State.OPEN);
             try {
                 commitTxn.commit().get();
@@ -671,7 +682,7 @@ public class TransactionEndToEndTest extends TransactionTestBase {
                 // recommit one transaction should be failed
                 log.info("expected exception for recommit one transaction.");
                 Assert.assertNotNull(reCommitError);
-                Assert.assertTrue(reCommitError.getCause() instanceof TransactionNotFoundException);
+                Assert.assertTrue(reCommitError.getCause() instanceof TransactionAlreadyCommittedException);
             }
         }
 
@@ -918,7 +929,7 @@ public class TransactionEndToEndTest extends TransactionTestBase {
                 // recommit one transaction should be failed
                 log.info("expected exception for recommit one transaction.");
                 Assert.assertNotNull(reCommitError);
-                Assert.assertTrue(reCommitError.getCause() instanceof TransactionNotFoundException);
+                Assert.assertTrue(reCommitError.getCause() instanceof TransactionAlreadyCommittedException);
             }
 
             message = consumer.receive(waitTimeForCannotReceiveMsgInSec, TimeUnit.SECONDS);
@@ -1133,7 +1144,7 @@ public class TransactionEndToEndTest extends TransactionTestBase {
             timeoutTxnSkipClientTimeout.commit().get();
             fail();
         } catch (Exception e) {
-            assertTrue(e.getCause() instanceof TransactionNotFoundException);
+            assertTrue(e.getCause() instanceof TransactionTimedOutException);
         }
         Field field = TransactionImpl.class.getDeclaredField("state");
         field.setAccessible(true);

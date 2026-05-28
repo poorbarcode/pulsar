@@ -101,6 +101,42 @@ public abstract class CoordinatorException extends Exception {
     }
 
     /**
+     * Exception is thrown when a transaction has already been committed.
+     */
+    public static class TransactionAlreadyCommittedException extends TransactionNotFoundException {
+
+        private static final long serialVersionUID = 0L;
+
+        public TransactionAlreadyCommittedException(TxnID txnID) {
+            super("The transaction `" + txnID + "` has already been committed.");
+        }
+    }
+
+    /**
+     * Exception is thrown when a transaction has already been aborted.
+     */
+    public static class TransactionAlreadyAbortedException extends TransactionNotFoundException {
+
+        private static final long serialVersionUID = 0L;
+
+        public TransactionAlreadyAbortedException(TxnID txnID) {
+            super("The transaction `" + txnID + "` has already been aborted.");
+        }
+    }
+
+    /**
+     * Exception is thrown when a transaction has already timed out.
+     */
+    public static class TransactionAlreadyTimedOutException extends TransactionNotFoundException {
+
+        private static final long serialVersionUID = 0L;
+
+        public TransactionAlreadyTimedOutException(TxnID txnID) {
+            super("The transaction `" + txnID + "` has already timed out.");
+        }
+    }
+
+    /**
      * Exception is thrown when a operation of transaction is executed in a error transaction metadata store state.
      */
     public static class TransactionMetadataStoreStateException extends CoordinatorException {

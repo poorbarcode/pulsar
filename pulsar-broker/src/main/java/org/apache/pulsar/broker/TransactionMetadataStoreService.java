@@ -57,8 +57,10 @@ import org.apache.pulsar.common.api.proto.TxnAction;
 import org.apache.pulsar.common.naming.SystemTopicNames;
 import org.apache.pulsar.common.util.FutureUtil;
 import org.apache.pulsar.common.util.collections.ConcurrentLongHashMap;
+import org.apache.pulsar.transaction.coordinator.EndedTxnStatus;
 import org.apache.pulsar.transaction.coordinator.TransactionCoordinatorID;
 import org.apache.pulsar.transaction.coordinator.TransactionMetadataStore;
+import org.apache.pulsar.transaction.coordinator.TransactionMetadataStoreConfig;
 import org.apache.pulsar.transaction.coordinator.TransactionMetadataStoreProvider;
 import org.apache.pulsar.transaction.coordinator.TransactionRecoverTracker;
 import org.apache.pulsar.transaction.coordinator.TransactionSubscription;
@@ -67,7 +69,11 @@ import org.apache.pulsar.transaction.coordinator.TransactionTimeoutTrackerFactor
 import org.apache.pulsar.transaction.coordinator.TxnMeta;
 import org.apache.pulsar.transaction.coordinator.exceptions.CoordinatorException.CoordinatorNotFoundException;
 import org.apache.pulsar.transaction.coordinator.exceptions.CoordinatorException.InvalidTxnStatusException;
+import org.apache.pulsar.transaction.coordinator.exceptions.CoordinatorException.TransactionAlreadyAbortedException;
+import org.apache.pulsar.transaction.coordinator.exceptions.CoordinatorException.TransactionAlreadyCommittedException;
 import org.apache.pulsar.transaction.coordinator.exceptions.CoordinatorException.TransactionMetadataStoreStateException;
+import org.apache.pulsar.transaction.coordinator.exceptions.CoordinatorException.TransactionNotFoundException;
+import org.apache.pulsar.transaction.coordinator.exceptions.CoordinatorException.TransactionAlreadyTimedOutException;
 import org.apache.pulsar.transaction.coordinator.impl.TxnLogBufferedWriterConfig;
 import org.apache.pulsar.transaction.coordinator.proto.TxnStatus;
 
@@ -230,7 +236,11 @@ public class TransactionMetadataStoreService {
                         pulsarService.getManagedLedgerStorage().getManagedLedgerStorageClass(v.getStorageClassName())
                                 .get().getManagedLedgerFactory(), v,
                         timeoutTracker, recoverTracker,
-                        pulsarService.getConfig().getMaxActiveTransactionsPerCoordinator(), txnLogBufferedWriterConfig,
+                        new TransactionMetadataStoreConfig(
+                                serviceConfiguration.getMaxActiveTransactionsPerCoordinator(),
+                                serviceConfiguration.getTransactionEndedStatusRetentionTimeMs(),
+                                serviceConfiguration.getTransactionEndedStatusMaxRecordCount()),
+                        txnLogBufferedWriterConfig,
                         brokerClientSharedTimer));
     }
 
@@ -340,10 +350,10 @@ public class TransactionMetadataStoreService {
                 .thenCompose(txnMeta -> {
                     if (txnMeta.status() == TxnStatus.OPEN) {
                         return updateTxnStatus(txnID, newStatus, TxnStatus.OPEN, isTimeout)
-                                .thenCompose(__ -> endTxnInTransactionBuffer(txnID, txnAction));
+                                .thenCompose(__ -> endTxnInTransactionBuffer(txnID, txnAction, isTimeout));
                     }
                     return fakeAsyncCheckTxnStatus(txnMeta.status(), txnAction, txnID, newStatus)
-                            .thenCompose(__ -> endTxnInTransactionBuffer(txnID, txnAction));
+                            .thenCompose(__ -> endTxnInTransactionBuffer(txnID, txnAction, isTimeout));
                 }).whenComplete((__, ex)-> {
                     if (ex == null) {
                         future.complete(null);
@@ -414,7 +424,7 @@ public class TransactionMetadataStoreService {
         });
     }
 
-    private CompletableFuture<Void> endTxnInTransactionBuffer(TxnID txnID, int txnAction) {
+    private CompletableFuture<Void> endTxnInTransactionBuffer(TxnID txnID, int txnAction, boolean isTimeout) {
         return getTxnMeta(txnID)
                 .thenCompose(txnMeta -> {
                     long lowWaterMark = getLowWaterMark(txnID);
@@ -449,7 +459,7 @@ public class TransactionMetadataStoreService {
                     });
                     return FutureUtil.waitForAll(Stream.concat(onSubFutureStream, onTopicFutureStream)
                                     .collect(Collectors.toList()))
-                            .thenCompose(__ -> endTxnInTransactionMetadataStore(txnID, txnAction));
+                            .thenCompose(__ -> endTxnInTransactionMetadataStore(txnID, txnAction, isTimeout));
                 });
     }
 
@@ -465,14 +475,30 @@ public class TransactionMetadataStoreService {
                 && !(realCause instanceof ManagedLedgerException.ManagedLedgerFencedException);
     }
 
-    private CompletableFuture<Void> endTxnInTransactionMetadataStore(TxnID txnID, int txnAction) {
+    private CompletableFuture<Void> endTxnInTransactionMetadataStore(TxnID txnID, int txnAction, boolean isTimeout) {
         if (TxnAction.COMMIT.getValue() == txnAction) {
             return updateTxnStatus(txnID, TxnStatus.COMMITTED, COMMITTING, false);
         } else if (TxnAction.ABORT.getValue() == txnAction) {
-            return updateTxnStatus(txnID, TxnStatus.ABORTED, ABORTING, false);
+            return updateTxnStatus(txnID, TxnStatus.ABORTED, ABORTING, isTimeout);
         } else {
             return FutureUtil.failedFuture(new InvalidTxnStatusException("Unsupported txnAction " + txnAction));
         }
+    }
+
+    public TransactionNotFoundException getEndedTxnException(TxnID txnID) {
+        TransactionMetadataStore store = stores.get(getTcIdFromTxnId(txnID));
+        if (store == null) {
+            return null;
+        }
+        EndedTxnStatus status = store.getEndedTxnStatus(txnID);
+        if (status == null) {
+            return null;
+        }
+        return switch (status) {
+            case COMMITTED -> new TransactionAlreadyCommittedException(txnID);
+            case ABORTED -> new TransactionAlreadyAbortedException(txnID);
+            case TIMEOUT -> new TransactionAlreadyTimedOutException(txnID);
+        };
     }
 
     private TransactionCoordinatorID getTcIdFromTxnId(TxnID txnId) {

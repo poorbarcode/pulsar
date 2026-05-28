@@ -118,6 +118,50 @@ public class TransactionMetadataStoreServiceTest extends BrokerTestBase {
     }
 
     @Test
+    public void testDuplicateEndTransactionReturnsRetainedStatus() throws Exception {
+        TransactionMetadataStoreService transactionMetadataStoreService = pulsar.getTransactionMetadataStoreService();
+        transactionMetadataStoreService.handleTcClientConnect(TransactionCoordinatorID.get(0));
+        Awaitility.await().until(() ->
+                transactionMetadataStoreService.getStores().size() == 1);
+        checkTransactionMetadataStoreReady((MLTransactionMetadataStore) pulsar.getTransactionMetadataStoreService()
+                .getStores().get(TransactionCoordinatorID.get(0)));
+
+        TxnID committedTxnID =
+                transactionMetadataStoreService.newTransaction(TransactionCoordinatorID.get(0), 5000, null).get();
+        transactionMetadataStoreService.endTransaction(committedTxnID, TxnAction.COMMIT.getValue(), false).get();
+        try {
+            transactionMetadataStoreService.endTransaction(committedTxnID, TxnAction.ABORT.getValue(), false).get();
+            fail("Duplicate end transaction should fail with the retained committed status");
+        } catch (ExecutionException e) {
+            assertTrue(e.getCause() instanceof CoordinatorException.TransactionAlreadyCommittedException);
+        }
+
+        TxnID abortedTxnID =
+                transactionMetadataStoreService.newTransaction(TransactionCoordinatorID.get(0), 5000, null).get();
+        transactionMetadataStoreService.endTransaction(abortedTxnID, TxnAction.ABORT.getValue(), false).get();
+        try {
+            transactionMetadataStoreService.endTransaction(abortedTxnID, TxnAction.COMMIT.getValue(), false).get();
+            fail("Duplicate end transaction should fail with the retained aborted status");
+        } catch (ExecutionException e) {
+            assertTrue(e.getCause() instanceof CoordinatorException.TransactionAlreadyAbortedException);
+        }
+
+        TxnID timeoutTxnID =
+                transactionMetadataStoreService.newTransaction(TransactionCoordinatorID.get(0), 5000, null).get();
+        transactionMetadataStoreService.endTransaction(timeoutTxnID, TxnAction.ABORT.getValue(), true).get();
+        transactionMetadataStoreService.endTransaction(timeoutTxnID, TxnAction.ABORT.getValue(), false).get();
+        try {
+            transactionMetadataStoreService.endTransaction(timeoutTxnID, TxnAction.COMMIT.getValue(), false).get();
+            fail("Duplicate end transaction should fail with the retained timeout status");
+        } catch (ExecutionException e) {
+            assertTrue(e.getCause() instanceof CoordinatorException.TransactionAlreadyTimedOutException);
+        }
+
+        transactionMetadataStoreService.removeTransactionMetadataStore(TransactionCoordinatorID.get(0));
+        Assert.assertEquals(transactionMetadataStoreService.getStores().size(), 0);
+    }
+
+    @Test
     public void testAddProducedPartitionToTxn() throws Exception {
         TransactionMetadataStoreService transactionMetadataStoreService = pulsar.getTransactionMetadataStoreService();
         transactionMetadataStoreService.handleTcClientConnect(TransactionCoordinatorID.get(0));

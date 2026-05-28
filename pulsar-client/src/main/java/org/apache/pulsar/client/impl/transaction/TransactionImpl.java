@@ -35,7 +35,10 @@ import org.apache.pulsar.client.api.MessageId;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.apache.pulsar.client.api.transaction.Transaction;
 import org.apache.pulsar.client.api.transaction.TransactionCoordinatorClientException.InvalidTxnStatusException;
+import org.apache.pulsar.client.api.transaction.TransactionCoordinatorClientException.TransactionAlreadyAbortedException;
+import org.apache.pulsar.client.api.transaction.TransactionCoordinatorClientException.TransactionAlreadyCommittedException;
 import org.apache.pulsar.client.api.transaction.TransactionCoordinatorClientException.TransactionNotFoundException;
+import org.apache.pulsar.client.api.transaction.TransactionCoordinatorClientException.TransactionTimedOutException;
 import org.apache.pulsar.client.api.transaction.TxnID;
 import org.apache.pulsar.client.impl.PulsarClientImpl;
 import org.apache.pulsar.common.util.FutureUtil;
@@ -199,8 +202,7 @@ public class TransactionImpl implements Transaction , TimerTask {
                     tcClient.commitAsync(txnId)
                             .whenComplete((vx, ex) -> {
                                 if (ex != null) {
-                                    if (ex instanceof TransactionNotFoundException
-                                            || ex instanceof InvalidTxnStatusException) {
+                                    if (isEndTxnFailedBecauseTransactionFinished(ex)) {
                                         this.state = State.ERROR;
                                     }
                                     commitFuture.completeExceptionally(ex);
@@ -228,8 +230,7 @@ public class TransactionImpl implements Transaction , TimerTask {
             tcClient.abortAsync(txnId).whenComplete((vx, ex) -> {
 
                 if (ex != null) {
-                    if (ex instanceof TransactionNotFoundException
-                            || ex instanceof InvalidTxnStatusException) {
+                    if (isEndTxnFailedBecauseTransactionFinished(ex)) {
                         this.state = State.ERROR;
                     }
                     abortFuture.completeExceptionally(ex);
@@ -242,6 +243,14 @@ public class TransactionImpl implements Transaction , TimerTask {
         });
 
         return abortFuture;
+    }
+
+    private static boolean isEndTxnFailedBecauseTransactionFinished(Throwable ex) {
+        return ex instanceof TransactionNotFoundException
+                || ex instanceof InvalidTxnStatusException
+                || ex instanceof TransactionAlreadyCommittedException
+                || ex instanceof TransactionAlreadyAbortedException
+                || ex instanceof TransactionTimedOutException;
     }
 
     @Override

@@ -680,6 +680,12 @@ public class TransactionMetaStoreHandler extends HandlerState
                 return new TransactionCoordinatorClientException.InvalidTxnStatusException(msg);
             case TransactionNotFound:
                 return new TransactionCoordinatorClientException.TransactionNotFoundException(msg);
+            case TransactionAlreadyCommitted:
+                return new TransactionCoordinatorClientException.TransactionAlreadyCommittedException(msg);
+            case TransactionAlreadyAborted:
+                return new TransactionCoordinatorClientException.TransactionAlreadyAbortedException(msg);
+            case TransactionTimedOut:
+                return new TransactionCoordinatorClientException.TransactionTimedOutException(msg);
             default:
                 return new TransactionCoordinatorClientException(msg);
         }

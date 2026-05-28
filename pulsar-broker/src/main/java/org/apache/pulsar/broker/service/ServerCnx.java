@@ -1581,6 +1581,7 @@ public class ServerCnx extends PulsarHandler implements TransportCnx {
         int clientProtocolVersion = connect.getProtocolVersion();
         features = new FeatureFlags();
         if (connect.hasFeatureFlags()) {
+            // TODO add test for new feature flag "supportsTransactionEndStatusErrors".
             features.copyFrom(connect.getFeatureFlags());
         }
 
@@ -3408,6 +3409,17 @@ public class ServerCnx extends PulsarHandler implements TransportCnx {
             return new CoordinatorException.CoordinatorNotFoundException(cause.getMessage());
 
         }
+        if (cause instanceof CoordinatorException.TransactionAlreadyCommittedException
+                || cause instanceof CoordinatorException.TransactionAlreadyAbortedException
+                || cause instanceof CoordinatorException.TransactionAlreadyTimedOutException) {
+            log.debug().attr("op", op).exception(cause).log("The transaction has already ended");
+            if (supportsTransactionEndStatusErrors()) {
+                return cause;
+            } else {
+                // To guarantee compatibility of the old version client, do not throw new error to them.
+                return new CoordinatorException.TransactionNotFoundException(cause.getMessage());
+            }
+        }
         log.error()
                 .attr("op", op)
                 .attr("requestId", requestId)
@@ -3500,7 +3512,7 @@ public class ServerCnx extends PulsarHandler implements TransportCnx {
             // v5: TC doesn't need pre-registration — participants advertise themselves by writing
             // /txn/op records when they actually apply ops. Still verify ownership before acking,
             // matching the legacy authorization surface.
-            verifyTxnOwnership(txnID)
+            verifyTxnOwnershipAndTxnState(txnID)
                     .thenCompose(isOwner -> isOwner ? CompletableFuture.<Void>completedFuture(null)
                             : failedFutureTxnNotOwned(txnID))
                     .whenComplete((v, ex) -> {
@@ -3520,7 +3532,7 @@ public class ServerCnx extends PulsarHandler implements TransportCnx {
 
         TransactionMetadataStoreService transactionMetadataStoreService =
                 service.pulsar().getTransactionMetadataStoreService();
-        verifyTxnOwnership(txnID)
+        verifyTxnOwnershipAndTxnState(txnID)
                 .thenCompose(isOwner -> {
                     if (!isOwner) {
                         return failedFutureTxnNotOwned(txnID);
@@ -3579,7 +3591,7 @@ public class ServerCnx extends PulsarHandler implements TransportCnx {
         }
 
         if (service.getPulsar().getConfig().isTransactionCoordinatorScalableTopicsEnabled()) {
-            verifyTxnOwnership(txnID)
+            verifyTxnOwnershipAndTxnState(txnID)
                     .thenCompose(isOwner -> {
                         if (!isOwner) {
                             return failedFutureTxnNotOwned(txnID);
@@ -3602,7 +3614,7 @@ public class ServerCnx extends PulsarHandler implements TransportCnx {
         TransactionMetadataStoreService transactionMetadataStoreService =
                 service.pulsar().getTransactionMetadataStoreService();
 
-        verifyTxnOwnership(txnID)
+        verifyTxnOwnershipAndTxnState(txnID)
                 .thenCompose(isOwner -> {
                     if (!isOwner) {
                         return failedFutureTxnNotOwned(txnID);
@@ -3641,25 +3653,47 @@ public class ServerCnx extends PulsarHandler implements TransportCnx {
         }
     }
 
-    private CompletableFuture<Boolean> verifyTxnOwnership(TxnID txnID) {
+    private CompletableFuture<Boolean> verifyTxnOwnershipAndTxnState(TxnID txnID) {
         assert ctx.executor().inEventLoop();
+        TransactionMetadataStoreService txnMetadataService = service.pulsar().getTransactionMetadataStoreService();
         CompletableFuture<Boolean> ownerCheck =
                 service.getPulsar().getConfig().isTransactionCoordinatorScalableTopicsEnabled()
                         ? service.pulsar().getTransactionCoordinatorV5()
                                 .verifyTxnOwnership(txnID, getPrincipal())
-                        : service.pulsar().getTransactionMetadataStoreService()
-                                .verifyTxnOwnership(txnID, getPrincipal());
-        return ownerCheck
-                .thenComposeAsync(isOwner -> {
+                        : txnMetadataService.verifyTxnOwnership(txnID, getPrincipal());
+        CompletableFuture<Boolean> future = new CompletableFuture<>();
+        ownerCheck.whenCompleteAsync((isOwner, ex) -> {
+                if (ex == null) {
                     if (isOwner) {
-                        return CompletableFuture.completedFuture(true);
+                        future.complete(true);
                     }
                     if (service.isAuthenticationEnabled() && service.isAuthorizationEnabled()) {
-                        return isSuperUser();
+                        isSuperUser().whenCompleteAsync((isSuperUser, ex2) -> {
+                            if (ex == null) {
+                                future.complete(isSuperUser);
+                            } else {
+                                future.completeExceptionally(ex2);
+                            }
+                        });
                     } else {
-                        return CompletableFuture.completedFuture(false);
+                        future.complete(false);
                     }
-                }, ctx.executor());
+                    return;
+                }
+                Throwable cause = FutureUtil.unwrapCompletionException(ex);
+                if (cause instanceof CoordinatorException.TransactionNotFoundException) {
+                    CoordinatorException.TransactionNotFoundException notFoundException =
+                            txnMetadataService.getEndedTxnException(txnID);
+                    if (notFoundException != null) {
+                        future.completeExceptionally(notFoundException);
+                    } else {
+                        future.completeExceptionally(cause);
+                    }
+                } else {
+                    future.completeExceptionally(cause);
+                }
+            }, ctx.executor());
+        return future;
     }
 
     @Override
@@ -3922,7 +3956,7 @@ public class ServerCnx extends PulsarHandler implements TransportCnx {
             // v5: TC doesn't need pre-registration — participants advertise themselves by writing
             // /txn/op records when they actually apply ops. Still verify ownership before acking,
             // matching the legacy authorization surface.
-            verifyTxnOwnership(txnID)
+            verifyTxnOwnershipAndTxnState(txnID)
                     .thenCompose(isOwner -> isOwner ? CompletableFuture.<Void>completedFuture(null)
                             : failedFutureTxnNotOwned(txnID))
                     .whenComplete((v, ex) -> {
@@ -3943,7 +3977,7 @@ public class ServerCnx extends PulsarHandler implements TransportCnx {
         TransactionMetadataStoreService transactionMetadataStoreService =
                 service.pulsar().getTransactionMetadataStoreService();
 
-        verifyTxnOwnership(txnID)
+        verifyTxnOwnershipAndTxnState(txnID)
                 .thenCompose(isOwner -> {
                     if (!isOwner) {
                         return failedFutureTxnNotOwned(txnID);
@@ -4392,6 +4426,10 @@ public class ServerCnx extends PulsarHandler implements TransportCnx {
 
     boolean supportsPartialProducer() {
         return features != null && features.isSupportsPartialProducer();
+    }
+
+    boolean supportsTransactionEndStatusErrors() {
+        return features != null && features.isSupportsTransactionEndStatusErrors();
     }
 
     @Override

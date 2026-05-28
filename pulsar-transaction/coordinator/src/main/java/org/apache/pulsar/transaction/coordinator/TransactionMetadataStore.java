@@ -53,6 +53,16 @@ public interface TransactionMetadataStore {
     CompletableFuture<TxnMeta> getTxnMeta(TxnID txnid);
 
     /**
+     * Query the retained final status for a transaction that is no longer active.
+     *
+     * @param txnid transaction id
+     * @return retained final status, or {@code null} if the transaction is active, unknown, or expired.
+     */
+    default EndedTxnStatus getEndedTxnStatus(TxnID txnid) {
+        return null;
+    }
+
+    /**
      * Create a new transaction in the transaction metadata store.
      *
      * @param timeoutInMills the timeout duration of the transaction in mills
@@ -148,4 +158,14 @@ public interface TransactionMetadataStore {
      * @return {@link TxnMeta} the txnMetas of slow transactions
      */
     List<TxnMeta> getSlowTransactions(long timeout);
+
+    default EndedTxnStatus getEndedTxnStatus(TxnStatus status, boolean isTimeout) {
+        if (status == TxnStatus.COMMITTED) {
+            return EndedTxnStatus.COMMITTED;
+        }
+        if (status == TxnStatus.ABORTED) {
+            return isTimeout ? EndedTxnStatus.TIMEOUT : EndedTxnStatus.ABORTED;
+        }
+        return null;
+    }
 }

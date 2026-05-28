@@ -168,6 +168,7 @@ import org.apache.pulsar.common.topics.TopicList;
 import org.apache.pulsar.common.util.FutureUtil;
 import org.apache.pulsar.common.util.collections.ConcurrentLongHashMap;
 import org.apache.pulsar.transaction.coordinator.TxnMeta;
+import org.apache.pulsar.transaction.coordinator.exceptions.CoordinatorException;
 import org.awaitility.Awaitility;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
@@ -3948,6 +3949,58 @@ public class ServerCnxTest {
         assertEquals(response.getTxnidMostBits(), 12L);
         assertEquals(response.getError().getValue(), 0);
         assertEquals(response.getMessage(), "server error");
+
+        channel.finish();
+    }
+
+    @Test(timeOut = 30000)
+    public void sendEndTxnResponseFailedWithEndedStatusError() throws Exception {
+        final TransactionMetadataStoreService txnStore = mock(TransactionMetadataStoreService.class);
+        when(txnStore.getTxnMeta(any())).thenReturn(CompletableFuture.completedFuture(mock(TxnMeta.class)));
+        when(txnStore.verifyTxnOwnership(any(), any())).thenReturn(CompletableFuture.completedFuture(true));
+        when(txnStore.endTransaction(any(TxnID.class), anyInt(), anyBoolean()))
+                .thenReturn(CompletableFuture.failedFuture(
+                        new CoordinatorException.TransactionAlreadyCommittedException(new TxnID(12L, 1L))));
+        when(pulsar.getTransactionMetadataStoreService()).thenReturn(txnStore);
+        svcConfig.setTransactionCoordinatorEnabled(true);
+        resetChannel();
+        channel.writeInbound(Commands.newConnect("none", "", null));
+        assertTrue(getResponse() instanceof CommandConnected);
+        ByteBuf clientCommand = Commands.serializeWithSize(Commands.newEndTxn(89L, 1L, 12L,
+                TxnAction.COMMIT));
+        channel.writeInbound(clientCommand);
+        CommandEndTxnResponse response = (CommandEndTxnResponse) getResponse();
+
+        assertEquals(response.getRequestId(), 89L);
+        assertEquals(response.getTxnidLeastBits(), 1L);
+        assertEquals(response.getTxnidMostBits(), 12L);
+        assertEquals(response.getError(), ServerError.TransactionAlreadyCommitted);
+
+        channel.finish();
+    }
+
+    @Test(timeOut = 30000)
+    public void sendEndTxnResponseFailedWithEndedStatusErrorFallsBackWithoutFeatureFlag() throws Exception {
+        final TransactionMetadataStoreService txnStore = mock(TransactionMetadataStoreService.class);
+        when(txnStore.getTxnMeta(any())).thenReturn(CompletableFuture.completedFuture(mock(TxnMeta.class)));
+        when(txnStore.verifyTxnOwnership(any(), any())).thenReturn(CompletableFuture.completedFuture(true));
+        when(txnStore.endTransaction(any(TxnID.class), anyInt(), anyBoolean()))
+                .thenReturn(CompletableFuture.failedFuture(
+                        new CoordinatorException.TransactionAlreadyCommittedException(new TxnID(12L, 1L))));
+        when(pulsar.getTransactionMetadataStoreService()).thenReturn(txnStore);
+        svcConfig.setTransactionCoordinatorEnabled(true);
+        resetChannel();
+        channel.writeInbound(newConnect(AuthMethod.AuthMethodNone, "", Commands.getCurrentProtocolVersion()));
+        assertTrue(getResponse() instanceof CommandConnected);
+        ByteBuf clientCommand = Commands.serializeWithSize(Commands.newEndTxn(89L, 1L, 12L,
+                TxnAction.COMMIT));
+        channel.writeInbound(clientCommand);
+        CommandEndTxnResponse response = (CommandEndTxnResponse) getResponse();
+
+        assertEquals(response.getRequestId(), 89L);
+        assertEquals(response.getTxnidLeastBits(), 1L);
+        assertEquals(response.getTxnidMostBits(), 12L);
+        assertEquals(response.getError(), ServerError.InvalidTxnStatus);
 
         channel.finish();
     }

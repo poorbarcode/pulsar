@@ -199,6 +199,7 @@ import org.apache.pulsar.packages.management.core.PackagesStorageProvider;
 import org.apache.pulsar.packages.management.core.impl.DefaultPackagesStorageConfiguration;
 import org.apache.pulsar.packages.management.core.impl.PackagesManagementImpl;
 import org.apache.pulsar.policies.data.loadbalancer.AdvertisedListener;
+import org.apache.pulsar.transaction.coordinator.TransactionMetadataStoreConfig;
 import org.apache.pulsar.transaction.coordinator.TransactionMetadataStoreProvider;
 import org.apache.pulsar.transaction.coordinator.impl.MLTransactionMetadataStoreProvider;
 import org.apache.pulsar.websocket.WebSocketConsumerServlet;
@@ -363,6 +364,8 @@ public class PulsarService implements AutoCloseable, ShutdownService {
         // Validate correctness of configuration
         PulsarConfigurationLoader.isComplete(config);
         TransactionBatchedWriteValidator.validate(config);
+        TransactionMetadataStoreConfig.validateEndedStatusConfig(config.getTransactionEndedStatusRetentionTimeMs(),
+                config.getTransactionEndedStatusMaxRecordCount());
         this.config = config;
         this.validateCustomMetricLabelKeys(config.getAllowedTopicPropertyKeysForMetrics());
         this.clock = Clock.systemUTC();

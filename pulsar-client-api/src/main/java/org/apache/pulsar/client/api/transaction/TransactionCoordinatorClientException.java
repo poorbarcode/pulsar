@@ -94,6 +94,39 @@ public class TransactionCoordinatorClientException extends IOException {
     }
 
     /**
+     * Thrown when transaction has already been committed in transaction coordinator.
+     */
+    public static class TransactionAlreadyCommittedException extends TransactionCoordinatorClientException {
+        private static final long serialVersionUID = 1L;
+
+        public TransactionAlreadyCommittedException(String message) {
+            super(message);
+        }
+    }
+
+    /**
+     * Thrown when transaction has already been aborted in transaction coordinator.
+     */
+    public static class TransactionAlreadyAbortedException extends TransactionCoordinatorClientException {
+        private static final long serialVersionUID = 1L;
+
+        public TransactionAlreadyAbortedException(String message) {
+            super(message);
+        }
+    }
+
+    /**
+     * Thrown when transaction has already timed out in transaction coordinator.
+     */
+    public static class TransactionTimedOutException extends TransactionCoordinatorClientException {
+        private static final long serialVersionUID = 1L;
+
+        public TransactionTimedOutException(String message) {
+            super(message);
+        }
+    }
+
+    /**
      * Thrown when transaction meta store handler not exists.
      */
     public static class MetaStoreHandlerNotExistsException extends TransactionCoordinatorClientException {

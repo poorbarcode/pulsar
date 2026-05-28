@@ -273,6 +273,12 @@ public class BrokerServiceException extends Exception {
             return ServerError.ConsumerAssignError;
         } else if (t instanceof CoordinatorException.CoordinatorNotFoundException) {
             return ServerError.TransactionCoordinatorNotFound;
+        } else if (t instanceof CoordinatorException.TransactionAlreadyCommittedException) {
+            return ServerError.TransactionAlreadyCommitted;
+        } else if (t instanceof CoordinatorException.TransactionAlreadyAbortedException) {
+            return ServerError.TransactionAlreadyAborted;
+        } else if (t instanceof CoordinatorException.TransactionAlreadyTimedOutException) {
+            return ServerError.TransactionTimedOut;
         } else if (t instanceof CoordinatorException.InvalidTxnStatusException) {
             return ServerError.InvalidTxnStatus;
         } else if (t instanceof NotAllowedException) {

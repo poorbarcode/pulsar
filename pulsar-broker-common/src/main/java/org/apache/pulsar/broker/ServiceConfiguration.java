@@ -3889,6 +3889,22 @@ public class ServiceConfiguration implements PulsarConfiguration {
 
     @FieldContext(
             category = CATEGORY_TRANSACTION,
+            doc = "How long to retain final transaction statuses in memory after the active transaction metadata is "
+                    + "removed. The retained status is only used to return precise errors for duplicate end "
+                    + "transaction requests. Setting this to 0 disables retention. A negative value means the "
+                    + "retention time dimension is not limited."
+    )
+    private long transactionEndedStatusRetentionTimeMs = TimeUnit.HOURS.toMillis(1);
+
+    @FieldContext(
+            category = CATEGORY_TRANSACTION,
+            doc = "The maximum number of final transaction statuses retained in memory. Setting this to 0 disables "
+                    + "retention. A negative value means the record count dimension is not limited."
+    )
+    private long transactionEndedStatusMaxRecordCount = 100_000L;
+
+    @FieldContext(
+            category = CATEGORY_TRANSACTION,
             doc = "MLPendingAckStore maintain a ConcurrentSkipListMap pendingAckLogIndex`,"
                     + "it store the position in pendingAckStore as value and save a position used to determine"
                     + "whether the previous data can be cleaned up as a key."

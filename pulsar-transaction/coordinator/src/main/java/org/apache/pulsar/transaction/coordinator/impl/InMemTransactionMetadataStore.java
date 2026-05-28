@@ -28,9 +28,11 @@ import java.util.concurrent.atomic.LongAdder;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.pulsar.client.api.transaction.TxnID;
 import org.apache.pulsar.common.policies.data.TransactionCoordinatorStats;
+import org.apache.pulsar.transaction.coordinator.EndedTxnStatus;
 import org.apache.pulsar.transaction.coordinator.TransactionCoordinatorID;
 import org.apache.pulsar.transaction.coordinator.TransactionMetadataStore;
 import org.apache.pulsar.transaction.coordinator.TransactionMetadataStoreAttributes;
+import org.apache.pulsar.transaction.coordinator.TransactionMetadataStoreConfig;
 import org.apache.pulsar.transaction.coordinator.TransactionSubscription;
 import org.apache.pulsar.transaction.coordinator.TxnMeta;
 import org.apache.pulsar.transaction.coordinator.exceptions.CoordinatorException.InvalidTxnStatusException;
@@ -50,13 +52,14 @@ class InMemTransactionMetadataStore implements TransactionMetadataStore {
     private final LongAdder commitTransactionCount;
     private final LongAdder abortTransactionCount;
     private final LongAdder transactionTimeoutCount;
+    private final EndedTxnStatusCache endedTxnStatusCache;
 
     private volatile TransactionMetadataStoreAttributes attributes = null;
     private static final AtomicReferenceFieldUpdater<InMemTransactionMetadataStore, TransactionMetadataStoreAttributes>
             ATTRIBUTES_FIELD_UPDATER = AtomicReferenceFieldUpdater.newUpdater(
                     InMemTransactionMetadataStore.class, TransactionMetadataStoreAttributes.class, "attributes");
 
-    InMemTransactionMetadataStore(TransactionCoordinatorID tcID) {
+    InMemTransactionMetadataStore(TransactionCoordinatorID tcID, TransactionMetadataStoreConfig metadataStoreConfig) {
         this.tcID = tcID;
         this.localID = new AtomicLong(0L);
         this.transactions = new ConcurrentHashMap<>();
@@ -65,6 +68,9 @@ class InMemTransactionMetadataStore implements TransactionMetadataStore {
         this.commitTransactionCount = new LongAdder();
         this.abortTransactionCount = new LongAdder();
         this.transactionTimeoutCount = new LongAdder();
+        this.endedTxnStatusCache = EndedTxnStatusCache.create(
+                metadataStoreConfig.getTransactionEndedStatusRetentionTimeMs(),
+                metadataStoreConfig.getTransactionEndedStatusMaxRecordCount(), null);
 
     }
 
@@ -78,6 +84,11 @@ class InMemTransactionMetadataStore implements TransactionMetadataStore {
             getFuture.complete(txn);
         }
         return getFuture;
+    }
+
+    @Override
+    public EndedTxnStatus getEndedTxnStatus(TxnID txnid) {
+        return endedTxnStatusCache.get(txnid);
     }
 
     @Override
@@ -130,8 +141,18 @@ class InMemTransactionMetadataStore implements TransactionMetadataStore {
         return getTxnMeta(txnid).thenCompose(txn -> {
             try {
                 txn.updateTxnStatus(newStatus, expectedStatus);
-                if (isTimeout && expectedStatus == TxnStatus.ABORTING) {
+                if (isTimeout && newStatus == TxnStatus.ABORTING) {
                     transactionTimeoutCount.increment();
+                }
+                if (newStatus == TxnStatus.COMMITTED || newStatus == TxnStatus.ABORTED) {
+                    if (newStatus == TxnStatus.COMMITTED) {
+                        commitTransactionCount.increment();
+                    } else {
+                        abortTransactionCount.increment();
+                    }
+                    EndedTxnStatus status = getEndedTxnStatus(newStatus, isTimeout);
+                    endedTxnStatusCache.record(txnid, status, null, System.currentTimeMillis());
+                    transactions.remove(txnid);
                 }
                 return CompletableFuture.completedFuture(null);
             } catch (InvalidTxnStatusException e) {
@@ -155,6 +176,7 @@ class InMemTransactionMetadataStore implements TransactionMetadataStore {
     @Override
     public CompletableFuture<Void> closeAsync() {
         transactions.clear();
+        endedTxnStatusCache.close();
         return CompletableFuture.completedFuture(null);
     }
 

@@ -69,7 +69,8 @@ public class TransactionMetadataStoreProviderTest {
     public void setup() throws Exception {
         this.tcId = new TransactionCoordinatorID(1L);
         this.store = this.provider.openStore(tcId, null, null,
-                null, new MLTransactionMetadataStoreTest.TransactionRecoverTrackerImpl(), 0L,
+                null, new MLTransactionMetadataStoreTest.TransactionRecoverTrackerImpl(),
+                TransactionMetadataStoreConfig.defaultConfig(0L),
                 new TxnLogBufferedWriterConfig(), transactionTimer).get();
     }
 
@@ -153,6 +154,21 @@ public class TransactionMetadataStoreProviderTest {
         // get the txn status, it should be changed.
         TxnStatus newTxnStatus = this.store.getTxnStatus(txnID).get();
         assertEquals(newTxnStatus, TxnStatus.OPEN);
+    }
+
+    @Test
+    public void testFinalTxnStatusRemovedFromActiveStore() throws Exception {
+        TxnID txnID = this.store.newTransaction(0L, null).get();
+        this.store.updateTxnStatus(txnID, TxnStatus.COMMITTING, TxnStatus.OPEN, false).get();
+        this.store.updateTxnStatus(txnID, TxnStatus.COMMITTED, TxnStatus.COMMITTING, false).get();
+        assertEquals(this.store.getEndedTxnStatus(txnID), EndedTxnStatus.COMMITTED);
+
+        try {
+            this.store.getTxnMeta(txnID).get();
+            fail("Should fail to get txn meta after the transaction reaches a final status");
+        } catch (ExecutionException ee) {
+            assertTrue(ee.getCause() instanceof TransactionNotFoundException);
+        }
     }
 
     @Test
