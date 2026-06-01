@@ -4000,7 +4000,7 @@ public class ServerCnxTest {
         assertEquals(response.getRequestId(), 89L);
         assertEquals(response.getTxnidLeastBits(), 1L);
         assertEquals(response.getTxnidMostBits(), 12L);
-        assertEquals(response.getError(), ServerError.InvalidTxnStatus);
+        assertEquals(response.getError(), ServerError.TransactionNotFound);
 
         channel.finish();
     }

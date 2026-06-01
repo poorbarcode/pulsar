@@ -464,9 +464,12 @@ public class MLTransactionMetadataStore
                         .thenAccept(position -> {
                             appendLogCount.increment();
                             try {
-                                List<Position> positionsToDelete = txnMetaListPair.getRight();
+                                List<Position> txnLogs = txnMetaListPair.getRight();
                                 synchronized (txnMetaListPair.getLeft()) {
                                     txnMetaListPair.getLeft().updateTxnStatus(newStatus, expectedStatus);
+                                    if (newStatus != TxnStatus.COMMITTED && newStatus != TxnStatus.ABORTED) {
+                                        txnLogs.add(position);
+                                    }
                                 }
                                 if (newStatus == TxnStatus.ABORTING && isTimeout) {
                                     this.transactionTimeoutCount.increment();
@@ -482,9 +485,9 @@ public class MLTransactionMetadataStore
                                     }
                                     EndedTxnStatus endedTxnStatus = getEndedTxnStatus(newStatus, isTimeout);
                                     if (!endedTxnStatusCache.record(txnID, endedTxnStatus, position, modifyTime)) {
-                                        positionsToDelete.add(position);
+                                        txnLogs.add(position);
                                     }
-                                    deleteTxnLogPositions(txnID, positionsToDelete);
+                                    deleteTxnLogPositions(txnID, txnLogs);
                                     if (txnMetaMap.remove(txnID.getLeastSigBits()) != null) {
                                         onGoingTxnCount.decrement();
                                     }
