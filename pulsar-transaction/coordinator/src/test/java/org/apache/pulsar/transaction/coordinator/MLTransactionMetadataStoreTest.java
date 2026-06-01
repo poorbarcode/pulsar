@@ -49,6 +49,7 @@ import org.apache.pulsar.transaction.coordinator.impl.MLTransactionLogImpl;
 import org.apache.pulsar.transaction.coordinator.impl.MLTransactionMetadataStore;
 import org.apache.pulsar.transaction.coordinator.impl.MLTransactionSequenceIdGenerator;
 import org.apache.pulsar.transaction.coordinator.impl.TxnLogBufferedWriterConfig;
+import org.apache.pulsar.transaction.coordinator.proto.TransactionMetadataEntry;
 import org.apache.pulsar.transaction.coordinator.proto.TxnStatus;
 import org.apache.pulsar.transaction.coordinator.test.MockedBookKeeperTestCase;
 import org.awaitility.Awaitility;
@@ -487,6 +488,72 @@ public class MLTransactionMetadataStoreTest extends MockedBookKeeperTestCase {
         }
     }
 
+    @Test(dataProvider = "bufferedWriterConfigDataProvider")
+    public void testReplayKeepsEndLogWhenPreviousLogsRemain(TxnLogBufferedWriterConfig txnLogBufferedWriterConfig)
+            throws Exception {
+        ManagedLedgerFactoryConfig factoryConf = new ManagedLedgerFactoryConfig();
+        factoryConf.setMaxCacheSize(0);
+
+        @Cleanup("shutdown")
+        ManagedLedgerFactory factory = new ManagedLedgerFactoryImpl(metadataStore, bkc, factoryConf);
+        TransactionCoordinatorID transactionCoordinatorID = new TransactionCoordinatorID(1);
+        ManagedLedgerConfig managedLedgerConfig = new ManagedLedgerConfig();
+        MLTransactionSequenceIdGenerator mlTransactionSequenceIdGenerator = new MLTransactionSequenceIdGenerator();
+        managedLedgerConfig.setManagedLedgerInterceptor(mlTransactionSequenceIdGenerator);
+
+        MLTransactionLogImpl mlTransactionLog = new MLTransactionLogImpl(transactionCoordinatorID, factory,
+                managedLedgerConfig, txnLogBufferedWriterConfig, transactionTimer, DISABLED_BUFFERED_WRITER_METRICS);
+        mlTransactionLog.initialize().get(2, TimeUnit.SECONDS);
+
+        TxnID txnID = new TxnID(transactionCoordinatorID.getId(), 0L);
+        long now = System.currentTimeMillis();
+        Position newPosition = mlTransactionLog.append(newTxnLogEntry(txnID, now)).get(2, TimeUnit.SECONDS);
+        Position abortingPosition = mlTransactionLog.append(updateTxnLogEntry(txnID, TxnStatus.OPEN,
+                TxnStatus.ABORTING, now + 1, true)).get(2, TimeUnit.SECONDS);
+        Position abortedPosition = mlTransactionLog.append(updateTxnLogEntry(txnID, TxnStatus.ABORTING,
+                TxnStatus.ABORTED, now + 2, true)).get(2, TimeUnit.SECONDS);
+        mlTransactionLog.closeAsync().get(2, TimeUnit.SECONDS);
+
+        RecordingMLTransactionLogImpl recoveredTxnLog = new RecordingMLTransactionLogImpl(transactionCoordinatorID,
+                factory, managedLedgerConfig, txnLogBufferedWriterConfig, transactionTimer);
+        recoveredTxnLog.initialize().get(2, TimeUnit.SECONDS);
+        @Cleanup("closeAsync")
+        MLTransactionMetadataStore recoveredStore =
+                new MLTransactionMetadataStore(transactionCoordinatorID, recoveredTxnLog,
+                        new TransactionTimeoutTrackerImpl(), mlTransactionSequenceIdGenerator, 0L);
+        recoveredStore.init(new TransactionRecoverTrackerImpl()).get();
+
+        Awaitility.await().until(recoveredStore::checkIfReady);
+        assertEquals(recoveredStore.getEndedTxnStatus(txnID), EndedTxnStatus.TIMEOUT);
+        Assert.assertTrue(recoveredTxnLog.deleted(newPosition));
+        Assert.assertTrue(recoveredTxnLog.deleted(abortingPosition));
+        Assert.assertFalse(recoveredTxnLog.deleted(abortedPosition));
+    }
+
+    private static TransactionMetadataEntry newTxnLogEntry(TxnID txnID, long now) {
+        return new TransactionMetadataEntry()
+                .setTxnidMostBits(txnID.getMostSigBits())
+                .setTxnidLeastBits(txnID.getLeastSigBits())
+                .setStartTime(now)
+                .setTimeoutMs(1000)
+                .setMetadataOp(TransactionMetadataEntry.TransactionMetadataOp.NEW)
+                .setLastModificationTime(now)
+                .setMaxLocalTxnId(txnID.getLeastSigBits());
+    }
+
+    private static TransactionMetadataEntry updateTxnLogEntry(TxnID txnID, TxnStatus expectedStatus,
+                                                              TxnStatus newStatus, long now, boolean isTimeout) {
+        return new TransactionMetadataEntry()
+                .setTxnidMostBits(txnID.getMostSigBits())
+                .setTxnidLeastBits(txnID.getLeastSigBits())
+                .setExpectedStatus(expectedStatus)
+                .setMetadataOp(TransactionMetadataEntry.TransactionMetadataOp.UPDATE)
+                .setLastModificationTime(now)
+                .setNewStatus(newStatus)
+                .setIsTimeout(isTimeout)
+                .setMaxLocalTxnId(txnID.getLeastSigBits());
+    }
+
     /**
      * Verify transaction meta store recover correct.
      * TODO After the batch feature is dynamically switched，append tests that contain both batch and non-batch data.
@@ -596,6 +663,29 @@ public class MLTransactionMetadataStoreTest extends MockedBookKeeperTestCase {
         @Override
         public void close() {
 
+        }
+    }
+
+    private static class RecordingMLTransactionLogImpl extends MLTransactionLogImpl {
+        private final List<List<Position>> deletedPositions = new ArrayList<>();
+
+        RecordingMLTransactionLogImpl(TransactionCoordinatorID tcID,
+                                      ManagedLedgerFactory managedLedgerFactory,
+                                      ManagedLedgerConfig managedLedgerConfig,
+                                      TxnLogBufferedWriterConfig txnLogBufferedWriterConfig,
+                                      HashedWheelTimer timer) {
+            super(tcID, managedLedgerFactory, managedLedgerConfig, txnLogBufferedWriterConfig, timer,
+                    DISABLED_BUFFERED_WRITER_METRICS);
+        }
+
+        @Override
+        public CompletableFuture<Void> deletePosition(List<Position> positions) {
+            deletedPositions.add(new ArrayList<>(positions));
+            return super.deletePosition(positions);
+        }
+
+        boolean deleted(Position position) {
+            return deletedPositions.stream().flatMap(List::stream).anyMatch(position::equals);
         }
     }
 

@@ -233,7 +233,6 @@ public class MLTransactionMetadataStore
                                     txnMetaListPair.getLeft()
                                             .updateTxnStatus(transactionMetadataEntry.getNewStatus(),
                                                     transactionMetadataEntry.getExpectedStatus());
-                                    txnMetaListPair.getRight().add(position);
                                     recoverTracker.updateTransactionStatus(txnID.getLeastSigBits(), newStatus);
                                     if (newStatus == TxnStatus.COMMITTED || newStatus == TxnStatus.ABORTED) {
                                         long endTime = transactionMetadataEntry.getLastModificationTime();
@@ -247,6 +246,8 @@ public class MLTransactionMetadataStore
                                         if (txnMetaMap.remove(transactionId) != null) {
                                             onGoingTxnCount.decrement();
                                         }
+                                    } else {
+                                        positionsToDelete.add(position);
                                     }
                                 }
                                 break;
