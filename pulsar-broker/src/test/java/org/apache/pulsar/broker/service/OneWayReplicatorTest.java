@@ -238,7 +238,7 @@ public class OneWayReplicatorTest extends OneWayReplicatorTestBase {
     }
 
     @Test(timeOut = 120 * 1000)
-    public void testTopicGCDoesNotDisconnectReplicatorWhenRemoteProducerIsActive() throws Exception {
+    public void testDisconnectAndReconnectInactiveReplicator() throws Exception {
         final String topic = BrokerTestUtil.newUniqueName("persistent://" + replicatedNamespace + "/tp_");
         // Let inactive replicator check faster.
         int replicationInactiveThresholdSeconds = pulsar1.getConfig().getBrokerReplicationInactiveThresholdSeconds();
