@@ -826,6 +826,17 @@ public class ServiceConfiguration implements PulsarConfiguration {
     private Integer brokerDeleteInactiveTopicsMaxInactiveDurationSeconds = null;
 
     @FieldContext(
+        category = CATEGORY_POLICIES,
+        dynamic = true,
+            doc = "Time in seconds since a replicator's producer last sent a message, after which the replicator"
+                    + " is considered inactive. When inactive-topic deletion is enabled (via"
+                    + " brokerDeleteInactiveTopicsEnabled, or enabled by namespace/topic policy), a replicated"
+                    + " topic is eligible for deletion only once all its replicators have been inactive for this"
+                    + " duration."
+    )
+    private Integer brokerReplicationInactiveThresholdSeconds = 24 * 3600;
+
+    @FieldContext(
             category = CATEGORY_POLICIES,
             dynamic = true,
             doc = "Allow forced deletion of tenants. Default is false."

@@ -130,6 +130,8 @@ public abstract class AbstractTopic implements Topic, TopicPolicyListener {
 
     // Timestamp of when this topic was last seen active
     protected volatile long lastActive;
+    // Timestamp of when the latest producer was disconnected.
+    protected volatile Long localProducersEmptyTime;
 
     // Flag to signal that producer of this topic has published batch-message so, broker should not allow consumer which
     // doesn't support batch-message
@@ -665,16 +667,50 @@ public abstract class AbstractTopic implements Topic, TopicPolicyListener {
         return null;
     }
 
-    protected boolean hasLocalProducers() {
-        if (producers.isEmpty()) {
-            return false;
+    public abstract CompletableFuture<Void> closeReplProducersIfNoBacklog();
+
+    public abstract CompletableFuture<Void> startReplProducers();
+
+    public void disconnectReplicatorIfNoTrafficForLongTime() {
+        updateLocalProducersEmptyTime();
+
+        final Long cachedTime = localProducersEmptyTime;
+        if (cachedTime == null) {
+            return;
         }
+        long threshold = brokerService.getPulsar().getConfig().getBrokerReplicationInactiveThresholdSeconds() * 1000;
+        if (System.currentTimeMillis() - cachedTime > threshold) {
+            closeReplProducersIfNoBacklog().whenCompleteAsync((__, ex) -> {
+                // Here, "!=" is used instead of the "!equals()" to avoid the problem of "inability to compare due
+                // to multiple changes in this attribute within a short period of time".
+                if (cachedTime != localProducersEmptyTime) {
+                    log.warn().log("Restart replication producers since new producers were registered concurently"
+                            + " when closing producers.");
+                    startReplProducers().whenComplete((ignore, ex2) -> {
+                        log.error().exception(ex2).log("Failed to start replication producers after registered"
+                            + " new producers");
+                    });
+                }
+            });
+        }
+    }
+
+    protected void updateLocalProducersEmptyTime() {
+        // The timestamp has been set.
+        if (localProducersEmptyTime != null) {
+            return;
+        }
+        // Only contains remote producer | producers is empty: update the time.
         for (Producer producer : producers.values()) {
             if (!producer.isRemote()) {
-                return true;
+                return;
             }
         }
-        return false;
+        localProducersEmptyTime = System.currentTimeMillis();
+    }
+
+    protected boolean hasProducersActive() {
+        return !producers.isEmpty();
     }
 
     @Override
@@ -1014,6 +1050,7 @@ public abstract class AbstractTopic implements Topic, TopicPolicyListener {
         if (existProducer != null) {
             return tryOverwriteOldProducer(existProducer, producer);
         } else if (!producer.isRemote()) {
+            localProducersEmptyTime = null;
             USER_CREATED_PRODUCER_COUNTER_UPDATER.incrementAndGet(this);
         }
         return CompletableFuture.completedFuture(null);

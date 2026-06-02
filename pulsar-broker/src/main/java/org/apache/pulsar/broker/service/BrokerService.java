@@ -808,6 +808,10 @@ public class BrokerService implements Closeable {
             int interval = pulsar().getConfiguration().getBrokerDeleteInactiveTopicsFrequencySeconds();
             inactivityMonitor.scheduleAtFixedRateNonConcurrently(() -> checkGC(), interval, interval,
                     TimeUnit.SECONDS);
+            if (pulsar().getConfig().getBrokerReplicationInactiveThresholdSeconds() > 0) {
+                inactivityMonitor.scheduleAtFixedRateNonConcurrently(() -> checkInactiveReplication(), interval,
+                        interval, TimeUnit.SECONDS);
+            }
         }
 
         // Deduplication info checker
@@ -1599,7 +1603,7 @@ public class BrokerService implements Closeable {
                         .attr("topic", topic)
                         .exceptionMessage(ex.getCause())
                         .log("Replication check failed. Removing topic from topics list");
-                nonPersistentTopic.stopReplProducers().whenComplete((v, exception) -> {
+                nonPersistentTopic.closeReplProducersIfNoBacklog().whenComplete((v, exception) -> {
                     topicFuture.completeExceptionally(ex);
                 });
                 return null;
@@ -2487,6 +2491,14 @@ public class BrokerService implements Closeable {
 
     public void checkGC() {
         forEachTopic(Topic::checkGC);
+    }
+
+    public void checkInactiveReplication() {
+        forEachTopic(topic -> {
+            if (topic instanceof AbstractTopic abstractTopic) {
+                abstractTopic.disconnectReplicatorIfNoTrafficForLongTime();
+            }
+        });
     }
 
     public void checkClusterMigration() {

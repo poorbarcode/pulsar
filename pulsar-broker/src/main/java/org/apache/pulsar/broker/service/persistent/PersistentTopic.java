@@ -888,6 +888,7 @@ public class PersistentTopic extends AbstractTopic implements Topic, AddEntryCal
         return false;
     }
 
+    @Override
     public CompletableFuture<Void> startReplProducers() {
         // read repl-cluster from policies to avoid restart of replicator which are in process of disconnect and close
         return brokerService.pulsar().getPulsarResources().getNamespaceResources()
@@ -921,7 +922,7 @@ public class PersistentTopic extends AbstractTopic implements Topic, AddEntryCal
         return FutureUtil.waitForAll(closeFutures);
     }
 
-    private synchronized CompletableFuture<Void> closeReplProducersIfNoBacklog() {
+    public synchronized CompletableFuture<Void> closeReplProducersIfNoBacklog() {
         List<CompletableFuture<Void>> closeFutures = new ArrayList<>();
         replicators.forEach((region, replicator) -> closeFutures.add(replicator.disconnect()));
         shadowReplicators.forEach((__, replicator) -> closeFutures.add(replicator.disconnect()));
@@ -3375,7 +3376,7 @@ public class PersistentTopic extends AbstractTopic implements Topic, AddEntryCal
                 break;
         }
         // no local producers
-        return hasLocalProducers();
+        return hasProducersActive();
     }
 
     private boolean hasBacklogs(boolean getPreciseBacklog) {
