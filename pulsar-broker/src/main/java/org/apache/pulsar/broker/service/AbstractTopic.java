@@ -678,17 +678,21 @@ public abstract class AbstractTopic implements Topic, TopicPolicyListener {
         if (cachedTime == null) {
             return;
         }
-        long threshold = brokerService.getPulsar().getConfig().getBrokerReplicationInactiveThresholdSeconds() * 1000;
-        if (System.currentTimeMillis() - cachedTime > threshold) {
+        int threshold = brokerService.getPulsar().getConfig().getBrokerReplicationInactiveThresholdSeconds();
+        if (System.currentTimeMillis() - cachedTime > threshold * 1000L) {
+            log.info().attr("brokerReplicationInactiveThresholdSeconds", threshold)
+                    .log("Disconnecting replication producers since no producer is active for a long time.");
             closeReplProducersIfNoBacklog().whenCompleteAsync((__, ex) -> {
                 // Here, "!=" is used instead of the "!equals()" to avoid the problem of "inability to compare due
                 // to multiple changes in this attribute within a short period of time".
                 if (cachedTime != localProducersEmptyTime) {
-                    log.warn().log("Restart replication producers since new producers were registered concurently"
+                    log.warn().log("Restart replication producers since new producers were registered concurrently"
                             + " when closing producers.");
                     startReplProducers().whenComplete((ignore, ex2) -> {
-                        log.error().exception(ex2).log("Failed to start replication producers after registered"
-                            + " new producers");
+                        if (ex2 != null) {
+                            log.error().exception(ex2).log("Failed to start replication producers after registered"
+                                + " new producers");
+                        }
                     });
                 }
             });

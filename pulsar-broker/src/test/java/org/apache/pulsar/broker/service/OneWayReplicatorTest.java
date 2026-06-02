@@ -116,6 +116,8 @@ import org.apache.pulsar.common.partition.PartitionedTopicMetadata;
 import org.apache.pulsar.common.policies.data.AutoTopicCreationOverride;
 import org.apache.pulsar.common.policies.data.ClusterData;
 import org.apache.pulsar.common.policies.data.HierarchyTopicPolicies;
+import org.apache.pulsar.common.policies.data.InactiveTopicDeleteMode;
+import org.apache.pulsar.common.policies.data.InactiveTopicPolicies;
 import org.apache.pulsar.common.policies.data.PublishRate;
 import org.apache.pulsar.common.policies.data.ReplicatorStats;
 import org.apache.pulsar.common.policies.data.RetentionPolicies;
@@ -232,6 +234,61 @@ public class OneWayReplicatorTest extends OneWayReplicatorTestBase {
         cleanupTopics(() -> {
             admin1.topics().delete(topicName1);
             admin2.topics().deletePartitionedTopic(topicName2);
+        });
+    }
+
+    @Test(timeOut = 120 * 1000)
+    public void testTopicGCDoesNotDisconnectReplicatorWhenRemoteProducerIsActive() throws Exception {
+        final String topic = BrokerTestUtil.newUniqueName("persistent://" + replicatedNamespace + "/tp_");
+        // Let inactive replicator check faster.
+        int replicationInactiveThresholdSeconds = pulsar1.getConfig().getBrokerReplicationInactiveThresholdSeconds();
+        pulsar1.getConfig().setBrokerReplicationInactiveThresholdSeconds(10);
+        // create topic.
+        admin1.topics().createNonPartitionedTopic(topic);
+        client1.newProducer(Schema.STRING).topic(topic).create().close();
+        waitReplicatorStarted(topic);
+        PersistentTopic persistentTopic1 = (PersistentTopic) broker1.getTopic(topic, false).join().get();
+
+        // Let topic GC slower.
+        InactiveTopicPolicies inactiveTopicPolicies =
+                new InactiveTopicPolicies(InactiveTopicDeleteMode.delete_when_no_subscriptions, 3600, true);
+        admin1.topicPolicies().setInactiveTopicPolicies(topic, inactiveTopicPolicies);
+        Awaitility.await().untilAsserted(() -> {
+            assertFalse(persistentTopic1.getProducers().values().stream()
+                    .anyMatch(producer -> !producer.isRemote()));
+            assertTrue(persistentTopic1.getSubscriptions().isEmpty());
+            assertTrue(persistentTopic1.getInactiveTopicPolicies().isDeleteWhileInactive());
+            assertEquals(persistentTopic1.getInactiveTopicPolicies().getMaxInactiveDurationSeconds(), 3600);
+        });
+
+        // Trigger an event: inactive replicator.
+        // Verify: the producer was closed.
+        persistentTopic1.disconnectReplicatorIfNoTrafficForLongTime();
+        Thread.sleep(1000 * 12);
+        persistentTopic1.disconnectReplicatorIfNoTrafficForLongTime();
+        Awaitility.await().untilAsserted(() -> {
+            Replicator replicator = persistentTopic1.getReplicators().get(cluster2);
+            assertNotNull(replicator);
+            assertFalse(replicator.isConnected());
+        });
+
+        // Trigger an event: new producer registered.
+        // Verify: the replication is started again.
+        Producer<String> producer1 = client1.newProducer(Schema.STRING).topic(topic).create();
+        Awaitility.await().untilAsserted(() -> {
+            Replicator replicator = persistentTopic1.getReplicators().get(cluster2);
+            assertNotNull(replicator);
+            assertTrue(replicator.isConnected());
+        });
+
+        // cleanup.
+        pulsar1.getConfig().setBrokerReplicationInactiveThresholdSeconds(replicationInactiveThresholdSeconds);
+        if (producer1 != null) {
+            producer1.close();
+        }
+        cleanupTopics(() -> {
+            admin1.topics().delete(topic);
+            admin2.topics().delete(topic);
         });
     }
 

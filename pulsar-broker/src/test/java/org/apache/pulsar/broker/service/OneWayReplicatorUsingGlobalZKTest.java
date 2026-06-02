@@ -827,20 +827,23 @@ public class OneWayReplicatorUsingGlobalZKTest extends OneWayReplicatorTest {
 
     @Test
     public void testTopicGCDoesNotDisconnectReplicatorWhenRemoteProducerIsActive() throws Exception {
+        int replicationInactiveThresholdSeconds = pulsar1.getConfig().getBrokerReplicationInactiveThresholdSeconds();
+        pulsar1.getConfig().setBrokerReplicationInactiveThresholdSeconds(3600);
         final String topic = BrokerTestUtil.newUniqueName("persistent://" + replicatedNamespace + "/tp_");
         admin1.topics().createNonPartitionedTopic(topic);
         Producer<String> producer1 = client1.newProducer(Schema.STRING).topic(topic).create();
 
         try {
             producer1.send("msg-1");
+            waitReplicatorStarted(topic, pulsar1);
             waitReplicatorStarted(topic, pulsar2);
-            PersistentTopic persistentTopic2 = (PersistentTopic) broker2
-                    .getTopic(topic, false).join().get();
+            PersistentTopic persistentTopic2 = (PersistentTopic) broker2.getTopic(topic, false)
+                    .join().get();
 
             // Set inactive policies.
             InactiveTopicPolicies  inactiveTopicPolicies = new InactiveTopicPolicies();
             inactiveTopicPolicies.setInactiveTopicDeleteMode(InactiveTopicDeleteMode.delete_when_no_subscriptions);
-            inactiveTopicPolicies.setMaxInactiveDurationSeconds(60);
+            inactiveTopicPolicies.setMaxInactiveDurationSeconds(10);
             inactiveTopicPolicies.setDeleteWhileInactive(true);
             admin2.topicPolicies().setInactiveTopicPolicies(topic, inactiveTopicPolicies);
 
@@ -850,7 +853,7 @@ public class OneWayReplicatorUsingGlobalZKTest extends OneWayReplicatorTest {
                         .anyMatch(producer -> !producer.isRemote()));
                 assertTrue(persistentTopic2.getSubscriptions().isEmpty());
                 assertTrue(persistentTopic2.getInactiveTopicPolicies().isDeleteWhileInactive());
-                assertEquals(persistentTopic2.getInactiveTopicPolicies().getMaxInactiveDurationSeconds(), 60);
+                assertEquals(persistentTopic2.getInactiveTopicPolicies().getMaxInactiveDurationSeconds(), 10);
 
                 Replicator replicator = persistentTopic2.getReplicators().get(cluster1);
                 assertNotNull(replicator);
@@ -859,14 +862,17 @@ public class OneWayReplicatorUsingGlobalZKTest extends OneWayReplicatorTest {
             });
 
             // Trigger GC.
+            persistentTopic2.disconnectReplicatorIfNoTrafficForLongTime();
+            persistentTopic2.checkGC();
+            Thread.sleep(15 * 1000);
+            persistentTopic2.disconnectReplicatorIfNoTrafficForLongTime();
             persistentTopic2.checkGC();
 
             // Verify: the replication is not disconnected due to Topic GC.
-            Awaitility.await().during(Duration.ofSeconds(120)).atMost(Duration.ofSeconds(5)).untilAsserted(() -> {
-                Replicator replicator = persistentTopic2.getReplicators().get(cluster1);
-                assertNotNull(replicator);
-                assertTrue(replicator.isConnected());
-            });
+            Replicator replicator = persistentTopic2.getReplicators().get(cluster1);
+            assertNotNull(replicator);
+            assertTrue(replicator.isConnected());
+
             // Verify: the replication still works.
             producer1.send("msg-2");
             Awaitility.await().untilAsserted(() -> {
@@ -874,6 +880,7 @@ public class OneWayReplicatorUsingGlobalZKTest extends OneWayReplicatorTest {
             });
 
         } finally {
+            pulsar1.getConfig().setBrokerReplicationInactiveThresholdSeconds(replicationInactiveThresholdSeconds);
             producer1.close();
             admin1.topics().setReplicationClusters(topic, Arrays.asList(cluster1));
             admin2.topics().setReplicationClusters(topic, Arrays.asList(cluster2));
