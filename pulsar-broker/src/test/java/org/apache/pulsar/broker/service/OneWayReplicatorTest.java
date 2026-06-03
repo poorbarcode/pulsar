@@ -292,6 +292,59 @@ public class OneWayReplicatorTest extends OneWayReplicatorTestBase {
         });
     }
 
+    @Test(timeOut = 120 * 1000)
+    public void testDisconnectAndReconnectInactiveReplicatorNonPersistent() throws Exception {
+        final String topic = BrokerTestUtil.newUniqueName("non-persistent://" + replicatedNamespace + "/tp_");
+        // Let inactive replicator check faster.
+        int replicationInactiveThresholdSeconds = pulsar1.getConfig().getBrokerReplicationInactiveThresholdSeconds();
+        pulsar1.getConfig().setBrokerReplicationInactiveThresholdSeconds(10);
+        // create topic.
+        admin1.topics().createNonPartitionedTopic(topic);
+        Consumer consumer1 = client1.newConsumer().topic(topic).subscriptionName("s1").subscribe();
+        waitReplicatorStarted(topic);
+        Consumer consumer2 = client2.newConsumer().topic(topic).subscriptionName("s1").subscribe();
+
+        NonPersistentTopic nonPersistentTopic1 = (NonPersistentTopic) broker1.getTopic(topic, false).join().get();
+
+        // Let topic GC slower.
+        InactiveTopicPolicies inactiveTopicPolicies =
+                new InactiveTopicPolicies(InactiveTopicDeleteMode.delete_when_subscriptions_caught_up, 3600, true);
+        admin1.topicPolicies().setInactiveTopicPolicies(topic, inactiveTopicPolicies);
+        Awaitility.await().untilAsserted(() -> {
+            assertFalse(nonPersistentTopic1.getProducers().values().stream()
+                    .anyMatch(producer -> !producer.isRemote()));
+            //assertTrue(nonPersistentTopic1.getSubscriptions().isEmpty());
+            assertTrue(nonPersistentTopic1.getInactiveTopicPolicies().isDeleteWhileInactive());
+            assertEquals(nonPersistentTopic1.getInactiveTopicPolicies().getMaxInactiveDurationSeconds(), 3600);
+        });
+
+        // Trigger an event: inactive replicator.
+        // Verify: the producer was closed.
+        nonPersistentTopic1.disconnectReplicatorIfNoTrafficForLongTime();
+        Thread.sleep(1000 * 12);
+        nonPersistentTopic1.disconnectReplicatorIfNoTrafficForLongTime();
+        Awaitility.await().untilAsserted(() -> {
+            Replicator replicator = nonPersistentTopic1.getReplicators().get(cluster2);
+            assertNotNull(replicator);
+            assertFalse(replicator.isConnected());
+        });
+
+        // Trigger an event: new producer registered.
+        // Verify: the replication is started again.
+        Producer<String> producer1 = client1.newProducer(Schema.STRING).topic(topic).create();
+        Awaitility.await().untilAsserted(() -> {
+            Replicator replicator = nonPersistentTopic1.getReplicators().get(cluster2);
+            assertNotNull(replicator);
+            assertTrue(replicator.isConnected());
+        });
+
+        // cleanup.
+        pulsar1.getConfig().setBrokerReplicationInactiveThresholdSeconds(replicationInactiveThresholdSeconds);
+        producer1.close();
+        consumer1.close();
+        consumer2.close();
+    }
+
     @Test(timeOut = 45 * 1000)
     public void testReplicatorProducerStatInTopic() throws Exception {
         final String topicName = BrokerTestUtil.newUniqueName("persistent://" + replicatedNamespace + "/tp_");

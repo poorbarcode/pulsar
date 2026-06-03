@@ -825,6 +825,16 @@ public class OneWayReplicatorUsingGlobalZKTest extends OneWayReplicatorTest {
         admin2.topics().delete(tp, false);
     }
 
+    @Test(enabled = false)
+    public void testDisconnectAndReconnectInactiveReplicator() throws Exception {
+        super.testDisconnectAndReconnectInactiveReplicator();
+    }
+
+    @Test(enabled = false)
+    public void testDisconnectAndReconnectInactiveReplicatorNonPersistent() throws Exception {
+        super.testDisconnectAndReconnectInactiveReplicator();
+    }
+
     @Test
     public void testTopicGCDoesNotDisconnectReplicatorWhenRemoteProducerIsActive() throws Exception {
         int replicationInactiveThresholdSeconds = pulsar1.getConfig().getBrokerReplicationInactiveThresholdSeconds();

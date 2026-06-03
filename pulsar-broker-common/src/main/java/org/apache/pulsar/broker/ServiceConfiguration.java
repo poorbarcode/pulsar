@@ -839,7 +839,7 @@ public class ServiceConfiguration implements PulsarConfiguration {
                 + " runs with the inactive-topic monitor, whose interval is"
                 + " brokerDeleteInactiveTopicsFrequencySeconds. The default is 86400 seconds (24 hours)."
     )
-    private Integer brokerReplicationInactiveThresholdSeconds = 24 * 3600;
+    private int brokerReplicationInactiveThresholdSeconds = 24 * 3600;
 
     @FieldContext(
             category = CATEGORY_POLICIES,

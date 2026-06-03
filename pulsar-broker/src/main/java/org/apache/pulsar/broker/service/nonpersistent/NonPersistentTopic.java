@@ -598,9 +598,16 @@ public class NonPersistentTopic extends AbstractTopic implements Topic, TopicPol
         return closeFuture;
     }
 
-    public CompletableFuture<Void> closeReplProducersIfNoBacklog() {
+    public CompletableFuture<Void> stopReplProducers() {
         List<CompletableFuture<Void>> closeFutures = new ArrayList<>();
         replicators.forEach((region, replicator) -> closeFutures.add(replicator.terminate()));
+        return FutureUtil.waitForAll(closeFutures);
+    }
+
+    @Override
+    public CompletableFuture<Void> closeReplProducersIfNoBacklog() {
+        List<CompletableFuture<Void>> closeFutures = new ArrayList<>();
+        replicators.forEach((region, replicator) -> closeFutures.add(replicator.disconnect()));
         return FutureUtil.waitForAll(closeFutures);
     }
 

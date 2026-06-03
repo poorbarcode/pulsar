@@ -675,10 +675,16 @@ public abstract class AbstractTopic implements Topic, TopicPolicyListener {
         updateLocalProducersEmptyTime();
 
         final Long cachedTime = localProducersEmptyTime;
+        // Still active.
         if (cachedTime == null) {
             return;
         }
+        // Disabled the feature.
         int threshold = brokerService.getPulsar().getConfig().getBrokerReplicationInactiveThresholdSeconds();
+        if (threshold <= 0) {
+            return;
+        }
+        // Check and close replication producers.
         if (System.currentTimeMillis() - cachedTime > threshold * 1000L) {
             log.info().attr("brokerReplicationInactiveThresholdSeconds", threshold)
                     .log("Disconnecting replication producers since no producer is active for a long time.");
@@ -850,7 +856,8 @@ public abstract class AbstractTopic implements Topic, TopicPolicyListener {
                             log.warn("Attempting to add producer to a terminated topic");
                             throw new TopicTerminatedException("Topic was already terminated");
                         }
-                        return internalAddProducer(producer).thenApply(ignore -> {
+                        return internalAddProducer(producer).thenCompose(__ -> this.startReplProducers())
+                                .thenApply(ignore -> {
                             USAGE_COUNT_UPDATER.incrementAndGet(this);
                             log.debug()
                                     .attr("producerName", producer.getProducerName())

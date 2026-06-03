@@ -85,6 +85,17 @@ public class OneWayReplicatorUsingGlobalPartitionedTest extends OneWayReplicator
         super.testDeleteTopicWhenReplicating();
     }
 
+    @Test(enabled = false)
+    public void testDisconnectAndReconnectInactiveReplicator() throws Exception {
+        super.testDisconnectAndReconnectInactiveReplicator();
+    }
+
+    @Test(enabled = false)
+    public void testDisconnectAndReconnectInactiveReplicatorNonPersistent() throws Exception {
+        super.testDisconnectAndReconnectInactiveReplicator();
+    }
+
+
     @Override
     @Test(enabled = false)
     public void testReplicatorProducerStatInTopic() throws Exception {

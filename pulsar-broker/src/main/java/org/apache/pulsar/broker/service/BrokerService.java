@@ -1603,7 +1603,7 @@ public class BrokerService implements Closeable {
                         .attr("topic", topic)
                         .exceptionMessage(ex.getCause())
                         .log("Replication check failed. Removing topic from topics list");
-                nonPersistentTopic.closeReplProducersIfNoBacklog().whenComplete((v, exception) -> {
+                nonPersistentTopic.stopReplProducers().whenComplete((v, exception) -> {
                     topicFuture.completeExceptionally(ex);
                 });
                 return null;
