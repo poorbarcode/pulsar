@@ -856,8 +856,12 @@ public abstract class AbstractTopic implements Topic, TopicPolicyListener {
                             log.warn("Attempting to add producer to a terminated topic");
                             throw new TopicTerminatedException("Topic was already terminated");
                         }
-                        return internalAddProducer(producer).thenCompose(__ -> this.startReplProducers())
-                                .thenApply(ignore -> {
+                        CompletableFuture<Void> internalAppProducerFuture = internalAddProducer(producer);
+                        internalAppProducerFuture.thenApply(__ -> this.startReplProducers()).exceptionally(ex -> {
+                            log.error("Failed to start replication producers.");
+                            return null;
+                        });
+                        return internalAppProducerFuture.thenApply(ignore -> {
                             USAGE_COUNT_UPDATER.incrementAndGet(this);
                             log.debug()
                                     .attr("producerName", producer.getProducerName())
