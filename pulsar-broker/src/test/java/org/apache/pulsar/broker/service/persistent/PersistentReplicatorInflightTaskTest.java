@@ -18,9 +18,15 @@
  */
 package org.apache.pulsar.broker.service.persistent;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 import java.util.ArrayList;
@@ -165,6 +171,36 @@ public class PersistentReplicatorInflightTaskTest extends OneWayReplicatorTestBa
             admin1.topics().delete(topicName, true);
             admin2.topics().delete(topicName, true);
         }
+    }
+
+    @Test
+    public void testReplicateEntriesProcessesBatchWhenReadWasNotSkipped() throws Exception {
+        PersistentReplicator replicator = spy(getReplicator(topicName));
+        List<Entry> entries = Collections.emptyList();
+        InFlightTask task = new InFlightTask(PositionFactory.create(1, 1), 1, replicator.getReplicatorId());
+        task.setEntries(entries);
+        doReturn(false).when(replicator).doReplicateEntries(any(), any());
+        doNothing().when(replicator).readMoreEntries();
+
+        replicator.replicateEntries(entries, task, false);
+
+        verify(replicator, times(1)).doReplicateEntries(entries, task);
+        verify(replicator, never()).readMoreEntries();
+    }
+
+    @Test
+    public void testReplicateEntriesResumesReadWhenNoMessagesWereSentAfterSkippedRead() throws Exception {
+        PersistentReplicator replicator = spy(getReplicator(topicName));
+        List<Entry> entries = Collections.emptyList();
+        InFlightTask task = new InFlightTask(PositionFactory.create(1, 1), 1, replicator.getReplicatorId());
+        task.setEntries(entries);
+        doReturn(false).when(replicator).doReplicateEntries(any(), any());
+        doNothing().when(replicator).readMoreEntries();
+
+        replicator.replicateEntries(entries, task, true);
+
+        verify(replicator, times(1)).doReplicateEntries(entries, task);
+        verify(replicator, times(1)).readMoreEntries();
     }
 
     @Test
