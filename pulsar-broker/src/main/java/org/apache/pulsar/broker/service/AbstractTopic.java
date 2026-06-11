@@ -697,6 +697,11 @@ public abstract class AbstractTopic implements Topic, TopicPolicyListener {
                 persistentReplicator.disconnectIfNoTrafficAndBacklog();
             }
         }
+        for (Replicator replicator : getShadowReplicators().values()) {
+            if (replicator instanceof PersistentReplicator persistentReplicator) {
+                persistentReplicator.disconnectIfNoTrafficAndBacklog();
+            }
+        }
     }
 
     @Override

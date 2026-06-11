@@ -429,7 +429,8 @@ public abstract class PersistentReplicator extends AbstractReplicator
         // If the previous "read more entries" was skipped due to the producer write buffer is full, we need to trigger
         // once after replicated entries. But if "doReplicateEntries" already sent some messages, the event "read more
         // entries" can be triggered by the receipt action of publishing.
-        if (skippedReadAfterSent && !doReplicateEntries(entries, inFlightTask)) {
+        boolean atLeastOneMessageSentForReplication = doReplicateEntries(entries, inFlightTask);
+        if (skippedReadAfterSent && !atLeastOneMessageSentForReplication) {
             readMoreEntries();
         }
     }
