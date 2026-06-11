@@ -828,16 +828,14 @@ public class ServiceConfiguration implements PulsarConfiguration {
     @FieldContext(
         category = CATEGORY_POLICIES,
         dynamic = true,
-        doc = "Time in seconds that a topic may have no local producers before the broker considers its outbound"
-                + " replication producers idle. The timer starts when the inactive-replication check first observes"
-                + " that the topic has no local producers; remote producers created by replication from another"
-                + " cluster do not reset this timer. When the threshold is exceeded and the replication backlog is"
-                + " clear, the broker disconnects the topic's replication producers to release idle replication"
-                + " resources. A connected remote producer still makes the topic active for inactive-topic GC, so"
-                + " the topic is not deleted only because local producers are absent; deletion is still controlled"
-                + " by brokerDeleteInactiveTopicsEnabled and the namespace/topic inactive-topic policies. The check"
-                + " runs with the inactive-topic monitor, whose interval is"
-                + " brokerDeleteInactiveTopicsFrequencySeconds. The default is 86400 seconds (24 hours)."
+        doc = "Time in seconds that a persistent geo-replication replicator may stay idle before the broker"
+                + " disconnects its replication producer. A replicator is eligible only when it has no backlog and"
+                + " has not read entries for replication processing for longer than this threshold. Disconnecting"
+                + " only releases the idle producer; the replicator and its cursor remain available, and the"
+                + " producer is recreated automatically when new messages need to be replicated. Set this value to"
+                + " 0 or a negative value to disable idle-replicator disconnection. The check runs with the"
+                + " inactive-topic monitor, whose interval is brokerDeleteInactiveTopicsFrequencySeconds, and only"
+                + " when brokerDeleteInactiveTopicsEnabled is true. The default is 86400 seconds (24 hours)."
     )
     private int brokerReplicationInactiveThresholdSeconds = 24 * 3600;
 
