@@ -67,6 +67,7 @@ import org.apache.pulsar.broker.service.BrokerServiceException.ProducerBusyExcep
 import org.apache.pulsar.broker.service.BrokerServiceException.ProducerFencedException;
 import org.apache.pulsar.broker.service.BrokerServiceException.TopicMigratedException;
 import org.apache.pulsar.broker.service.BrokerServiceException.TopicTerminatedException;
+import org.apache.pulsar.broker.service.persistent.PersistentReplicator;
 import org.apache.pulsar.broker.service.persistent.PersistentTopic;
 import org.apache.pulsar.broker.service.plugin.EntryFilter;
 import org.apache.pulsar.broker.service.schema.SchemaRegistryService;
@@ -130,8 +131,6 @@ public abstract class AbstractTopic implements Topic, TopicPolicyListener {
 
     // Timestamp of when this topic was last seen active
     protected volatile long lastActive;
-    // Timestamp of when the latest producer was disconnected.
-    protected volatile Long localProducersEmptyTime;
 
     // Flag to signal that producer of this topic has published batch-message so, broker should not allow consumer which
     // doesn't support batch-message
@@ -667,60 +666,37 @@ public abstract class AbstractTopic implements Topic, TopicPolicyListener {
         return null;
     }
 
-    public abstract CompletableFuture<Void> closeReplProducersIfNoBacklog();
-
-    public abstract CompletableFuture<Void> startReplProducers();
-
-    public void disconnectReplicatorIfNoTrafficForLongTime() {
-        updateLocalProducersEmptyTime();
-
-        final Long cachedTime = localProducersEmptyTime;
-        // Still active.
-        if (cachedTime == null) {
-            return;
-        }
-        // Disabled the feature.
-        int threshold = brokerService.getPulsar().getConfig().getBrokerReplicationInactiveThresholdSeconds();
-        if (threshold <= 0) {
-            return;
-        }
-        // Check and close replication producers.
-        if (System.currentTimeMillis() - cachedTime > threshold * 1000L) {
-            log.info().attr("brokerReplicationInactiveThresholdSeconds", threshold)
-                    .log("Disconnecting replication producers since no producer is active for a long time.");
-            closeReplProducersIfNoBacklog().whenCompleteAsync((__, ex) -> {
-                // Here, "!=" is used instead of the "!equals()" to avoid the problem of "inability to compare due
-                // to multiple changes in this attribute within a short period of time".
-                if (cachedTime != localProducersEmptyTime) {
-                    log.warn().log("Restart replication producers since new producers were registered concurrently"
-                            + " when closing producers.");
-                    startReplProducers().whenComplete((ignore, ex2) -> {
-                        if (ex2 != null) {
-                            log.error().exception(ex2).log("Failed to start replication producers after registered"
-                                + " new producers");
-                        }
-                    });
-                }
-            });
-        }
-    }
-
-    protected void updateLocalProducersEmptyTime() {
-        // The timestamp has been set.
-        if (localProducersEmptyTime != null) {
-            return;
-        }
-        // Only contains remote producer | producers is empty: update the time.
-        for (Producer producer : producers.values()) {
-            if (!producer.isRemote()) {
-                return;
-            }
-        }
-        localProducersEmptyTime = System.currentTimeMillis();
-    }
-
     protected boolean hasProducersActive() {
         return !producers.isEmpty();
+    }
+
+    protected boolean hasActiveReplicators() {
+        for (Replicator replicator : getReplicators().values()) {
+            if (replicator.isConnected()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    protected boolean hasLocalProducers() {
+        if (producers.isEmpty()) {
+            return false;
+        }
+        for (Producer producer : producers.values()) {
+            if (!producer.isRemote()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void disconnectReplicatorsIfNoTrafficAndBacklog() {
+        for (Replicator replicator : getReplicators().values()) {
+            if (replicator instanceof PersistentReplicator persistentReplicator) {
+                persistentReplicator.disconnectIfNoTrafficAndBacklog();
+            }
+        }
     }
 
     @Override
@@ -856,12 +832,7 @@ public abstract class AbstractTopic implements Topic, TopicPolicyListener {
                             log.warn("Attempting to add producer to a terminated topic");
                             throw new TopicTerminatedException("Topic was already terminated");
                         }
-                        CompletableFuture<Void> internalAppProducerFuture = internalAddProducer(producer);
-                        internalAppProducerFuture.thenApply(__ -> this.startReplProducers()).exceptionally(ex -> {
-                            log.error("Failed to start replication producers.");
-                            return null;
-                        });
-                        return internalAppProducerFuture.thenApply(ignore -> {
+                        return internalAddProducer(producer).thenApply(ignore -> {
                             USAGE_COUNT_UPDATER.incrementAndGet(this);
                             log.debug()
                                     .attr("producerName", producer.getProducerName())
@@ -1065,7 +1036,6 @@ public abstract class AbstractTopic implements Topic, TopicPolicyListener {
         if (existProducer != null) {
             return tryOverwriteOldProducer(existProducer, producer);
         } else if (!producer.isRemote()) {
-            localProducersEmptyTime = null;
             USER_CREATED_PRODUCER_COUNTER_UPDATER.incrementAndGet(this);
         }
         return CompletableFuture.completedFuture(null);

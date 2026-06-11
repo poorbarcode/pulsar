@@ -2496,7 +2496,7 @@ public class BrokerService implements Closeable {
     public void checkInactiveReplication() {
         forEachTopic(topic -> {
             if (topic instanceof AbstractTopic abstractTopic) {
-                abstractTopic.disconnectReplicatorIfNoTrafficForLongTime();
+                abstractTopic.disconnectReplicatorsIfNoTrafficAndBacklog();
             }
         });
     }

@@ -179,7 +179,7 @@ public class ShadowReplicatorTest extends BrokerTestBase {
                 new PersistentReplicator.InFlightTask(
                         entry.getPosition(), entries.size(), replicator.getReplicatorId());
         inFlightTask.setEntries(entries);
-        Assert.assertTrue(replicator.replicateEntries(entries, inFlightTask));
+        replicator.replicateEntries(entries, inFlightTask);
 
         Awaitility.await().untilAsserted(() -> {
             Assert.assertTrue(inFlightTask.isDone());

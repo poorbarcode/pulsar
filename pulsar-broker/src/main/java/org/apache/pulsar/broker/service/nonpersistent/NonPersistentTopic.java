@@ -605,19 +605,6 @@ public class NonPersistentTopic extends AbstractTopic implements Topic, TopicPol
     }
 
     @Override
-    public CompletableFuture<Void> closeReplProducersIfNoBacklog() {
-        List<CompletableFuture<Void>> closeFutures = new ArrayList<>();
-        replicators.forEach((region, replicator) -> closeFutures.add(replicator.disconnect()));
-        return FutureUtil.waitForAll(closeFutures);
-    }
-
-    @Override
-    public CompletableFuture<Void> startReplProducers() {
-        replicators.forEach((region, replicator) -> replicator.startProducer());
-        return CompletableFuture.completedFuture(null);
-    }
-
-    @Override
     public CompletableFuture<Void> checkReplication() {
         TopicName name = TopicName.get(topic);
         if (NamespaceService.isHeartbeatNamespace(name)
@@ -1038,7 +1025,7 @@ public class NonPersistentTopic extends AbstractTopic implements Topic, TopicPol
 
     public boolean isActive() {
         // No local consumers and no local producers
-        return !subscriptions.isEmpty() || hasProducersActive();
+        return !subscriptions.isEmpty() || hasLocalProducers();
     }
 
     @Override
@@ -1101,7 +1088,7 @@ public class NonPersistentTopic extends AbstractTopic implements Topic, TopicPol
                         .attr("maxInactiveDurationInSec", maxInactiveDurationInSec)
                         .log("Topic inactive for seconds, closing repl producers.");
 
-                closeReplProducersIfNoBacklog().thenCompose(v -> delete(true, false))
+                stopReplProducers().thenCompose(v -> delete(true, false))
                         .thenCompose(__ -> tryToDeletePartitionedMetadata())
                         .thenRun(() -> log.info("Topic deleted successfully due to inactivity"))
                         .exceptionally(e -> {

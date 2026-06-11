@@ -159,9 +159,6 @@ public class ReplicatedSubscriptionsController implements AutoCloseable, Topic.P
                             + "configured for that cluster. Ignoring the request.");
             return;
         }
-        if (!replicator.isConnected()) {
-            topic.startReplProducers();
-        }
 
         // Send response containing the current last written message id. The response
         // marker we're publishing locally and then replicating will have a higher

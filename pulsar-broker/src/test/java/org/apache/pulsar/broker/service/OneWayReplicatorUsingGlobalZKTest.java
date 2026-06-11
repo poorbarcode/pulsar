@@ -826,13 +826,13 @@ public class OneWayReplicatorUsingGlobalZKTest extends OneWayReplicatorTest {
     }
 
     @Test(enabled = false)
-    public void testDisconnectAndReconnectInactiveReplicator() throws Exception {
-        super.testDisconnectAndReconnectInactiveReplicator();
-    }
-
-    @Test(enabled = false)
-    public void testDisconnectAndReconnectInactiveReplicatorNonPersistent() throws Exception {
-        super.testDisconnectAndReconnectInactiveReplicator();
+    public void testDisconnectAndReconnectReplicator(boolean binaryWayRepl,
+                                                     boolean hasLocalProducerRegistered,
+                                                     boolean localProducerHasTraffic,
+                                                     boolean hasRemoteProducerTraffic,
+                                                     boolean hasRemoteProducerRegistered) throws Exception {
+        super.testDisconnectAndReconnectReplicator(binaryWayRepl, hasLocalProducerRegistered, localProducerHasTraffic,
+                hasRemoteProducerTraffic, hasRemoteProducerRegistered);
     }
 
     @Test
@@ -872,10 +872,10 @@ public class OneWayReplicatorUsingGlobalZKTest extends OneWayReplicatorTest {
             });
 
             // Trigger GC.
-            persistentTopic2.disconnectReplicatorIfNoTrafficForLongTime();
+            persistentTopic2.disconnectReplicatorsIfNoTrafficAndBacklog();
             persistentTopic2.checkGC();
             Thread.sleep(15 * 1000);
-            persistentTopic2.disconnectReplicatorIfNoTrafficForLongTime();
+            persistentTopic2.disconnectReplicatorsIfNoTrafficAndBacklog();
             persistentTopic2.checkGC();
 
             // Verify: the replication is not disconnected due to Topic GC.

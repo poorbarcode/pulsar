@@ -86,6 +86,8 @@ public abstract class AbstractReplicator implements Replicator {
     private static final AtomicReferenceFieldUpdater<AbstractReplicator, Attributes> ATTRIBUTES_UPDATER =
             AtomicReferenceFieldUpdater.newUpdater(AbstractReplicator.class, Attributes.class, "attributes");
 
+    protected volatile long latestPublishTime = System.currentTimeMillis();
+
     public enum State {
         /**
          * This enum has two mean meanings：
@@ -184,7 +186,7 @@ public abstract class AbstractReplicator implements Replicator {
         return CompletableFuture.completedFuture(null);
     }
 
-    public void startProducer() {
+    protected void startProducer() {
         // Guarantee only one task call "producerBuilder.createAsync()".
         Pair<Boolean, State> setStartingRes = compareSetAndGetState(State.Disconnected, State.Starting);
         if (!setStartingRes.getLeft()) {
@@ -313,8 +315,7 @@ public abstract class AbstractReplicator implements Replicator {
     /**
      * This method only be used by {@link PersistentTopic#checkGC} now.
      */
-    @Override
-    public CompletableFuture<Void> disconnect() {
+    protected CompletableFuture<Void> disconnect() {
         long backlog = getNumberOfEntriesInBacklog();
         if (backlog > 0) {
             CompletableFuture<Void> disconnectFuture = new CompletableFuture<>();
@@ -389,8 +390,6 @@ public abstract class AbstractReplicator implements Replicator {
             Pair<Boolean, State> setDisconnectedRes = compareSetAndGetState(State.Disconnecting, State.Disconnected);
             if (setDisconnectedRes.getLeft()) {
                 this.producer = null;
-                // deactivate further read
-                disableReplicatorRead();
                 return;
             }
             if (setDisconnectedRes.getRight() == State.Terminating

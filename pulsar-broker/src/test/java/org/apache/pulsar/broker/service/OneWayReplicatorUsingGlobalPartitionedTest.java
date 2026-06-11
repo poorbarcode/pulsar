@@ -86,15 +86,14 @@ public class OneWayReplicatorUsingGlobalPartitionedTest extends OneWayReplicator
     }
 
     @Test(enabled = false)
-    public void testDisconnectAndReconnectInactiveReplicator() throws Exception {
-        super.testDisconnectAndReconnectInactiveReplicator();
+    public void testDisconnectAndReconnectReplicator(boolean binaryWayRepl,
+                                                     boolean hasLocalProducerRegistered,
+                                                     boolean localProducerHasTraffic,
+                                                     boolean hasRemoteProducerTraffic,
+                                                     boolean hasRemoteProducerRegistered) throws Exception {
+        super.testDisconnectAndReconnectReplicator(binaryWayRepl, hasLocalProducerRegistered, localProducerHasTraffic,
+                hasRemoteProducerTraffic, hasRemoteProducerRegistered);
     }
-
-    @Test(enabled = false)
-    public void testDisconnectAndReconnectInactiveReplicatorNonPersistent() throws Exception {
-        super.testDisconnectAndReconnectInactiveReplicator();
-    }
-
 
     @Override
     @Test(enabled = false)
