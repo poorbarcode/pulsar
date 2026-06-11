@@ -378,9 +378,10 @@ public abstract class PersistentReplicator extends AbstractReplicator
 
         readFailureBackoff.reduceToHalf();
 
-        replicateEntries(entries, inFlightTask);
+        boolean producerIsWritable = isWritable();
+        replicateEntries(entries, inFlightTask, !producerIsWritable);
 
-        if (!isWritable()) {
+        if (!producerIsWritable) {
             // Don't read any more entries until the current pending entries are persisted
             log.debug()
                     .attr("isWritable", isWritable())
@@ -390,7 +391,8 @@ public abstract class PersistentReplicator extends AbstractReplicator
         }
     }
 
-    protected void replicateEntries(List<Entry> entries, InFlightTask inFlightTask) {
+    protected void replicateEntries(List<Entry> entries, InFlightTask inFlightTask,
+                                    final boolean skippedReadAfterSent) {
         latestPublishTime = System.currentTimeMillis();
         // Release memory if terminated.
         if (state == State.Terminated || state == State.Terminating
@@ -407,7 +409,7 @@ public abstract class PersistentReplicator extends AbstractReplicator
         Runnable retryReplicateEntries = () -> {
             ml.getScheduledExecutor().schedule(() -> {
                 ml.getExecutor().execute(() -> {
-                    replicateEntries(entries, inFlightTask);
+                    replicateEntries(entries, inFlightTask, skippedReadAfterSent);
                 });
             }, 100, TimeUnit.MILLISECONDS);
         };
@@ -424,7 +426,12 @@ public abstract class PersistentReplicator extends AbstractReplicator
             return;
         }
         // Do replicate.
-        doReplicateEntries(entries, inFlightTask);
+        // If the previous "read more entries" was skipped due to the producer write buffer is full, we need to trigger
+        // once after replicated entries. But if "doReplicateEntries" already sent some messages, the event "read more
+        // entries" can be triggered by the receipt action of publishing.
+        if (skippedReadAfterSent && !doReplicateEntries(entries, inFlightTask)) {
+            readMoreEntries();
+        }
     }
 
     protected abstract boolean doReplicateEntries(List<Entry> entries, InFlightTask inFlightTask);
