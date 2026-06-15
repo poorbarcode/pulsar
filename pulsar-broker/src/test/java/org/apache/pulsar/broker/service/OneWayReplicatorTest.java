@@ -345,11 +345,6 @@ public class OneWayReplicatorTest extends OneWayReplicatorTestBase {
             Optional<org.apache.pulsar.broker.service.Producer> serviceProducer1 = persistentTopic1.getProducers()
                     .values().stream().filter(p -> !p.isRemote()).findAny();
             assertTrue(serviceProducer1.isPresent());
-//            if (localProducerHasTraffic) {
-//                assertTrue(System.currentTimeMillis() - serviceProducer1.get().getLatestPublishTime() < 1_500);
-//            } else {
-//                assertTrue(System.currentTimeMillis() - serviceProducer1.get().getLatestPublishTime() > 2_500);
-//            }
         }
         // All states match: remote producers.
         if (binaryWayRepl) {
@@ -360,11 +355,6 @@ public class OneWayReplicatorTest extends OneWayReplicatorTestBase {
                 Optional<org.apache.pulsar.broker.service.Producer> serviceProducer1 = persistentTopic1.getProducers()
                         .values().stream().filter(p -> p.isRemote()).findAny();
                 assertTrue(serviceProducer1.isPresent());
-//                if (hasRemoteProducerTraffic) {
-//                    assertTrue(System.currentTimeMillis() - serviceProducer1.get().getLatestPublishTime() < 1_500);
-//                } else {
-//                    assertTrue(System.currentTimeMillis() - serviceProducer1.get().getLatestPublishTime() > 2_500);
-//                }
             }
         }
 
@@ -380,8 +370,6 @@ public class OneWayReplicatorTest extends OneWayReplicatorTestBase {
                 Thread.sleep(1000);
             }
         } else {
-            // TODO terminate 的判断逻辑搬运到 replicator 中。
-            //  resume 的判断逻辑可言在 scheduled task 中，也可以在 cursor pending read 中。
             Thread.sleep(100_000);
             assertFalse(persistentTopic1.getReplicators().isEmpty());
             PersistentReplicator persistentReplicatorA =
@@ -390,12 +378,6 @@ public class OneWayReplicatorTest extends OneWayReplicatorTestBase {
             assertEquals(persistentReplicatorA.getState(), AbstractReplicator.State.Disconnected);
 
             // Verify: resume.
-//            if (!hasRemoteProducerRegistered) {
-//                persistentTopic2.getReplicators().get(cluster1).startProducer();
-//                Awaitility.await().untilAsserted(() -> {
-//                  assertTrue(persistentTopic2.getReplicators().get(cluster1).isConnected());
-//                });
-//            }
             if (hasRemoteProducerRegistered && !hasRemoteProducerTraffic) {
                 producer2.send("msg-remote");
             }
