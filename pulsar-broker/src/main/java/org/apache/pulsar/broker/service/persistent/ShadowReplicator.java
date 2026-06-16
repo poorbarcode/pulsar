@@ -61,7 +61,7 @@ public class ShadowReplicator extends PersistentReplicator {
 
     @Override
     @SuppressWarnings("unchecked")
-    protected boolean doReplicateEntries(List<Entry> entries, InFlightTask inFlightTask) {
+    protected boolean replicateEntries(List<Entry> entries, InFlightTask inFlightTask) {
         boolean atLeastOneMessageSentForReplication = false;
 
         try {

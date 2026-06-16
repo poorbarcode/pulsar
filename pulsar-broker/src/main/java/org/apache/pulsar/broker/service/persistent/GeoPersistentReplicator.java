@@ -146,7 +146,7 @@ public class GeoPersistentReplicator extends PersistentReplicator {
 
     @Override
     @SuppressWarnings("unchecked")
-    protected boolean doReplicateEntries(List<Entry> entries, final InFlightTask inFlightTask) {
+    protected boolean replicateEntries(List<Entry> entries, final InFlightTask inFlightTask) {
         boolean atLeastOneMessageSentForReplication = false;
         boolean isEnableReplicatedSubscriptions =
                 brokerService.pulsar().getConfiguration().isEnableReplicatedSubscriptions();

@@ -362,6 +362,48 @@ public abstract class PersistentReplicator extends AbstractReplicator
                 .attr("size", entries.size())
                 .log("Read entries complete");
         InFlightTask inFlightTask = (InFlightTask) ctx;
+
+        latestPublishTime = System.currentTimeMillis();
+        // Release memory if terminated.
+        if (state == State.Terminated || state == State.Terminating
+                || inFlightTask.isSkipReadResultDueToCursorRewind()) {
+            for (Entry entry : entries) {
+                inFlightTask.incCompletedEntries();
+                entry.release();
+            }
+            return;
+        }
+
+        // Retry to trigger read completes if it is not started.
+        ManagedLedgerImpl ml = (ManagedLedgerImpl) cursor.getManagedLedger();
+        Runnable retryReplicateEntries = () -> {
+            long estimatedTimeStampProducerConnected = this.estimatedTimeStampProducerConnected;
+            long delayMillis;
+            if (estimatedTimeStampProducerConnected > System.currentTimeMillis()) {
+                delayMillis = (estimatedTimeStampProducerConnected - System.currentTimeMillis()) + 100;
+            } else {
+                delayMillis = 100;
+            }
+            ml.getScheduledExecutor().schedule(() -> {
+                ml.getExecutor().execute(() -> {
+                    readEntriesComplete(entries, ctx);
+                });
+            }, delayMillis, TimeUnit.MILLISECONDS);
+        };
+
+        // Retry.
+        if (state == Disconnecting ||  state == Starting) {
+            retryReplicateEntries.run();
+            return;
+        }
+        // Start producer and retry.
+        if (state == Disconnected) {
+            startProducer();
+            retryReplicateEntries.run();
+            return;
+        }
+
+        // After set entries, the next reading can be start.
         inFlightTask.setEntries(entries);
 
         // After the replicator starts, the speed will be gradually increased.
@@ -378,12 +420,12 @@ public abstract class PersistentReplicator extends AbstractReplicator
 
         readFailureBackoff.reduceToHalf();
 
-        boolean producerIsWritable = isWritable();
-        replicateEntries(entries, inFlightTask, !producerIsWritable);
+        boolean atLeastOneMessageSentForReplication = replicateEntries(entries, inFlightTask);
 
-        if (!producerIsWritable) {
+        if (atLeastOneMessageSentForReplication && !isWritable()) {
             // Don't read any more entries until the current pending entries are persisted
             log.debug()
+                    .attr("atLeastOneMessageSentForReplication", atLeastOneMessageSentForReplication)
                     .attr("isWritable", isWritable())
                     .log("Pausing replication traffic");
         } else {
@@ -391,58 +433,7 @@ public abstract class PersistentReplicator extends AbstractReplicator
         }
     }
 
-    protected void replicateEntries(List<Entry> entries, InFlightTask inFlightTask,
-                                    final boolean skippedReadAfterSent) {
-        latestPublishTime = System.currentTimeMillis();
-        // Release memory if terminated.
-        if (state == State.Terminated || state == State.Terminating
-                || inFlightTask.isSkipReadResultDueToCursorRewind()) {
-            for (Entry entry : entries) {
-                inFlightTask.incCompletedEntries();
-                entry.release();
-            }
-            return;
-        }
-
-        // Retry to replicate messages if it is not started.
-        ManagedLedgerImpl ml = (ManagedLedgerImpl) cursor.getManagedLedger();
-        Runnable retryReplicateEntries = () -> {
-            long estimatedTimeStampProducerConnected = this.estimatedTimeStampProducerConnected;
-            long delayMillis;
-            if (estimatedTimeStampProducerConnected > System.currentTimeMillis()) {
-                delayMillis = (estimatedTimeStampProducerConnected - System.currentTimeMillis()) + 100;
-            } else {
-                delayMillis = 100;
-            }
-            ml.getScheduledExecutor().schedule(() -> {
-                ml.getExecutor().execute(() -> {
-                    replicateEntries(entries, inFlightTask, skippedReadAfterSent);
-                });
-            }, delayMillis, TimeUnit.MILLISECONDS);
-        };
-
-        // Retry.
-        if (state == Disconnecting ||  state == Starting) {
-            retryReplicateEntries.run();
-            return;
-        }
-        // Start producer and retry.
-        if (state == Disconnected) {
-            startProducer();
-            retryReplicateEntries.run();
-            return;
-        }
-        // Do replicate.
-        // If the previous "read more entries" was skipped due to the producer write buffer is full, we need to trigger
-        // once after replicated entries. But if "doReplicateEntries" already sent some messages, the event "read more
-        // entries" can be triggered by the receipt action of publishing.
-        boolean atLeastOneMessageSentForReplication = doReplicateEntries(entries, inFlightTask);
-        if (skippedReadAfterSent && !atLeastOneMessageSentForReplication) {
-            readMoreEntries();
-        }
-    }
-
-    protected abstract boolean doReplicateEntries(List<Entry> entries, InFlightTask inFlightTask);
+    protected abstract boolean replicateEntries(List<Entry> entries, InFlightTask inFlightTask);
 
     protected CompletableFuture<SchemaInfo> getSchemaInfo(MessageImpl msg) throws ExecutionException {
         if (msg.getSchemaVersion() == null || msg.getSchemaVersion().length == 0) {
