@@ -179,12 +179,12 @@ public class PersistentReplicatorInflightTaskTest extends OneWayReplicatorTestBa
         List<Entry> entries = Collections.emptyList();
         InFlightTask task = new InFlightTask(PositionFactory.create(1, 1), 1, replicator.getReplicatorId());
         task.setEntries(entries);
-        doReturn(false).when(replicator).doReplicateEntries(any(), any());
+        doReturn(false).when(replicator).replicateEntries(any(), any());
         doNothing().when(replicator).readMoreEntries();
 
-        replicator.replicateEntries(entries, task, false);
+        replicator.replicateEntries(entries, task);
 
-        verify(replicator, times(1)).doReplicateEntries(entries, task);
+        verify(replicator, times(1)).replicateEntries(entries, task);
         verify(replicator, never()).readMoreEntries();
     }
 
@@ -194,12 +194,12 @@ public class PersistentReplicatorInflightTaskTest extends OneWayReplicatorTestBa
         List<Entry> entries = Collections.emptyList();
         InFlightTask task = new InFlightTask(PositionFactory.create(1, 1), 1, replicator.getReplicatorId());
         task.setEntries(entries);
-        doReturn(false).when(replicator).doReplicateEntries(any(), any());
+        doReturn(false).when(replicator).replicateEntries(any(), any());
         doNothing().when(replicator).readMoreEntries();
 
-        replicator.replicateEntries(entries, task, true);
+        replicator.replicateEntries(entries, task);
 
-        verify(replicator, times(1)).doReplicateEntries(entries, task);
+        verify(replicator, times(1)).replicateEntries(entries, task);
         verify(replicator, times(1)).readMoreEntries();
     }
 
