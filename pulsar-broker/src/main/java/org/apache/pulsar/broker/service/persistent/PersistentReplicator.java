@@ -407,11 +407,18 @@ public abstract class PersistentReplicator extends AbstractReplicator
         // Retry to replicate messages if it is not started.
         ManagedLedgerImpl ml = (ManagedLedgerImpl) cursor.getManagedLedger();
         Runnable retryReplicateEntries = () -> {
+            long estimatedTimeStampProducerConnected = this.estimatedTimeStampProducerConnected;
+            long delayMillis;
+            if (estimatedTimeStampProducerConnected > System.currentTimeMillis()) {
+                delayMillis = (estimatedTimeStampProducerConnected - System.currentTimeMillis()) + 100;
+            } else {
+                delayMillis = 100;
+            }
             ml.getScheduledExecutor().schedule(() -> {
                 ml.getExecutor().execute(() -> {
                     replicateEntries(entries, inFlightTask, skippedReadAfterSent);
                 });
-            }, 100, TimeUnit.MILLISECONDS);
+            }, delayMillis, TimeUnit.MILLISECONDS);
         };
 
         // Retry.

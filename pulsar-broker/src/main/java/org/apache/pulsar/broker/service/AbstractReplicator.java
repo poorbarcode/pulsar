@@ -88,6 +88,9 @@ public abstract class AbstractReplicator implements Replicator {
 
     protected volatile long latestPublishTime = System.currentTimeMillis();
 
+    // The estimated time when the producer connection is successful, "0" means it will be connected immediately.
+    protected volatile long estimatedTimeStampProducerConnected = 0;
+
     public enum State {
         /**
          * This enum has two mean meanings：
@@ -214,12 +217,14 @@ public abstract class AbstractReplicator implements Replicator {
             builderImpl.getConf().setNonPartitionedTopicExpected(true);
             builderImpl.getConf().setReplProducer(true);
             return producerBuilder.createAsync().thenAccept(producer -> {
+                estimatedTimeStampProducerConnected = 0;
                 setProducerAndTriggerReadEntries(producer);
             });
         }).exceptionally(ex -> {
             Pair<Boolean, State> setDisconnectedRes = compareSetAndGetState(State.Starting, State.Disconnected);
             if (setDisconnectedRes.getLeft()) {
                 long waitTimeMs = backOff.next().toMillis();
+                estimatedTimeStampProducerConnected = System.currentTimeMillis() + waitTimeMs;
                 log.warn()
                         .exceptionMessage(ex)
                         .attr("waitTimeSec", waitTimeMs / 1000.0)
