@@ -1020,7 +1020,7 @@ public class ReplicatorTest extends ReplicatorTestBase {
         // Replicator for r1 -> r2
         PersistentTopic topic = (PersistentTopic) pulsar1.getBrokerService()
                 .getTopicReference(dest.toString()).get();
-        Replicator replicator = topic.getPersistentReplicator("r2");
+        PersistentReplicator replicator = (PersistentReplicator) topic.getPersistentReplicator("r2");
         PersistentTopic remoteTopic = (PersistentTopic) pulsar2.getBrokerService()
                 .getTopicReference(dest.toString()).get();
 
