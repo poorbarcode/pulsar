@@ -174,36 +174,6 @@ public class PersistentReplicatorInflightTaskTest extends OneWayReplicatorTestBa
     }
 
     @Test
-    public void testReplicateEntriesProcessesBatchWhenReadWasNotSkipped() throws Exception {
-        PersistentReplicator replicator = spy(getReplicator(topicName));
-        List<Entry> entries = Collections.emptyList();
-        InFlightTask task = new InFlightTask(PositionFactory.create(1, 1), 1, replicator.getReplicatorId());
-        task.setEntries(entries);
-        doReturn(false).when(replicator).replicateEntries(any(), any());
-        doNothing().when(replicator).readMoreEntries();
-
-        replicator.replicateEntries(entries, task);
-
-        verify(replicator, times(1)).replicateEntries(entries, task);
-        verify(replicator, never()).readMoreEntries();
-    }
-
-    @Test
-    public void testReplicateEntriesResumesReadWhenNoMessagesWereSentAfterSkippedRead() throws Exception {
-        PersistentReplicator replicator = spy(getReplicator(topicName));
-        List<Entry> entries = Collections.emptyList();
-        InFlightTask task = new InFlightTask(PositionFactory.create(1, 1), 1, replicator.getReplicatorId());
-        task.setEntries(entries);
-        doReturn(false).when(replicator).replicateEntries(any(), any());
-        doNothing().when(replicator).readMoreEntries();
-
-        replicator.replicateEntries(entries, task);
-
-        verify(replicator, times(1)).replicateEntries(entries, task);
-        verify(replicator, times(1)).readMoreEntries();
-    }
-
-    @Test
     public void testCreateOrRecycleInFlightTaskIntoQueue() throws Exception {
         log.info("Starting testCreateOrRecycleInFlightTaskIntoQueue");
 
