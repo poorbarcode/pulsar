@@ -79,6 +79,7 @@ public class ReplicationTopicGcTest extends OneWayReplicatorTestBase {
         config.setBrokerDeleteInactiveTopicsFrequencySeconds(5);
         config.setBrokerDeleteInactiveTopicsMaxInactiveDurationSeconds(5);
         config.setReplicationPolicyCheckDurationSeconds(1);
+        config.setBrokerReplicationInactiveThresholdSeconds(5);
     }
 
     @Test(dataProvider = "topicTypes")
