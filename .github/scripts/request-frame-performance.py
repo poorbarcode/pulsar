@@ -37,7 +37,7 @@ LOGS.mkdir(exist_ok=True)
 REFS = {
     "base": "17166c820b",
     "before": "81730ae9f22ceecf542e93388b0b4bd656e24adc",
-    "after": "2639dff9647ac4e8483aa99d627b48fddfb088d3",
+    "after": "539b4c2ccd2663f28f230c9920da60e0d261e1a3",
 }
 BENCHMARK = "microbench/src/main/java/org/apache/pulsar/broker/service/RequestFrameMemoryControllerBenchmark.java"
 GRADLE = ["./gradlew", "--console=plain", "--max-workers=3", "-PtestRetryCount=0"]

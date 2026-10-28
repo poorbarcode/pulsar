@@ -22,6 +22,9 @@ on:
   push:
     branches: [codex/request-frame-memory-performance]
   workflow_dispatch:
+concurrency:
+  group: request-frame-memory-performance
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
