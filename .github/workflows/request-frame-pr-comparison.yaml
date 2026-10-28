@@ -1,0 +1,93 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+name: Request frame PR comparison
+on:
+  push:
+    branches: [codex/request-frame-pr-comparison]
+  workflow_dispatch:
+concurrency:
+  group: request-frame-pr-comparison
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  compare:
+    if: github.repository == 'poorbarcode/pulsar'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v5
+        with:
+          distribution: corretto
+          java-version: |
+            17
+            25
+      - uses: ./.github/actions/setup-gradle
+        with:
+          cache-read-only: false
+      - name: Build both images on one native amd64 host
+        run: python3 .github/scripts/request-frame-pr-comparison.py prepare
+      - name: Compare fixed-small - three alternating pairs
+        run: python3 .github/scripts/request-frame-pr-comparison.py fixed-small
+      - name: Preserve fixed-small checkpoint
+        uses: actions/upload-artifact@v4
+        with:
+          name: request-frame-pr-comparison-fixed-small
+          path: ${{ runner.temp }}/request-frame-pr-comparison
+          retention-days: 7
+          if-no-files-found: error
+      - name: Compare fixed-large - three alternating pairs
+        run: python3 .github/scripts/request-frame-pr-comparison.py fixed-large
+      - name: Preserve fixed-large checkpoint
+        uses: actions/upload-artifact@v4
+        with:
+          name: request-frame-pr-comparison-fixed-large
+          path: ${{ runner.temp }}/request-frame-pr-comparison
+          retention-days: 7
+          if-no-files-found: error
+      - name: Compare max-small - three alternating pairs
+        run: python3 .github/scripts/request-frame-pr-comparison.py max-small
+      - name: Preserve max-small checkpoint
+        uses: actions/upload-artifact@v4
+        with:
+          name: request-frame-pr-comparison-max-small
+          path: ${{ runner.temp }}/request-frame-pr-comparison
+          retention-days: 7
+          if-no-files-found: error
+      - name: Compare max-large - three alternating pairs
+        run: python3 .github/scripts/request-frame-pr-comparison.py max-large
+      - name: Preserve max-large checkpoint
+        uses: actions/upload-artifact@v4
+        with:
+          name: request-frame-pr-comparison-max-large
+          path: ${{ runner.temp }}/request-frame-pr-comparison
+          retention-days: 7
+          if-no-files-found: error
+      - name: Upload all results and reproducibility metadata
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: request-frame-pr-comparison
+          path: ${{ runner.temp }}/request-frame-pr-comparison
+          retention-days: 30
+          if-no-files-found: error
