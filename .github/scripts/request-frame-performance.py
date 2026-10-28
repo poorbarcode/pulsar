@@ -69,7 +69,8 @@ capture(["df", "-h"], OUT / "disk-before.txt")
 run(["tests/performance/environment/scripts/configure-perf-test-environment.sh", "validate"],
     "host-validation", check=False)
 manifest = {"sourceRefs": REFS, "checkouts": {}, "jmh": [], "runs": [],
-            "hostScope": "GitHub-hosted native Linux amd64 VM; frequency and noisy neighbours are uncontrolled."}
+            "hostScope": "GitHub-hosted native Linux amd64 VM; frequency and noisy neighbours are uncontrolled.",
+            "priorJmhRun": "https://github.com/poorbarcode/pulsar/actions/runs/40676383935"}
 
 
 def save_manifest():
@@ -92,8 +93,6 @@ for variant, ref in REFS.items():
     manifest["checkouts"][variant] = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=checkout, text=True).strip()
     tasks = [":tests:java-test-image:dockerBuild", ":tests:performance:tools:installDist",
              ":tests:performance:launcher:classes"]
-    if variant != "base":
-        tasks.append(":microbench:shadowJar")
     run(GRADLE + tasks + ["-Pdocker.tag=rfm-" + variant], "build-" + variant, cwd=checkout)
     image = "apachepulsar/pulsar:rfm-" + variant
     capture(["docker", "image", "inspect", image], OUT / ("image-" + variant + ".json"))
@@ -105,40 +104,25 @@ for variant, ref in REFS.items():
 # Finish all builds before measurements. The same official Pulsar Dockerfile and allocator are used on both sides.
 for checkout in checkouts.values():
     run(["./gradlew", "--stop"], "stop-daemon-" + checkout.name, cwd=checkout)
-jmh_out = OUT / "jmh"
-jmh_out.mkdir(exist_ok=True)
-for repetition in range(3):
-    for threads in [1, 4]:
-        order = ["before", "after"] if repetition % 2 == 0 else ["after", "before"]
-        for variant in order:
-            jar, = (checkouts[variant] / "microbench/build/libs").glob("*-benchmarks.jar")
-            name = f"jmh-{variant}-t{threads}-r{repetition}"
-            run(["docker", "run", "--rm", "--user", str(os.getuid()), "--entrypoint", "java",
-                 "-v", str(jar) + ":/benchmarks.jar:ro", "-v", str(jmh_out) + ":/results",
-                 "apachepulsar/pulsar:rfm-" + variant, "-jar", "/benchmarks.jar",
-                 ".*RequestFrameMemoryControllerBenchmark.*", "-f", "1", "-t", str(threads),
-                 "-wi", "3", "-i", "5", "-w", "1s", "-r", "1s", "-prof", "gc",
-                 "-jvmArgsAppend", "-Xms256m -Xmx256m -XX:MaxDirectMemorySize=512m",
-                 "-rf", "json", "-rff", "/results/" + name + ".json"], name)
-            manifest["jmh"].append({"variant": variant, "threads": threads,
-                                    "repetition": repetition, "file": name + ".json"})
-            save_manifest()
+# Reuse the completed three-repetition JMH measurements from priorJmhRun.
 
 reports = OUT / "reports"
 common = ["--scenario", "tests/performance/scenarios/iot-telemetry-base.yaml",
           "--extends", "configs/iot-telemetry-low-mem", "--extends", "configs/bookie-journal-tmpfs"]
 settings = {
-    "workloads.iotTelemetry.rate": 0,
-    "workloads.iotTelemetry.warmup.seconds": 0,
-    "workloads.iotTelemetry.warmup.messages": 50000,
-    "workloads.iotTelemetry.measurement.seconds": 0,
-    "workloads.iotTelemetry.measurement.messages": 200000,
+    "workloads.iotTelemetry.rate": 20000,
+    "metrics.intervalSeconds": 1,
+    "workloads.iotTelemetry.warmup.seconds": 20,
+    "workloads.iotTelemetry.warmup.messages": 0,
+    "workloads.iotTelemetry.measurement.seconds": 60,
+    "workloads.iotTelemetry.measurement.messages": 0,
     "workloads.iotTelemetry.timeoutSeconds": 240,
     "workloads.iotTelemetry.devices.count": 10000,
     "workloads.iotTelemetry.gateways.count": 10,
     "workloads.iotTelemetry.gateways.producer.ioThreads": 4,
     "workloads.iotTelemetry.gateways.producer.listenerThreads": 4,
     "workloads.iotTelemetry.gateways.producer.maxOutstanding": 1024,
+    "workloads.iotTelemetry.gateways.producer.precreate": "true",
     "workloads.iotTelemetry.gateways.producer.batchingEnabled": "false",
     "workloads.iotTelemetry.topics.count": 8,
     "workloads.iotTelemetry.applications.count": 1,
@@ -155,8 +139,7 @@ scenarios = {
     "large-manual": {"workloads.iotTelemetry.payload.size": 131072,
                      "cluster.brokers.env.inProgressRequestFrameMemoryLimitEnabled": "true",
                      "workloads.iotTelemetry.gateways.producer.maxOutstanding": 128,
-                     "workloads.iotTelemetry.warmup.messages": 10000,
-                     "workloads.iotTelemetry.measurement.messages": 50000},
+                     "workloads.iotTelemetry.rate": 500},
 }
 run(GRADLE + [":tests:performance:metrics:up"], "metrics-up", cwd=checkouts["after"])
 try:
@@ -183,7 +166,7 @@ try:
                         continue
                     data = json.loads(metadata.read_text())
                     selector = data["selector"]
-                    query = '{__name__=~"jvm_direct_memory.*|process_resident_memory_bytes|pulsar_broker_publish_in_progress_buffer_memory_usage.*|pulsar_.*pending.*",' + selector[1:]
+                    query = '{__name__=~"jvm_memory_direct_.*|jvm_memory_bytes_used|process_resident_memory_bytes|process_cpu_seconds_total|pulsar_broker_publish_in_progress_buffer_memory_usage.*|pulsar_.*pending.*",' + selector[1:]
                     params = urllib.parse.urlencode({"query": query, "start": data["startEpochMs"] / 1000,
                         "end": data["endEpochMs"] / 1000, "step": data["intervalSeconds"]})
                     url = data["victoriaMetrics"]["prometheusApi"] + "query_range?" + params
